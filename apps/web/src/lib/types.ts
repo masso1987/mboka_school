@@ -13,6 +13,7 @@ export interface Me {
   user: { id: string; email: string; fullName: string; locale: string | null; platformRole: string };
   tenants: TenantSummary[];
   csrfToken: string;
+  security?: { mfaPending: boolean; mfaSetupRequired: boolean; mfaEnabled: boolean };
 }
 
 export interface TenantContextResponse {
@@ -25,6 +26,7 @@ export interface TenantContextResponse {
     timezone: string;
     defaultCurrency: string;
     campuses: { id: string; code: string; name: string }[];
+    security?: { requireMfaForPrivileged: boolean };
   };
   roles: { key: string; nameFr: string; nameEn: string }[];
   permissions: string[];

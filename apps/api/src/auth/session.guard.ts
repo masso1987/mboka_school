@@ -1,9 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { timingSafeEqual } from 'node:crypto';
-import { Errors } from '../common/api-error';
-import type { AppRequest } from '../common/request-context';
-import { IS_PUBLIC } from './metadata';
+import { ApiException, Errors } from '../common/api-error';
+import type { AppRequest, AuthContext } from '../common/request-context';
+import { IS_PUBLIC, MFA_STAGE } from './metadata';
 import { SESSION_COOKIE, SessionService } from './session.service';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -34,9 +34,23 @@ export class SessionGuard implements CanActivate {
     if (!SAFE_METHODS.has(req.method) && !csrfMatches(req.header('x-csrf-token'), auth.csrfToken)) {
       throw Errors.csrf();
     }
+
+    // Second factor and mandatory enrollment (§11.1): until done, only routes marked for that stage work.
+    const stages = this.reflector.getAllAndOverride<string[]>(MFA_STAGE, [ctx.getHandler(), ctx.getClass()]) ?? [];
+    if (!auth.mfaVerified && !stages.includes('verify')) {
+      throw new ApiException(HttpStatus.UNAUTHORIZED, 'MFA_REQUIRED', 'Enter the code from your authenticator app');
+    }
+    if (auth.mfaVerified && mfaSetupRequired(auth) && !stages.includes('setup')) {
+      throw new ApiException(HttpStatus.FORBIDDEN, 'MFA_SETUP_REQUIRED', 'Set up two-factor authentication to continue');
+    }
     req.auth = auth;
     return true;
   }
+}
+
+/** Platform administrators must use MFA (spec §11.1); tenant roles are enforced per school in TenantGuard. */
+export function mfaSetupRequired(auth: AuthContext): boolean {
+  return auth.platformRole === 'SUPER_ADMIN' && !auth.mfaEnabled;
 }
 
 export function csrfMatches(provided: string | undefined, expected: string): boolean {

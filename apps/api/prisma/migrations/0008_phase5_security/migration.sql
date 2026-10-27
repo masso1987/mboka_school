@@ -1,0 +1,102 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- AlterTable
+ALTER TABLE "sessions" ADD COLUMN     "last_seen_at" TIMESTAMPTZ(6),
+ADD COLUMN     "mfa_verified" BOOLEAN NOT NULL DEFAULT true;
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "mfa_enabled_at" TIMESTAMPTZ(6),
+ADD COLUMN     "mfa_last_step" INTEGER,
+ADD COLUMN     "mfa_pending_secret" TEXT,
+ADD COLUMN     "mfa_recovery_codes" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN     "password_changed_at" TIMESTAMPTZ(6);
+

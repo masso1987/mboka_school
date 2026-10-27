@@ -10,6 +10,7 @@ import { ApiRequestError } from './lib/api';
 import { SessionProvider, useMe } from './lib/session';
 import { NAV_ITEMS } from './nav';
 import { AcademicYearsPage } from './pages/AcademicYearsPage';
+import { AccountPage, MfaVerifyPage } from './pages/AccountPage';
 import { AdministrationPage } from './pages/AdministrationPage';
 import { AttendancePage } from './pages/AttendancePage';
 import { ClassDetailPage, ClassesPage } from './pages/ClassesPage';
@@ -43,12 +44,21 @@ function Root() {
   if (me.isPending) return <p className="p-8 text-slate-500">{t('common.loading')}</p>;
   if (me.isError) return <p className="p-8 text-danger-600">{t('common.errorGeneric')}</p>;
   if (!me.data) return <LoginPage />;
+  if (me.data.security?.mfaPending) return <MfaVerifyPage />;
+  if (me.data.security?.mfaSetupRequired) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-8">
+        <AccountPage mandatory />
+      </main>
+    );
+  }
 
   return (
     <SessionProvider me={me.data}>
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="account" element={<AccountPage />} />
           <Route path="academic-years" element={<AcademicYearsPage />} />
           <Route path="students" element={<StudentsPage />} />
           <Route path="students/:id" element={<StudentDetailPage />} />
@@ -76,6 +86,11 @@ function Root() {
       </Routes>
     </SessionProvider>
   );
+}
+
+// App-shell service worker (§10.1); not in development, where it would fight hot reload.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'));
 }
 
 createRoot(document.getElementById('root')!).render(

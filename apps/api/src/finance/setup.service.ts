@@ -12,7 +12,7 @@ import { toDate, toIso } from '../common/dates';
 import { guardDb } from '../common/db-errors';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 import { Decimal, FinanceCore } from './finance-core';
-import { encryptSecret } from './secrets';
+import { encryptSecret } from '../common/secrets';
 
 /** Currencies, exchange-rate history, financial periods and provider credentials (Module 9, EXP-010). */
 @Injectable()

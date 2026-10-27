@@ -9,10 +9,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
+    const req = host.switchToHttp().getRequest<{ requestId?: string }>();
     const [status, body] = toApiError(exception);
     if (status >= 500) {
       // Log the error type and stack only — never request bodies, which may hold student data.
-      this.logger.error(exception instanceof Error ? exception.stack : String(exception));
+      this.logger.error(`rid=${req.requestId ?? '-'} ${exception instanceof Error ? exception.stack : String(exception)}`);
+      // The request id lets support find this exact failure in the logs.
+      (body.error as { requestId?: string }).requestId = req.requestId;
     }
     res.status(status).json(body);
   }

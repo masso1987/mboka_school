@@ -1,7 +1,7 @@
 import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
 import { ApiHeader } from '@nestjs/swagger';
 import type { PermissionKey } from '@mboka/shared';
-import { IS_PUBLIC, REQUIRED_PERMISSIONS } from './metadata';
+import { IS_PUBLIC, MFA_STAGE, REQUIRED_PERMISSIONS } from './metadata';
 import { PlatformAdminGuard } from './platform-admin.guard';
 import { TenantGuard } from './tenant.guard';
 
@@ -22,3 +22,6 @@ export const RequirePermissions = (...permissions: PermissionKey[]) =>
 
 /** Platform super administrators only. Grants no access to school data by itself. */
 export const PlatformAdmin = () => UseGuards(PlatformAdminGuard);
+
+/** Allowed while the session still awaits its second factor ('verify') or mandatory MFA enrollment ('setup'). */
+export const AllowDuringMfa = (...stages: ('verify' | 'setup')[]) => SetMetadata(MFA_STAGE, stages);

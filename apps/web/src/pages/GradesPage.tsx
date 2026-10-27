@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ASSESSMENT_KINDS, formatMarkCell, parseMarkCell } from '@mboka/shared';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Select, Table } from '../components/ui';
 import { ApiRequestError } from '../lib/api';
 import type { GradeSheet, OverviewRow, Period } from '../lib/grades-types';
 import { useCurrentYear, useLabel, useTenantMutation, useTenantQuery } from '../lib/hooks';
+import { marksDraftKey, readJson, writeJson } from '../lib/offline';
 import { useSession } from '../lib/session';
 import type { Assignment, SchoolClass } from '../lib/types';
 
@@ -136,6 +137,11 @@ function GradeSheetView({ refs, onBack }: { refs: { classSubjectId: string; peri
   const [reason, setReason] = useState('');
   const [newA, setNewA] = useState({ name: '', kind: 'TEST', maxScore: '20', weight: '1' });
   const [csv, setCsv] = useState({ assessmentId: '', text: '' });
+  // Unsaved marks survive a reload or a lost connection (§10.2 draft mark entry).
+  const { tenantId } = useSession();
+  const draftKey = tenantId ? marksDraftKey(tenantId, refs.classSubjectId, refs.periodId) : '';
+  const [draftRestored, setDraftRestored] = useState(false);
+  const ready = useRef(false);
 
   useEffect(() => {
     if (!sheet.data) return;
@@ -145,9 +151,27 @@ function GradeSheetView({ refs, onBack }: { refs: { classSubjectId: string; peri
       for (const a of sheet.data.assessments) c[`${s.studentId}:${a.id}`] = formatMarkCell(s.marks[a.id]);
       cm[s.studentId] = s.comment;
     }
-    setCells(c);
-    setComments(cm);
-  }, [sheet.data]);
+    const draft = draftKey ? readJson<{ cells: Record<string, string>; comments: Record<string, string> }>(draftKey) : null;
+    setCells(draft ? { ...c, ...draft.cells } : c);
+    setComments(draft ? { ...cm, ...draft.comments } : cm);
+    setDraftRestored(Boolean(draft));
+    ready.current = true;
+  }, [sheet.data, draftKey]);
+
+  useEffect(() => {
+    if (!ready.current || !draftKey || !sheet.data?.canEdit) return;
+    const server = sheet.data;
+    const changedCells = Object.fromEntries(
+      Object.entries(cells).filter(([k, v]) => {
+        const [studentId, assessmentId] = k.split(':');
+        const st = server.students.find((x) => x.studentId === studentId);
+        return st && v !== formatMarkCell(st.marks[assessmentId!]);
+      }),
+    );
+    const changedComments = Object.fromEntries(Object.entries(comments).filter(([id, v]) => v !== (server.students.find((x) => x.studentId === id)?.comment ?? '')));
+    const dirty = Object.keys(changedCells).length + Object.keys(changedComments).length > 0;
+    writeJson(draftKey, dirty ? { cells: changedCells, comments: changedComments } : null);
+  }, [cells, comments, draftKey, sheet.data]);
 
   const sh = sheet.data;
   const invalid = useMemo(() => {
@@ -180,8 +204,12 @@ function GradeSheetView({ refs, onBack }: { refs: { classSubjectId: string; peri
       }),
     );
     const changedComments = s.students.filter((st) => (comments[st.studentId] ?? '') !== st.comment).map((st) => ({ studentId: st.studentId, comment: comments[st.studentId] ?? '' }));
-    if (marks.length > 0) saveMarks.mutate({ ...refs, marks, ...(reason && { reason }) });
-    if (changedComments.length > 0) saveComments.mutate({ ...refs, comments: changedComments });
+    const done = () => {
+      writeJson(draftKey, null);
+      setDraftRestored(false);
+    };
+    if (marks.length > 0) saveMarks.mutate({ ...refs, marks, ...(reason && { reason }) }, { onSuccess: done });
+    if (changedComments.length > 0) saveComments.mutate({ ...refs, comments: changedComments }, { onSuccess: done });
   }
 
   function runImport() {
@@ -257,6 +285,9 @@ function GradeSheetView({ refs, onBack }: { refs: { classSubjectId: string; peri
         <ErrorMessage error={act.error} />
       )}
 
+      {draftRestored && (
+        <p role="status" className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('grades.draftRestored')}</p>
+      )}
       <Card title={t('grades.marks')}>
         {s.assessments.length === 0 ? (
           <Empty>{t('grades.noAssessments')}</Empty>

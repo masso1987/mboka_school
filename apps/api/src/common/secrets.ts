@@ -3,14 +3,15 @@ import { createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEq
 import { ApiException } from '../common/api-error';
 
 /**
- * Provider secrets are encrypted at rest with AES-256-GCM under PAYMENT_SECRETS_KEY
- * (32 bytes, base64), kept outside the database (§11.3). Format: v1.<iv>.<tag>.<ciphertext>.
+ * Secrets at rest (payment-provider keys, MFA seeds) are encrypted with AES-256-GCM under
+ * APP_SECRETS_KEY (32 bytes, base64; PAYMENT_SECRETS_KEY accepted as the former name), kept
+ * outside the database (§11.3). Format: v1.<iv>.<tag>.<ciphertext>.
  */
 function key(): Buffer {
-  const raw = process.env.PAYMENT_SECRETS_KEY;
+  const raw = process.env.APP_SECRETS_KEY ?? process.env.PAYMENT_SECRETS_KEY;
   const k = raw ? Buffer.from(raw, 'base64') : undefined;
   if (!k || k.length !== 32) {
-    throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, 'SECRETS_KEY_MISSING', 'PAYMENT_SECRETS_KEY is not configured');
+    throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, 'SECRETS_KEY_MISSING', 'APP_SECRETS_KEY is not configured');
   }
   return k;
 }

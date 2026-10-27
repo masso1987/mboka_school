@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   'tenant.settings.read': 'View school configuration',
   'tenant.settings.update': 'Change school configuration',
   'tenant.campuses.manage': 'Create and edit campuses',
+  'tenant.data.export': 'Export all school data (portability, end of contract)',
   'users.read': 'View user accounts',
   'users.invite': 'Invite users to the school',
   'users.permissions.manage': 'Assign roles and permissions',

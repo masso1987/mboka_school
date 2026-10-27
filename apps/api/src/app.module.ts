@@ -13,6 +13,7 @@ import { HrModule } from './hr/hr.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionGuard } from './auth/session.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
+import { env } from './config/env';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { StaffModule } from './staff/staff.module';
@@ -22,7 +23,7 @@ import { TimetableModule } from './timetable/timetable.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: () => env().RATE_LIMIT_PER_MINUTE }]),
     PrismaModule,
     AuditModule,
     AuthModule,

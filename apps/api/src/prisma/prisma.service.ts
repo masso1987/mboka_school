@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 export type Tx = Prisma.TransactionClient;
@@ -9,7 +9,19 @@ export interface DbScope {
 }
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'query'> implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger('Database');
+
+  constructor() {
+    const threshold = Number(process.env.SLOW_QUERY_MS ?? 500);
+    // 0 turns slow-query logging off (and the per-query event it costs).
+    super(threshold > 0 ? { log: [{ emit: 'event', level: 'query' }] } : {});
+    // Slow queries are logged with their SQL text only; parameter values may hold personal data.
+    if (threshold > 0) this.$on('query', (e) => {
+      if (e.duration >= threshold) this.logger.warn(JSON.stringify({ slowQueryMs: e.duration, sql: e.query.slice(0, 500) }));
+    });
+  }
+
   async onModuleInit(): Promise<void> {
     await this.$connect();
   }

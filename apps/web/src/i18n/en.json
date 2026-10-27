@@ -222,7 +222,8 @@
       "pending": "Waiting to sync",
       "conflict": "Conflict to resolve",
       "error": "Not saved"
-    }
+    },
+    "offlineCopy": "You are offline: this is the copy of the register saved on this device. It will be sent when the connection returns."
   },
   "teaching": {
     "tabs": {
@@ -291,7 +292,8 @@
   "admin": {
     "tabs": {
       "users": "Users",
-      "campuses": "Campuses"
+      "campuses": "Campuses",
+      "security": "Security"
     },
     "invite": "Add a user",
     "fullName": "Full name",
@@ -309,7 +311,10 @@
     },
     "editRoles": "Edit roles",
     "newCampus": "New campus",
-    "address": "Address"
+    "address": "Address",
+    "securityTitle": "Security policy",
+    "securityHelp": "Require two-factor authentication for accounts that manage users, finance settings, reversals and refunds, or compensation.",
+    "requireMfa": "Require two-factor authentication for sensitive roles"
   },
   "errors": {
     "ACADEMIC_YEAR_OVERLAP": "This period overlaps an existing academic year.",
@@ -399,7 +404,15 @@
     "LEAVE_OVERLAP": "This period overlaps another request.",
     "INSUFFICIENT_LEAVE_BALANCE": "Not enough annual leave left.",
     "LEAVE_ALREADY_DECIDED": "This request has already been decided.",
-    "NOT_RETRYABLE": "Only failed deliveries can be retried."
+    "NOT_RETRYABLE": "Only failed deliveries can be retried.",
+    "MFA_REQUIRED": "Enter the code from your authenticator app.",
+    "MFA_SETUP_REQUIRED": "Turn on two-factor authentication on your account first.",
+    "INVALID_MFA_CODE": "Invalid or already used code.",
+    "MFA_ALREADY_ENABLED": "Two-factor authentication is already on.",
+    "MFA_NOT_STARTED": "Start the setup first.",
+    "MFA_NOT_ENABLED": "Two-factor authentication is off.",
+    "INVALID_CREDENTIALS": "Incorrect password.",
+    "ROLLOVER_HAS_EXCEPTIONS": "Some students still need a decision or a class."
   },
   "fees": {
     "tabs": {
@@ -663,7 +676,8 @@
       "duplicate_row": "duplicate student",
       "invalid_value": "unreadable value",
       "above_maximum": "mark above the maximum"
-    }
+    },
+    "draftRestored": "Draft restored: marks entered on this device are not saved yet."
   },
   "reportCards": {
     "annual": "Annual report",
@@ -834,5 +848,51 @@
     "baseSalary": "Base salary",
     "allowances": "Allowances",
     "recordChange": "Record"
+  },
+  "account": {
+    "title": "My account",
+    "mfaMandatory": "Two-factor authentication is required for your role. Turn it on to continue.",
+    "mfa": "Two-factor authentication",
+    "on": "On",
+    "off": "Off",
+    "enabled": "Two-factor authentication is on.",
+    "recoveryIntro": "Write these recovery codes down and keep them safe. Each works once, if you lose your phone. They will not be shown again.",
+    "continue": "Continue",
+    "recoveryLeft": "{{count}} recovery code(s) left.",
+    "disable": "Turn off two-factor authentication",
+    "code": "Code",
+    "disableConfirm": "Turn off",
+    "qrAlt": "QR code to scan with your authenticator app",
+    "scan": "Scan this QR code with an authenticator app (Google Authenticator, Microsoft Authenticator…), then enter the 6-digit code it shows.",
+    "manual": "Manual entry:",
+    "activate": "Turn on",
+    "mfaHelp": "Protect your account with a 6-digit code from your phone, asked at every sign-in.",
+    "setup": "Set up",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordHint": "At least 10 characters; a passphrase is safer and easier to remember.",
+    "confirmPassword": "Confirm the new password",
+    "mismatch": "The two passwords do not match.",
+    "passwordChanged": "Password changed. {{count}} other session(s) signed out.",
+    "changePassword": "Change password",
+    "sessions": "Open sessions",
+    "signOutOthers": "Sign out other sessions",
+    "device": "Device",
+    "lastSeen": "Last activity",
+    "thisDevice": "This device",
+    "revoke": "Sign out",
+    "verifyTitle": "Verification",
+    "verifyHelp": "Enter the code from your authenticator app, or a recovery code.",
+    "verify": "Verify"
+  },
+  "offline": {
+    "offline": "Offline",
+    "pending": "{{count}} waiting",
+    "syncNow": "Sync",
+    "waiting": "Will be sent when the connection returns",
+    "synced": "{{count}} register(s) synchronised.",
+    "rejected": "{{count}} register(s) rejected by the server: open Attendance to redo them.",
+    "signOutWarning": "{{count}} unsynchronised entr(y/ies) will be lost if you sign out. Continue?"
   }
 }
