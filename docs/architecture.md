@@ -31,8 +31,10 @@ docs/         Architecture, ADRs
 ## Adding a tenant-scoped module — checklist
 
 - [ ] Prisma model has `tenantId`, `@@unique([tenantId, id])`, `@@map` snake_case, `Timestamptz`/`Date` types, `Decimal` for money.
-- [ ] Relations to other tenant tables use composite `(tenantId, id)` foreign keys.
-- [ ] New migration adds the table to RLS (`ENABLE` + `FORCE` + `tenant_isolation` policy) and grants.
+- [ ] Relations to other tenant tables use composite `(tenantId, id)` foreign keys (optional ones in raw SQL).
+- [ ] New migration adds the table to RLS (`ENABLE` + `FORCE` + `tenant_isolation` policy), a `tenant_id` FK to `tenants`, and grants.
+- [ ] Unique violations mapped by model name in `guardDb(…, { Model: () => error })`; extra unique rules pre-checked.
+- [ ] Operations a client may retry offline carry a client `operationId` stored in `sync_operations` in the same transaction.
 - [ ] New permissions added to `packages/shared/src/permissions.ts` and to default roles; run `npm run db:seed`.
 - [ ] Every query inside `prisma.scoped(...)` **and** filtered by `tenantId`.
 - [ ] Controllers use `@RequirePermissions(...)`; bodies use `@ZodBody(schema)` + `@ApiZodBody(schema)`.

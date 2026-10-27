@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import { isoDate } from './primitives';
 
 /** Request/response contracts shared by the API (validation) and the web app (forms). */
 
 export const LOCALES = ['fr', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'invalid_date');
 const currencyCode = z.string().regex(/^[A-Z]{3}$/, 'invalid_currency');
 
 export const loginSchema = z.object({

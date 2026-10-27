@@ -124,6 +124,7 @@ model Membership {
   tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignments UserRoleAssignment[]
+  staff       Staff?
 
   @@unique([tenantId, userId])
   @@unique([tenantId, id])
@@ -203,7 +204,9 @@ model Campus {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  classes SchoolClass[]
+  rooms   Room[]
 
   @@unique([tenantId, code])
   @@unique([tenantId, id])
@@ -228,7 +231,13 @@ model AcademicYear {
   updatedAt DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   createdBy String?            @map("created_by") @db.Uuid
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant           Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  periods          AcademicPeriod[]
+  classes          SchoolClass[]
+  enrollments      Enrollment[]
+  admissions       Admission[]
+  assignments      TeachingAssignment[]
+  timetableEntries TimetableEntry[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -252,4 +261,485 @@ model AuditLog {
   @@index([tenantId, createdAt])
   @@index([actorId])
   @@map("audit_logs")
+}
+
+// ================================================================ Phase 1
+// New tenant tables carry tenant_id with an FK to tenants added in migration 0003
+// (no Prisma back-relation on Tenant, to keep that model readable). Required references
+// to other tenant tables are composite (tenant_id, id); optional ones also get a composite
+// FK in raw SQL (0003), since Prisma cannot mix optional and required columns in a relation.
+
+/// Per-tenant monotonic counters (matricules, staff numbers), incremented with UPDATE … RETURNING.
+model TenantCounter {
+  tenantId String @map("tenant_id") @db.Uuid
+  key      String
+  value    Int    @default(0)
+
+  @@id([tenantId, key])
+  @@map("tenant_counters")
+}
+
+/// Client-generated operation ids already applied (offline replay protection, ATT-009/010).
+model SyncOperation {
+  tenantId    String   @map("tenant_id") @db.Uuid
+  operationId String   @map("operation_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  kind        String
+  response    Json
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([tenantId, operationId])
+  @@map("sync_operations")
+}
+
+// ---------------------------------------------------------------- academics
+
+enum PeriodKind {
+  TERM
+  SEMESTER
+  SEQUENCE
+  EXAM_SESSION
+  OTHER
+}
+
+model AcademicPeriod {
+  id             String     @id @default(uuid()) @db.Uuid
+  tenantId       String     @map("tenant_id") @db.Uuid
+  academicYearId String     @map("academic_year_id") @db.Uuid
+  kind           PeriodKind
+  name           String
+  position       Int
+  startDate      DateTime   @map("start_date") @db.Date
+  endDate        DateTime   @map("end_date") @db.Date
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  academicYear AcademicYear @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, academicYearId, kind, position])
+  @@unique([tenantId, id])
+  @@map("academic_periods")
+}
+
+enum EducationCycle {
+  PRIMARY
+  SECONDARY_FIRST
+  SECONDARY_SECOND
+  TECHNICAL
+  VOCATIONAL
+}
+
+model EducationLevel {
+  id        String         @id @default(uuid()) @db.Uuid
+  tenantId  String         @map("tenant_id") @db.Uuid
+  code      String
+  nameFr    String         @map("name_fr")
+  nameEn    String         @map("name_en")
+  cycle     EducationCycle
+  position  Int            @default(0)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  classes    SchoolClass[]
+  admissions Admission[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@map("education_levels")
+}
+
+/// Streams, series and technical specializations (ACA-004/009).
+model Program {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String
+  nameFr    String   @map("name_fr")
+  nameEn    String   @map("name_en")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  classes SchoolClass[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@map("programs")
+}
+
+model Subject {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String
+  nameFr    String   @map("name_fr")
+  nameEn    String   @map("name_en")
+  category  String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  classSubjects ClassSubject[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@map("subjects")
+}
+
+/// A class (or section/group) within one academic year.
+model SchoolClass {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  campusId       String   @map("campus_id") @db.Uuid
+  levelId        String   @map("level_id") @db.Uuid
+  programId      String?  @map("program_id") @db.Uuid
+  code           String
+  name           String
+  capacity       Int?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  academicYear     AcademicYear        @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  campus           Campus              @relation(fields: [tenantId, campusId], references: [tenantId, id], onDelete: Restrict)
+  level            EducationLevel      @relation(fields: [tenantId, levelId], references: [tenantId, id], onDelete: Restrict)
+  program          Program?            @relation(fields: [programId], references: [id], onDelete: Restrict)
+  subjects         ClassSubject[]
+  enrollments      Enrollment[]
+  attendance       AttendanceSession[]
+  timetableEntries TimetableEntry[]
+
+  @@unique([tenantId, academicYearId, code])
+  @@unique([tenantId, id])
+  @@map("classes")
+}
+
+/// Subject taught in a class with its coefficient — distinct from assessment weights (Module 7 formula note).
+model ClassSubject {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  classId     String   @map("class_id") @db.Uuid
+  subjectId   String   @map("subject_id") @db.Uuid
+  coefficient Decimal  @db.Decimal(5, 2)
+  weeklyHours Decimal  @map("weekly_hours") @db.Decimal(4, 1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  schoolClass SchoolClass          @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
+  subject     Subject              @relation(fields: [tenantId, subjectId], references: [tenantId, id], onDelete: Restrict)
+  assignments TeachingAssignment[]
+
+  @@unique([tenantId, classId, subjectId])
+  @@unique([tenantId, id])
+  @@map("class_subjects")
+}
+
+// ---------------------------------------------------------------- staff
+
+enum EmploymentType {
+  PERMANENT
+  CONTRACT
+  PART_TIME
+  TEMPORARY
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Staff {
+  id             String         @id @default(uuid()) @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  /// Linked user account in this tenant, when the employee signs in (teachers).
+  membershipId   String?        @unique @map("membership_id") @db.Uuid
+  staffNumber    String         @map("staff_number")
+  firstName      String         @map("first_name")
+  lastName       String         @map("last_name")
+  gender         String?
+  email          String?
+  phone          String?
+  position       String
+  isTeacher      Boolean        @default(false) @map("is_teacher")
+  employmentType EmploymentType @map("employment_type")
+  status         StaffStatus    @default(ACTIVE)
+  hireDate       DateTime?      @map("hire_date") @db.Date
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  membership       Membership?          @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  assignments      TeachingAssignment[]
+  timetableEntries TimetableEntry[]
+
+  @@unique([tenantId, staffNumber])
+  @@unique([tenantId, id])
+  @@map("staff")
+}
+
+enum AssignmentRole {
+  MAIN
+  CO_TEACHER
+  REPLACEMENT
+}
+
+/// Never deleted: ending an assignment sets end_date so teaching history is preserved (Module 4).
+model TeachingAssignment {
+  id             String         @id @default(uuid()) @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  academicYearId String         @map("academic_year_id") @db.Uuid
+  classSubjectId String         @map("class_subject_id") @db.Uuid
+  staffId        String         @map("staff_id") @db.Uuid
+  role           AssignmentRole @default(MAIN)
+  startDate      DateTime       @map("start_date") @db.Date
+  endDate        DateTime?      @map("end_date") @db.Date
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  academicYear AcademicYear @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  classSubject ClassSubject @relation(fields: [tenantId, classSubjectId], references: [tenantId, id], onDelete: Restrict)
+  staff        Staff        @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, staffId])
+  @@unique([tenantId, id])
+  @@map("teaching_assignments")
+}
+
+// ---------------------------------------------------------------- students
+
+enum StudentStatus {
+  APPLICANT
+  ACTIVE
+  GRADUATED
+  WITHDRAWN
+  TRANSFERRED
+  ARCHIVED
+}
+
+model Student {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String        @map("tenant_id") @db.Uuid
+  matricule    String
+  firstName    String        @map("first_name")
+  lastName     String        @map("last_name")
+  gender       String?
+  dateOfBirth  DateTime      @map("date_of_birth") @db.Date
+  placeOfBirth String?       @map("place_of_birth")
+  nationality  String?
+  address      String?
+  status       StudentStatus @default(ACTIVE)
+  archivedAt   DateTime?     @map("archived_at") @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  guardians   StudentGuardian[]
+  enrollments Enrollment[]
+  admissions  Admission[]
+  attendance  AttendanceRecord[]
+
+  @@unique([tenantId, matricule])
+  @@unique([tenantId, id])
+  @@index([tenantId, lastName, firstName])
+  @@map("students")
+}
+
+model Guardian {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  students StudentGuardian[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, phone])
+  @@map("guardians")
+}
+
+enum GuardianRelationship {
+  FATHER
+  MOTHER
+  GUARDIAN
+  SIBLING
+  OTHER
+}
+
+model StudentGuardian {
+  tenantId           String               @map("tenant_id") @db.Uuid
+  studentId          String               @map("student_id") @db.Uuid
+  guardianId         String               @map("guardian_id") @db.Uuid
+  relationship       GuardianRelationship
+  isPrimary          Boolean              @default(false) @map("is_primary")
+  isEmergencyContact Boolean              @default(false) @map("is_emergency_contact")
+  canPickUp          Boolean              @default(false) @map("can_pick_up")
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student  Student  @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Cascade)
+  guardian Guardian @relation(fields: [tenantId, guardianId], references: [tenantId, id], onDelete: Restrict)
+
+  @@id([studentId, guardianId])
+  @@index([tenantId, guardianId])
+  @@map("student_guardians")
+}
+
+enum AdmissionStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WAITLISTED
+  WITHDRAWN
+}
+
+model Admission {
+  id               String          @id @default(uuid()) @db.Uuid
+  tenantId         String          @map("tenant_id") @db.Uuid
+  studentId        String          @map("student_id") @db.Uuid
+  academicYearId   String          @map("academic_year_id") @db.Uuid
+  requestedLevelId String          @map("requested_level_id") @db.Uuid
+  status           AdmissionStatus @default(SUBMITTED)
+  notes            String?
+  decidedAt        DateTime?       @map("decided_at") @db.Timestamptz(6)
+  decidedBy        String?         @map("decided_by") @db.Uuid
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student        Student        @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Restrict)
+  academicYear   AcademicYear   @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  requestedLevel EducationLevel @relation(fields: [tenantId, requestedLevelId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, id])
+  @@map("admissions")
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ENROLLED
+  REPEATING
+  TRANSFERRED
+  WITHDRAWN
+  COMPLETED
+}
+
+/// At most one active enrollment per student and academic year (partial unique index in 0003).
+model Enrollment {
+  id             String           @id @default(uuid()) @db.Uuid
+  tenantId       String           @map("tenant_id") @db.Uuid
+  studentId      String           @map("student_id") @db.Uuid
+  academicYearId String           @map("academic_year_id") @db.Uuid
+  classId        String           @map("class_id") @db.Uuid
+  status         EnrollmentStatus @default(ENROLLED)
+  enrolledOn     DateTime         @map("enrolled_on") @db.Date
+  leftOn         DateTime?        @map("left_on") @db.Date
+  leftReason     String?          @map("left_reason")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student      Student            @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Restrict)
+  academicYear AcademicYear       @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  schoolClass  SchoolClass        @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
+  attendance   AttendanceRecord[]
+
+  @@index([tenantId, classId])
+  @@unique([tenantId, id])
+  @@map("enrollments")
+}
+
+// ---------------------------------------------------------------- attendance
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+/// One register per class, date and slot ("DAY" for daily attendance, or a lesson label).
+model AttendanceSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  classId   String   @map("class_id") @db.Uuid
+  date      DateTime @db.Date
+  slot      String   @default("DAY")
+  version   Int      @default(1)
+  takenBy   String   @map("taken_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  schoolClass SchoolClass        @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
+  records     AttendanceRecord[]
+
+  @@unique([tenantId, classId, date, slot])
+  @@unique([tenantId, id])
+  @@map("attendance_sessions")
+}
+
+model AttendanceRecord {
+  id           String           @id @default(uuid()) @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  sessionId    String           @map("session_id") @db.Uuid
+  studentId    String           @map("student_id") @db.Uuid
+  enrollmentId String           @map("enrollment_id") @db.Uuid
+  status       AttendanceStatus
+  arrivalTime  String?          @map("arrival_time")
+  reason       String?
+  updatedBy    String           @map("updated_by") @db.Uuid
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  session    AttendanceSession @relation(fields: [tenantId, sessionId], references: [tenantId, id], onDelete: Cascade)
+  student    Student           @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Restrict)
+  enrollment Enrollment        @relation(fields: [tenantId, enrollmentId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, sessionId, studentId])
+  @@index([tenantId, studentId])
+  @@map("attendance_records")
+}
+
+// ---------------------------------------------------------------- timetable
+
+model Room {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  campusId  String   @map("campus_id") @db.Uuid
+  code      String
+  name      String
+  capacity  Int?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  campus           Campus           @relation(fields: [tenantId, campusId], references: [tenantId, id], onDelete: Restrict)
+  timetableEntries TimetableEntry[]
+
+  @@unique([tenantId, campusId, code])
+  @@unique([tenantId, id])
+  @@map("rooms")
+}
+
+/// Weekly lesson slot. Teacher, room and class double-booking is rejected by exclusion constraints (0003).
+model TimetableEntry {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  classId        String   @map("class_id") @db.Uuid
+  subjectLabel   String   @map("subject_label")
+  staffId        String?  @map("staff_id") @db.Uuid
+  roomId         String?  @map("room_id") @db.Uuid
+  /// ISO weekday, 1 = Monday.
+  weekday        Int
+  /// Minutes since midnight, school-local time.
+  startMinute    Int      @map("start_minute")
+  endMinute      Int      @map("end_minute")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  academicYear AcademicYear @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  schoolClass  SchoolClass  @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
+  staff        Staff?       @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  room         Room?        @relation(fields: [roomId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, id])
+  @@map("timetable_entries")
 }

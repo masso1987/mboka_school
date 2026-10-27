@@ -9,9 +9,15 @@ import { AppLayout } from './components/AppLayout';
 import { SessionProvider, useMe } from './lib/session';
 import { NAV_ITEMS } from './nav';
 import { AcademicYearsPage } from './pages/AcademicYearsPage';
+import { AdministrationPage } from './pages/AdministrationPage';
+import { AttendancePage } from './pages/AttendancePage';
+import { ClassDetailPage, ClassesPage } from './pages/ClassesPage';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
+import { StaffPage } from './pages/StaffPage';
+import { StudentDetailPage, StudentsPage } from './pages/StudentsPage';
+import { TeachingPage } from './pages/TeachingPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -30,6 +36,14 @@ function Root() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="academic-years" element={<AcademicYearsPage />} />
+          <Route path="students" element={<StudentsPage />} />
+          <Route path="students/:id" element={<StudentDetailPage />} />
+          <Route path="classes" element={<ClassesPage />} />
+          <Route path="classes/:id" element={<ClassDetailPage />} />
+          <Route path="teaching" element={<TeachingPage />} />
+          <Route path="attendance" element={<AttendancePage />} />
+          <Route path="hr" element={<StaffPage />} />
+          <Route path="administration" element={<AdministrationPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}
