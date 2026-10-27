@@ -1023,6 +1023,12 @@ model Payment {
   status            PaymentStatus
   externalReference String?       @map("external_reference")
   provider          String?
+  /// Mobile Money number the operator was asked to debit.
+  payerMsisdn       String?       @map("payer_msisdn")
+  /// Operator handles needed to check the result (e.g. Orange pay/notif tokens). Never credentials.
+  providerState     Json?         @map("provider_state")
+  providerCheckedAt DateTime?     @map("provider_checked_at") @db.Timestamptz(6)
+  failureReason     String?       @map("failure_reason")
   idempotencyKey    String        @map("idempotency_key") @db.Uuid
   cashierSessionId  String?       @map("cashier_session_id") @db.Uuid
   recordedBy        String?       @map("recorded_by") @db.Uuid
@@ -1117,6 +1123,9 @@ model Refund {
 model PaymentProvider {
   tenantId        String   @map("tenant_id") @db.Uuid
   code            String
+  /// SIGNED_WEBHOOK | MTN_MOMO | ORANGE_MONEY (check constraint in migration 0009).
+  kind            String   @default("SIGNED_WEBHOOK")
+  /// Signing secret, or the operator credentials as encrypted JSON.
   secretEncrypted String   @map("secret_encrypted")
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

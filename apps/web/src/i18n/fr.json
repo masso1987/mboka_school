@@ -412,7 +412,9 @@
     "MFA_NOT_STARTED": "Commencez par la configuration.",
     "MFA_NOT_ENABLED": "La double authentification n'est pas activée.",
     "INVALID_CREDENTIALS": "Mot de passe incorrect.",
-    "ROLLOVER_HAS_EXCEPTIONS": "Des élèves attendent une décision ou une classe."
+    "ROLLOVER_HAS_EXCEPTIONS": "Des élèves attendent une décision ou une classe.",
+    "PAYER_MSISDN_REQUIRED": "Saisissez le numéro Mobile Money à débiter.",
+    "PROVIDER_HOST_NOT_ALLOWED": "Cette adresse d'API opérateur n'est pas autorisée."
   },
   "fees": {
     "tabs": {
@@ -539,7 +541,14 @@
     "creditLabel": "Avoir non imputé",
     "remainingBalance": "Reste à payer après ce paiement",
     "issuedBy": "Délivré par {{name}}",
-    "appliedResult": "{{created}} facture(s) créée(s) ; {{existing}} élève(s) déjà facturé(s)."
+    "appliedResult": "{{created}} facture(s) créée(s) ; {{existing}} élève(s) déjà facturé(s).",
+    "payerMsisdn": "Numéro Mobile Money du payeur",
+    "payerMsisdnHint": "Format international sans « + », ex. 2376XXXXXXXX. Obligatoire pour MTN MoMo.",
+    "providerFailed": "Le paiement a échoué ou a été refusé par l'opérateur. Rien n'a été encaissé.",
+    "providerConfirmed": "Paiement confirmé par l'opérateur ; le reçu est disponible dans le relevé.",
+    "orangePayHint": "Le payeur confirme sur la page Orange Money :",
+    "verifyNow": "Vérifier auprès de l'opérateur",
+    "stillPending": "L'opérateur n'a pas encore de résultat ; une vérification automatique a lieu chaque minute."
   },
   "expenses": {
     "tabs": {

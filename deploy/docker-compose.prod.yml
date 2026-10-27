@@ -41,6 +41,8 @@ services:
       APP_SECRETS_KEY: ${APP_SECRETS_KEY:?}
       METRICS_TOKEN: ${METRICS_TOKEN:-}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
+      PUBLIC_URL: https://${PUBLIC_HOST}
+      MOBILE_MONEY_POLL_SECONDS: ${MOBILE_MONEY_POLL_SECONDS:-60}
     depends_on:
       postgres:
         condition: service_healthy

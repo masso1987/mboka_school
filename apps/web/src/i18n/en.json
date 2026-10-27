@@ -412,7 +412,9 @@
     "MFA_NOT_STARTED": "Start the setup first.",
     "MFA_NOT_ENABLED": "Two-factor authentication is off.",
     "INVALID_CREDENTIALS": "Incorrect password.",
-    "ROLLOVER_HAS_EXCEPTIONS": "Some students still need a decision or a class."
+    "ROLLOVER_HAS_EXCEPTIONS": "Some students still need a decision or a class.",
+    "PAYER_MSISDN_REQUIRED": "Enter the Mobile Money number to debit.",
+    "PROVIDER_HOST_NOT_ALLOWED": "This operator API address is not allowed."
   },
   "fees": {
     "tabs": {
@@ -539,7 +541,14 @@
     "creditLabel": "Unapplied credit",
     "remainingBalance": "Balance remaining after this payment",
     "issuedBy": "Issued by {{name}}",
-    "appliedResult": "{{created}} invoice(s) created; {{existing}} student(s) already billed."
+    "appliedResult": "{{created}} invoice(s) created; {{existing}} student(s) already billed.",
+    "payerMsisdn": "Payer's Mobile Money number",
+    "payerMsisdnHint": "International format without '+', e.g. 2376XXXXXXXX. Required for MTN MoMo.",
+    "providerFailed": "The payment failed or was declined by the operator. Nothing was collected.",
+    "providerConfirmed": "Payment confirmed by the operator; the receipt is in the statement.",
+    "orangePayHint": "The payer confirms on the Orange Money page:",
+    "verifyNow": "Check with the operator",
+    "stillPending": "The operator has no result yet; an automatic check runs every minute."
   },
   "expenses": {
     "tabs": {

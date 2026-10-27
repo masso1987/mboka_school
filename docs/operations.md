@@ -37,6 +37,10 @@ docker build -f apps/api/Dockerfile --target migrator -t mboka-migrator .
 | `METRICS_TOKEN` | recommended | bearer token for `/api/v1/health/metrics`; unset = 404 |
 | `ACCESS_LOG` | no (on) | one JSON line per request; `off` to silence |
 | `EMAIL_PROVIDER` | yes in production | `log` only in development |
+| `PUBLIC_URL` | with Mobile Money | public address, used in operator callback URLs |
+| `MOBILE_MONEY_POLL_SECONDS` | no (60) | reconciliation of pending operator payments; `0` disables |
+| `MOBILE_MONEY_ALLOWED_HOSTS` | no | operator API hosts schools may configure (default: MTN sandbox and production, `api.orange.com`) |
+| `TRUST_PROXY_HOPS` | no (1) | proxies in front of the API; 2 behind host nginx + web nginx |
 
 Behind a proxy, the API sees client IPs through `X-Forwarded-For`; configure the proxy to
 overwrite (not append to) that header, or rate limits apply to the proxy's address.
@@ -155,3 +159,36 @@ Use it for portability requests and at end of contract, before suspending the sc
 - **Suspected account compromise**: the user (or an administrator through the database) revokes all sessions
   (Account → Sessions → Sign out other sessions), changes the password, and the audit log is reviewed for the period.
 - Before each release: `npm audit --omit=dev` and review of the findings.
+
+## 9. Mobile Money (MTN MoMo, Orange Money)
+
+Each school configures its own merchant account (`PUT /api/v1/finance/providers`, permission
+`finance.settings.manage`); credentials are encrypted with `APP_SECRETS_KEY` and never returned.
+
+| Kind | Body | Flow |
+|---|---|---|
+| `MTN_MOMO` | `code`, `baseUrl`, `targetEnvironment` (`sandbox` or MTN's production value), `subscriptionKey`, `apiUser`, `apiKey` | request to pay → the payer approves on their phone |
+| `ORANGE_MONEY` | `code`, `baseUrl` (`https://api.orange.com`), `clientId`, `clientSecret`, `merchantKey`, `returnUrl` | web payment → the payer confirms on Orange's page (link shown to the cashier) |
+| `SIGNED_WEBHOOK` | `code`, `secret` | aggregator posting HMAC-signed results (unchanged) |
+
+- Operator notifications (`/api/v1/payment-callbacks/<school>/<code>/notify`) are unsigned: they only
+  trigger a status request to the operator; the payment is confirmed from that answer only, once, and only
+  for the exact amount. A reconciliation pass checks pending payments every `MOBILE_MONEY_POLL_SECONDS`.
+- A refused request (4xx) fails the payment with its reason. An unreachable MTN keeps it pending (MTN may have
+  received it); the status check settles it.
+- **Before go-live**: run one real payment per operator in their sandbox with the school's credentials —
+  the integration is tested against a local imitation of both APIs, not against the operators themselves.
+
+## 10. Single-host deployment (school.mboketech.com)
+
+`deploy/` holds the stack used on a shared VPS behind the host's nginx:
+
+1. DNS `A` record to the server (done for `school.mboketech.com` → `64.177.41.97`).
+2. From a clean checkout: `deploy/deploy.sh <ssh-host>` (add `SEED_NODE_ENV=development` for a showcase with the
+   demo school). It creates `/opt/mboka-school/.env` with generated secrets on first run, ships the images,
+   backs up, migrates through an SSH tunnel, seeds and starts the stack.
+3. Once, on the server: copy `deploy/nginx/school.mboketech.com.conf` to `/etc/nginx/sites-available/`, link it in
+   `sites-enabled`, `nginx -t && systemctl reload nginx`, then `certbot --nginx -d school.mboketech.com --hsts`.
+4. Nightly backup (root crontab):
+   `15 2 * * * cd /opt/mboka-school && set -a && . ./.env && PG_DUMP='docker compose --env-file .env exec -T postgres pg_dump' bash backup.sh backups && find backups -mtime +14 -delete`
+5. The first super-admin password is in `/opt/mboka-school/.env` (`SEED_ADMIN_PASSWORD`); MFA enrolment is forced at first sign-in.

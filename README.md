@@ -3,10 +3,17 @@
 Multi-tenant school management SaaS for primary, secondary, technical and vocational schools
 (Cameroon first). French and English, multi-currency, online-first with offline resilience.
 
-**Status: Phases 0 to 5 delivered** (each phase is its own stacked pull request).
+**Status: Phases 0 to 5 delivered; Phase 6 in progress** (each phase is its own stacked pull request).
 See [docs/architecture.md](docs/architecture.md) and [ADR 0001 — Tenant isolation](docs/adr/0001-tenant-isolation.md).
 Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/security.md) ·
 [performance baseline](docs/performance.md) · [UAT checklist](docs/uat-checklist.md).
+
+## What Phase 6 adds (in progress) — expansion
+
+| Area | Delivered |
+|---|---|
+| Mobile Money | MTN MoMo (request to pay) and Orange Money (web payment) per school, credentials encrypted; payments settle only from the operator's own status answer, once, for the exact amount; unsigned notifications only trigger a check; periodic reconciliation and a "Check with the operator" button; operator hosts allow-listed |
+| Hosting | Single-host deployment kit for school.mboketech.com (`deploy/`, [operations §10](docs/operations.md)) |
 
 ## What Phase 5 adds — resilience, security, production readiness
 
