@@ -1,5 +1,7 @@
 {
-  "app": { "name": "Mboka School" },
+  "app": {
+    "name": "Mboka School"
+  },
   "common": {
     "loading": "Chargement…",
     "save": "Enregistrer",
@@ -68,10 +70,18 @@
     "status": "Statut",
     "empty": "Aucune année scolaire. Créez la première pour commencer à configurer l'établissement.",
     "created": "Année scolaire créée.",
-    "statuses": { "DRAFT": "Brouillon", "ACTIVE": "Active", "CLOSED": "Clôturée" }
+    "statuses": {
+      "DRAFT": "Brouillon",
+      "ACTIVE": "Active",
+      "CLOSED": "Clôturée"
+    }
   },
   "classes": {
-    "tabs": { "classes": "Classes", "levels": "Niveaux", "subjects": "Matières" },
+    "tabs": {
+      "classes": "Classes",
+      "levels": "Niveaux",
+      "subjects": "Matières"
+    },
     "new": "Nouvelle classe",
     "needLevels": "Créez d'abord au moins un niveau (onglet Niveaux).",
     "level": "Niveau",
@@ -117,12 +127,21 @@
     "lastName": "Nom",
     "firstName": "Prénom",
     "gender": "Sexe",
-    "genders": { "F": "Féminin", "M": "Masculin" },
+    "genders": {
+      "F": "Féminin",
+      "M": "Masculin"
+    },
     "placeOfBirth": "Lieu de naissance",
     "guardian": "Parent ou tuteur",
     "phone": "Téléphone",
     "relationship": "Lien",
-    "relationships": { "FATHER": "Père", "MOTHER": "Mère", "GUARDIAN": "Tuteur", "SIBLING": "Frère / sœur", "OTHER": "Autre" },
+    "relationships": {
+      "FATHER": "Père",
+      "MOTHER": "Mère",
+      "GUARDIAN": "Tuteur",
+      "SIBLING": "Frère / sœur",
+      "OTHER": "Autre"
+    },
     "possibleDuplicate": "Un élève portant le même nom et la même date de naissance existe déjà. Vérifiez qu'il ne s'agit pas du même enfant.",
     "confirmDifferent": "Je confirme qu'il s'agit d'un autre enfant",
     "matriculeAuto": "Le matricule est attribué automatiquement.",
@@ -157,8 +176,18 @@
     "noStudents": "Aucun élève inscrit dans cette classe à cette date.",
     "recordedVersion": "Appel enregistré (version {{version}})",
     "notYetTaken": "Appel non encore effectué",
-    "statuses": { "PRESENT": "Présents", "ABSENT": "Absents", "LATE": "Retards", "EXCUSED": "Excusés" },
-    "short": { "PRESENT": "P", "ABSENT": "A", "LATE": "R", "EXCUSED": "E" },
+    "statuses": {
+      "PRESENT": "Présents",
+      "ABSENT": "Absents",
+      "LATE": "Retards",
+      "EXCUSED": "Excusés"
+    },
+    "short": {
+      "PRESENT": "P",
+      "ABSENT": "A",
+      "LATE": "R",
+      "EXCUSED": "E"
+    },
     "arrival": "Heure d'arrivée",
     "correctionReason": "Motif de la correction",
     "correctionHint": "Obligatoire pour modifier un appel déjà enregistré.",
@@ -175,9 +204,21 @@
     }
   },
   "teaching": {
-    "tabs": { "timetable": "Emploi du temps", "assignments": "Attributions", "rooms": "Salles" },
+    "tabs": {
+      "timetable": "Emploi du temps",
+      "assignments": "Attributions",
+      "rooms": "Salles"
+    },
     "noLessons": "Aucun cours programmé pour cette classe.",
-    "weekdays": { "1": "Lundi", "2": "Mardi", "3": "Mercredi", "4": "Jeudi", "5": "Vendredi", "6": "Samedi", "7": "Dimanche" },
+    "weekdays": {
+      "1": "Lundi",
+      "2": "Mardi",
+      "3": "Mercredi",
+      "4": "Jeudi",
+      "5": "Vendredi",
+      "6": "Samedi",
+      "7": "Dimanche"
+    },
     "deleteConfirm": "Supprimer ce cours de l'emploi du temps ?",
     "newLesson": "Ajouter un cours",
     "day": "Jour",
@@ -185,10 +226,18 @@
     "end": "Fin",
     "teacher": "Enseignant",
     "room": "Salle",
-    "conflictOn": { "class": "classe déjà occupée", "teacher": "enseignant déjà occupé", "room": "salle déjà occupée" },
+    "conflictOn": {
+      "class": "classe déjà occupée",
+      "teacher": "enseignant déjà occupé",
+      "room": "salle déjà occupée"
+    },
     "newAssignment": "Nouvelle attribution",
     "role": "Rôle",
-    "roles": { "MAIN": "Titulaire", "CO_TEACHER": "Co-enseignant", "REPLACEMENT": "Remplaçant" },
+    "roles": {
+      "MAIN": "Titulaire",
+      "CO_TEACHER": "Co-enseignant",
+      "REPLACEMENT": "Remplaçant"
+    },
     "assign": "Attribuer",
     "noAssignments": "Aucune attribution pour cette année.",
     "period": "Période",
@@ -209,12 +258,20 @@
     "accountHint": "Nécessaire pour qu'un enseignant se connecte et fasse l'appel.",
     "teacher": "Enseignant",
     "linked": "Lié",
-    "types": { "PERMANENT": "Permanent", "CONTRACT": "Contractuel", "PART_TIME": "Temps partiel", "TEMPORARY": "Vacataire" },
+    "types": {
+      "PERMANENT": "Permanent",
+      "CONTRACT": "Contractuel",
+      "PART_TIME": "Temps partiel",
+      "TEMPORARY": "Vacataire"
+    },
     "hireDate": "Date d'embauche",
     "isTeacher": "Personnel enseignant"
   },
   "admin": {
-    "tabs": { "users": "Utilisateurs", "campuses": "Campus" },
+    "tabs": {
+      "users": "Utilisateurs",
+      "campuses": "Campus"
+    },
     "invite": "Ajouter un utilisateur",
     "fullName": "Nom complet",
     "email": "Adresse e-mail",
@@ -224,7 +281,11 @@
     "tempPasswordWarning": "Transmettez-le de façon sécurisée : il ne sera plus affiché.",
     "lastLogin": "Dernière connexion",
     "you": "vous",
-    "statuses": { "ACTIVE": "Actif", "INVITED": "Invité", "REVOKED": "Révoqué" },
+    "statuses": {
+      "ACTIVE": "Actif",
+      "INVITED": "Invité",
+      "REVOKED": "Révoqué"
+    },
     "editRoles": "Modifier les rôles",
     "newCampus": "Nouveau campus",
     "address": "Adresse"
@@ -268,6 +329,242 @@
     "PLAN_LIMIT_REACHED": "Votre abonnement ne permet pas d'en ajouter davantage.",
     "ALREADY_MEMBER": "Cette personne a déjà accès à l'établissement.",
     "UNKNOWN_ROLE": "Rôle inconnu.",
-    "end_before_start": "La date de fin doit suivre la date de début."
+    "end_before_start": "La date de fin doit suivre la date de début.",
+    "AMOUNT_PRECISION": "Trop de décimales pour cette devise (le FCFA n'en a pas).",
+    "UNKNOWN_CURRENCY": "Devise inconnue.",
+    "CURRENCY_NOT_ENABLED": "Cette devise n'est pas activée pour l'établissement.",
+    "RATE_MISSING": "Aucun taux de change en vigueur à cette date pour ces devises.",
+    "RATE_EXISTS": "Un taux existe déjà pour cette paire et cette date.",
+    "REPORTING_CURRENCY_REQUIRED": "La devise de reporting doit rester activée.",
+    "PERIOD_CLOSED": "Cette période financière est clôturée.",
+    "PERIOD_ALREADY_CLOSED": "Période déjà clôturée.",
+    "PENDING_PAYMENTS_IN_PERIOD": "Des paiements attendent encore une confirmation dans cette période.",
+    "OPEN_CASHIER_SESSIONS": "Des caisses sont encore ouvertes pour cette période.",
+    "SCHEDULE_INACTIVE": "Ce barème est inactif.",
+    "DISCOUNT_EXCEEDS_BALANCE": "La réduction dépasse le solde restant.",
+    "INVOICE_HAS_PAYMENTS": "Annulez d'abord les paiements de cette facture.",
+    "INVOICE_CANCELLED": "Cette facture est annulée.",
+    "NO_OPEN_CASHIER_SESSION": "Ouvrez votre caisse avant d'encaisser des espèces.",
+    "REFERENCE_REQUIRED": "Indiquez la référence du virement, de la carte ou du Mobile Money.",
+    "PROVIDER_NOT_CONFIGURED": "Cet opérateur de paiement n'est pas configuré.",
+    "IDEMPOTENCY_KEY_REUSED": "Ce paiement a déjà été enregistré avec d'autres valeurs. Rechargez la page.",
+    "INVOICE_NOT_PAYABLE": "Cette facture n'est pas payable pour cet élève.",
+    "ALLOCATION_EXCEEDS_BALANCE": "Le montant imputé dépasse le solde de la facture.",
+    "ALLOCATION_EXCEEDS_PAYMENT": "Les imputations dépassent le montant du paiement.",
+    "PAYMENT_NOT_CONFIRMED": "Seul un paiement confirmé peut être annulé ou remboursé.",
+    "PAYMENT_HAS_REFUNDS": "Ce paiement a des remboursements en cours.",
+    "REFUND_EXCEEDS_CREDIT": "Le remboursement dépasse l'avoir disponible.",
+    "REFUND_ALREADY_DECIDED": "Ce remboursement a déjà été traité.",
+    "SESSION_ALREADY_OPEN": "Vous avez déjà une caisse ouverte dans cette devise.",
+    "SESSION_CLOSED": "Cette caisse est déjà clôturée.",
+    "ABOVE_APPROVAL_THRESHOLD": "Ce montant dépasse votre plafond d'approbation.",
+    "SECRETS_KEY_MISSING": "Configuration serveur incomplète (clé de chiffrement).",
+    "INVALID_SIGNATURE": "Signature invalide."
+  },
+  "fees": {
+    "tabs": {
+      "desk": "Caisse",
+      "invoices": "Factures",
+      "schedules": "Barèmes",
+      "refunds": "Remboursements",
+      "settings": "Paramètres"
+    },
+    "findStudent": "Rechercher un élève",
+    "noInvoices": "Aucune facture.",
+    "balanceDue": "Reste à payer",
+    "paidOf": "{{paid}} payés sur {{total}}",
+    "invoice": "Facture",
+    "issued": "Émise le",
+    "total": "Total",
+    "paid": "Payé",
+    "balance": "Solde",
+    "paymentStatuses": {
+      "UNPAID": "Impayée",
+      "PARTIALLY_PAID": "Partiellement payée",
+      "PAID": "Soldée",
+      "CANCELLED": "Annulée",
+      "PENDING_VERIFICATION": "En attente de confirmation",
+      "CONFIRMED": "Confirmé",
+      "FAILED": "Échoué",
+      "REVERSED": "Annulé (contre-passé)"
+    },
+    "paymentHistory": "Paiements",
+    "date": "Date",
+    "method": "Mode de paiement",
+    "amount": "Montant",
+    "receipt": "Reçu",
+    "credit": "Avoir : {{amount}}",
+    "methods": {
+      "CASH": "Espèces",
+      "BANK_TRANSFER": "Virement",
+      "CARD": "Carte",
+      "MOBILE_MONEY": "Mobile Money",
+      "CHEQUE": "Chèque"
+    },
+    "recordPayment": "Encaisser un paiement",
+    "currency": "Devise",
+    "reference": "Référence",
+    "referenceHintMomo": "Numéro de transaction Mobile Money.",
+    "provider": "Opérateur",
+    "manualConfirmation": "Confirmation manuelle",
+    "recorded": "{{amount}} encaissés — reçu {{receipt}}.",
+    "printReceipt": "Imprimer le reçu",
+    "pendingVerification": "Paiement en attente de confirmation par l'opérateur. Le solde sera mis à jour à la confirmation.",
+    "cashRegister": "Ma caisse",
+    "registerOpen": "Caisse ouverte ({{currency}})",
+    "openingFloat": "Fonds de caisse",
+    "cashTaken": "Espèces encaissées",
+    "expected": "Montant attendu",
+    "countedCash": "Espèces comptées",
+    "closeRegister": "Clôturer la caisse",
+    "closeConfirm": "Clôturer la caisse ? Cette opération est définitive.",
+    "registerClosedHelp": "Ouvrez votre caisse pour encaisser des espèces.",
+    "closedSummary": "Caisse clôturée : attendu {{expected}}, compté {{counted}}, écart {{gap}}.",
+    "openRegister": "Ouvrir la caisse",
+    "searchInvoices": "N° de facture, nom ou matricule",
+    "outstandingOnly": "Factures non soldées uniquement",
+    "lines": "Détail",
+    "description": "Libellé",
+    "dueDate": "Échéance",
+    "noPayments": "Aucun paiement.",
+    "applied": "Imputé",
+    "grantReduction": "Accorder une réduction",
+    "reductionKind": "Type",
+    "discountKinds": {
+      "DISCOUNT": "Remise",
+      "SCHOLARSHIP": "Bourse",
+      "WAIVER": "Exonération"
+    },
+    "grant": "Accorder",
+    "applyConfirm": "Facturer ce barème aux élèves concernés qui ne l'ont pas encore reçu ?",
+    "category": "Catégorie",
+    "installments": "Échéances",
+    "billed": "Élèves facturés",
+    "apply": "Facturer",
+    "noSchedules": "Aucun barème pour cette année scolaire.",
+    "newSchedule": "Nouveau barème",
+    "allLevels": "Tous les niveaux",
+    "installment": "Échéance",
+    "addInstallment": "Ajouter une échéance",
+    "newCategory": "Nouvelle catégorie de frais",
+    "kind": "Nature",
+    "kinds": {
+      "REGISTRATION": "Inscription",
+      "TUITION": "Scolarité",
+      "EXAM": "Examen",
+      "TRANSPORT": "Transport",
+      "CANTEEN": "Cantine",
+      "UNIFORM": "Uniforme",
+      "OTHER": "Autre"
+    },
+    "noRefunds": "Aucune demande de remboursement.",
+    "refundStatuses": {
+      "REQUESTED": "Demandé",
+      "APPROVED": "Approuvé",
+      "REJECTED": "Refusé"
+    },
+    "cannotApproveOwn": "Votre demande : un autre responsable doit la valider",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "currencies": "Devises",
+    "reportingCurrency": "Devise de reporting : {{currency}} (non modifiable).",
+    "exchangeRates": "Taux de change",
+    "from": "De",
+    "to": "Vers",
+    "rate": "Taux",
+    "effective": "Date d'effet",
+    "rateHelp": "Lecture : 1 unité de la devise « De » = taux × devise « Vers ». Un taux ne se modifie pas : saisissez un nouveau taux à une date ultérieure.",
+    "since": "depuis le {{date}}",
+    "periods": "Périodes financières",
+    "closed": "Clôturée",
+    "closePeriod": "Clôturer",
+    "closePeriodConfirm": "Clôturer cette période ? Plus aucune opération ne pourra y être datée.",
+    "print": "Imprimer",
+    "reversedStamp": "Paiement annulé",
+    "receivedFrom": "Reçu de",
+    "appliedTo": "Imputation",
+    "creditLabel": "Avoir non imputé",
+    "remainingBalance": "Reste à payer après ce paiement",
+    "issuedBy": "Délivré par {{name}}",
+    "appliedResult": "{{created}} facture(s) créée(s) ; {{existing}} élève(s) déjà facturé(s)."
+  },
+  "expenses": {
+    "tabs": {
+      "expenses": "Dépenses",
+      "budget": "Budget"
+    },
+    "new": "Nouvelle dépense",
+    "category": "Catégorie",
+    "description": "Objet",
+    "supplier": "Fournisseur",
+    "submit": "Soumettre",
+    "budgetWarning": "Attention : dépassement de budget pour cette catégorie ({{after}} engagés pour {{budgeted}} budgétés).",
+    "allStatuses": "Tous les statuts",
+    "statuses": {
+      "DRAFT": "Brouillon",
+      "SUBMITTED": "Soumise",
+      "APPROVED": "Approuvée",
+      "REJECTED": "Refusée",
+      "PAID": "Payée",
+      "CANCELLED": "Annulée"
+    },
+    "empty": "Aucune dépense.",
+    "number": "N°",
+    "paymentReference": "Référence du paiement (facultatif)",
+    "markPaid": "Marquer payée",
+    "cancelConfirm": "Annuler cette dépense ?",
+    "budgetFor": "Budget {{year}}",
+    "noBudget": "Aucun budget défini.",
+    "budgeted": "Budgété",
+    "actual": "Réalisé",
+    "remaining": "Disponible",
+    "utilization": "Consommation",
+    "editBudget": "Modifier le budget",
+    "addCategory": "Ajouter la catégorie",
+    "basis": "Réalisé = dépenses approuvées ou payées, datées dans l'année scolaire, en devise de reporting au taux enregistré pour chaque dépense."
+  },
+  "reports": {
+    "financialTitle": "Rapports financiers",
+    "from": "Du",
+    "to": "Au",
+    "status": {
+      "FINAL": "Définitif (période clôturée)",
+      "PROVISIONAL": "Provisoire"
+    },
+    "kpi": {
+      "billed": "Facturé",
+      "collected": "Encaissé",
+      "refunds": "Remboursements",
+      "outstanding": "Impayés",
+      "collectionRate": "Taux de recouvrement",
+      "expenses": "Dépenses",
+      "netCashResult": "Résultat de trésorerie",
+      "operatingResult": "Résultat d'exploitation",
+      "exchangeDifferences": "Écarts de change"
+    },
+    "definitionText": {
+      "billed": "Frais moins réductions des factures émises sur la période (factures annulées exclues), au taux de chaque facture.",
+      "collected": "Paiements reçus sur la période (confirmés ou annulés plus tard) moins les annulations datées de la période. Paiements en attente et échoués exclus.",
+      "refunds": "Remboursements approuvés sur la période.",
+      "outstanding": "Solde à la date de fin des factures émises jusqu'à cette date, en ne comptant que les paiements reçus et non annulés à cette date.",
+      "collectionRate": "Encaissements éligibles ÷ montants exigibles × 100. Exigible = échéances arrivées à la date de fin, moins les réductions. Les encaissements sont plafonnés au montant exigible par facture : les avances et avoirs ne gonflent pas le taux ; les montants non échus sont exclus.",
+      "expenses": "Dépenses approuvées ou payées, datées de la période.",
+      "netCashResult": "Encaissé − remboursements − dépenses payées sur la période. Vue de trésorerie, pas de rentabilité.",
+      "operatingResult": "Facturé − dépenses (approuvées ou payées) sur la période. À valider selon la méthode comptable de l'établissement.",
+      "exchangeDifferences": "Gains (+) ou pertes (−) de change réalisés sur les paiements de la période, entre le taux de la facture et celui du paiement."
+    },
+    "pending": "{{count}} paiement(s) en attente de confirmation ({{amount}}) ne sont pas inclus.",
+    "byMethod": "Encaissements par mode de paiement",
+    "byCategory": "Dépenses par catégorie",
+    "aging": "Ancienneté des impayés au {{date}}",
+    "buckets": {
+      "notDue": "Non échu",
+      "d0_30": "0–30 jours",
+      "d31_60": "31–60 jours",
+      "d61_90": "61–90 jours",
+      "d90plus": "+ de 90 jours"
+    },
+    "overdue": "Échu impayé",
+    "definitions": "Définitions"
   }
 }

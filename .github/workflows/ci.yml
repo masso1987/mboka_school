@@ -23,6 +23,8 @@ jobs:
       DATABASE_URL: postgresql://mboka_app:mboka_app_dev@localhost:5432/mboka?schema=public
       DIRECT_DATABASE_URL: postgresql://mboka:mboka_dev@localhost:5432/mboka?schema=public
       SEED_ADMIN_PASSWORD: ci-admin-password
+      # Test-only key; real environments use a secret store.
+      PAYMENT_SECRETS_KEY: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
