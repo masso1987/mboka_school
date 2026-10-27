@@ -3,6 +3,7 @@ import { computeResults, type EngineInput, type GradingRules, type PromotionInpu
 import type { Prisma } from '@prisma/client';
 import { createHash, randomBytes } from 'node:crypto';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../community/notifications.service';
 import type { Actor } from '../common/actor';
 import { ApiException, Errors } from '../common/api-error';
 import { toIso } from '../common/dates';
@@ -52,6 +53,7 @@ export class ReportCardsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly grades: GradesService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
@@ -261,6 +263,21 @@ export class ReportCardsService {
           data: { status: 'SUPERSEDED' },
         });
         await tx.reportCard.update({ where: { id: d.id }, data: { status: 'PUBLISHED', publishedBy: a.userId, publishedAt: new Date() } });
+      }
+      // Families with a portal account are told a new report card is available (COM-004).
+      const families = await this.notifications.guardianUsers(tx, a.tenantId, drafts.map((d) => d.studentId));
+      const students = await tx.student.findMany({ where: { tenantId: a.tenantId, id: { in: drafts.map((d) => d.studentId) }, membershipId: { not: null } }, select: { id: true, membershipId: true } });
+      const studentUsers = await tx.membership.findMany({ where: { tenantId: a.tenantId, status: 'ACTIVE', id: { in: students.map((s) => s.membershipId!) } }, select: { id: true, userId: true } });
+      for (const d of drafts) {
+        const content = d.content as unknown as ReportCardContent;
+        const own = studentUsers.find((m) => m.id === students.find((s) => s.id === d.studentId)?.membershipId)?.userId;
+        await this.notifications.notify(tx, a.tenantId, [...families.filter((f) => f.studentId === d.studentId).map((f) => f.userId), ...(own ? [own] : [])], {
+          kind: 'report_card.published',
+          title: `Bulletin disponible — ${content.student.firstName}`,
+          body: `${content.scope.label} : moyenne ${content.average ?? '—'}${content.rank ? `, rang ${content.rank}/${content.ranked}` : ''}.`,
+          link: `/portal/children/${d.studentId}`,
+          dedupeKey: `reportcard:${d.id}`,
+        });
       }
       await this.audit.record(
         { tenantId: a.tenantId, actorId: a.userId, action: 'report_cards.published', entityType: 'class', entityId: classId, metadata: { scope, count: drafts.length }, ip: a.ip },

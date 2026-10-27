@@ -18,7 +18,8 @@ export const DEFAULT_ROLES: readonly RoleTemplate[] = [
   {
     key: 'director',
     name: { fr: 'Fondateur / Directeur', en: 'School Owner / Director' },
-    permissions: PERMISSION_KEYS,
+    // Everything except the portal permissions, which only make sense for families.
+    permissions: PERMISSION_KEYS.filter((p) => !p.startsWith('portal.')),
   },
   {
     key: 'principal',
@@ -35,18 +36,19 @@ export const DEFAULT_ROLES: readonly RoleTemplate[] = [
       'attendance.correct',
       'timetable.manage',
       'hr.staff.read',
+      'hr.leave.request',
       'announcements.publish',
     ],
   },
   {
     key: 'registrar',
     name: { fr: 'Secrétaire / Registraire', en: 'Registrar / School Secretary' },
-    permissions: [...read, 'students.create', 'students.update', 'students.archive', 'admissions.manage', 'enrollments.manage'],
+    permissions: [...read, 'students.create', 'students.update', 'students.archive', 'admissions.manage', 'enrollments.manage', 'hr.leave.request'],
   },
   {
     key: 'teacher',
     name: { fr: 'Enseignant', en: 'Teacher' },
-    permissions: ['academics.years.read', 'timetable.read', 'attendance.record', 'grades.enter', 'grades.submit'],
+    permissions: ['academics.years.read', 'timetable.read', 'attendance.record', 'grades.enter', 'grades.submit', 'hr.leave.request'],
   },
   {
     key: 'chief_accountant',
@@ -66,26 +68,37 @@ export const DEFAULT_ROLES: readonly RoleTemplate[] = [
       'expenses.approve',
       'budgets.manage',
       'reports.financial.read',
+      'hr.leave.request',
     ],
   },
   {
     key: 'cashier',
     name: { fr: 'Caissier', en: 'Cashier' },
-    permissions: ['students.read', 'fees.invoice.read', 'payments.record'],
+    permissions: ['students.read', 'fees.invoice.read', 'payments.record', 'hr.leave.request'],
   },
   {
     key: 'hr_manager',
     name: { fr: 'Responsable RH', en: 'HR Manager' },
-    permissions: ['hr.staff.read', 'hr.staff.manage', 'hr.compensation.read'],
+    permissions: ['hr.staff.read', 'hr.staff.manage', 'hr.compensation.read', 'hr.compensation.manage', 'hr.leave.request', 'hr.leave.approve'],
   },
   {
     key: 'hr_officer',
     name: { fr: 'Agent RH', en: 'HR Officer' },
-    permissions: ['hr.staff.read'],
+    permissions: ['hr.staff.read', 'hr.leave.request'],
   },
   {
     key: 'auditor',
     name: { fr: 'Auditeur', en: 'Auditor' },
     permissions: ['audit.read', 'reports.financial.read', 'fees.invoice.read', 'academics.years.read'],
+  },
+  {
+    key: 'parent',
+    name: { fr: 'Parent / tuteur', en: 'Parent / guardian' },
+    permissions: ['portal.parent'],
+  },
+  {
+    key: 'student',
+    name: { fr: 'Élève', en: 'Student' },
+    permissions: ['portal.student'],
   },
 ];

@@ -52,13 +52,34 @@
     "community": "Communauté",
     "reports": "Rapports",
     "resources": "Ressources",
-    "administration": "Administration"
+    "administration": "Administration",
+    "portal": "Mes enfants"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
     "roles": "Vos rôles",
     "foundation": "Fondation de la plateforme (phase 0)",
-    "foundationText": "L'authentification, l'isolation des établissements, les rôles et le journal d'audit sont en place. Les modules métier arrivent dans les prochaines phases."
+    "foundationText": "L'authentification, l'isolation des établissements, les rôles et le journal d'audit sont en place. Les modules métier arrivent dans les prochaines phases.",
+    "enrolled": "Élèves inscrits ({{year}})",
+    "attendance30": "Assiduité (30 jours)",
+    "approvals": "À valider",
+    "pending": {
+      "expenses": "Dépenses",
+      "refunds": "Remboursements",
+      "leave": "Congés",
+      "gradeSheets": "Notes soumises"
+    },
+    "today": "Mes cours aujourd'hui",
+    "noLessons": "Aucun cours aujourd'hui.",
+    "toDo": "À faire",
+    "takeRegister": "Faire l'appel — {{name}}",
+    "sheetsInProgress": "{{count}} feuille(s) de notes en cours",
+    "allDone": "Rien en attente.",
+    "cashDesk": "Caisse",
+    "collectedToday": "Encaissé aujourd'hui",
+    "paymentsToday": "Paiements du jour",
+    "pendingVerification": "En attente de confirmation",
+    "openRegisters": "Caisses ouvertes"
   },
   "academicYears": {
     "title": "Années scolaires",
@@ -371,7 +392,14 @@
     "PERIOD_IN_OTHER_YEAR": "Cette période appartient à une autre année.",
     "REASON_REQUIRED": "Un motif est obligatoire.",
     "GRADES_NOT_APPROVED": "Toutes les notes doivent être validées avant de générer les bulletins :",
-    "NOTHING_TO_PUBLISH": "Aucun bulletin en brouillon à publier."
+    "NOTHING_TO_PUBLISH": "Aucun bulletin en brouillon à publier.",
+    "PORTAL_ALREADY_ENABLED": "Cette personne a déjà accès au portail.",
+    "NOT_STAFF": "Votre compte n'est pas rattaché à une fiche du personnel.",
+    "NO_WORKING_DAYS": "Aucun jour ouvré dans cette période.",
+    "LEAVE_OVERLAP": "Cette période chevauche une autre demande.",
+    "INSUFFICIENT_LEAVE_BALANCE": "Solde de congé annuel insuffisant.",
+    "LEAVE_ALREADY_DECIDED": "Cette demande a déjà été traitée.",
+    "NOT_RETRYABLE": "Seuls les envois en échec peuvent être relancés."
   },
   "fees": {
     "tabs": {
@@ -577,7 +605,14 @@
       "d90plus": "+ de 90 jours"
     },
     "overdue": "Échu impayé",
-    "definitions": "Définitions"
+    "definitions": "Définitions",
+    "exportPayments": "Exporter les paiements (CSV)",
+    "annual": "Comparaison annuelle",
+    "enrolled": "Inscrits",
+    "attendanceRate": "Assiduité",
+    "passRate": "Réussite",
+    "ongoing": "en cours",
+    "annualBasis": "Mêmes définitions que la synthèse financière ; l'année en cours est mesurée jusqu'à aujourd'hui. Réussite = bulletins annuels publiés au-dessus du seuil."
   },
   "grades": {
     "period": "Période",
@@ -694,5 +729,110 @@
     "saveRulesConfirm": "Créer une nouvelle version du barème ?",
     "saveRules": "Enregistrer une nouvelle version",
     "historyLine": "v{{version}} : {{count}} bulletin(s)"
+  },
+  "notifications": {
+    "title": "Notifications ({{count}} non lues)",
+    "heading": "Notifications",
+    "markAll": "Tout marquer comme lu",
+    "empty": "Aucune notification."
+  },
+  "portal": {
+    "children": "Mes enfants",
+    "noChildren": "Aucun enfant rattaché à votre compte. Contactez le secrétariat.",
+    "fees": "Scolarité",
+    "attendance": "Assiduité depuis le {{date}}",
+    "noAbsence": "Aucune absence ni retard.",
+    "reportCards": "Bulletins",
+    "noReportCards": "Aucun bulletin publié.",
+    "timetable": "Emploi du temps",
+    "tempPassword": "Compte créé. Mot de passe provisoire :",
+    "linkedExisting": "Accès accordé au compte existant.",
+    "enabled": "Accès au portail actif",
+    "revokeConfirm": "Retirer l'accès au portail ? Le dossier de l'élève est conservé.",
+    "revoke": "Retirer l'accès",
+    "grant": "Créer le compte",
+    "grantAccess": "Donner accès au portail",
+    "studentAccount": "Compte élève"
+  },
+  "community": {
+    "tabs": {
+      "feed": "Annonces",
+      "outbox": "Envois e-mail"
+    },
+    "new": "Nouvelle annonce",
+    "title": "Titre",
+    "audience": "Destinataires",
+    "audiences": {
+      "ALL": "Tout l'établissement",
+      "STAFF": "Personnel",
+      "GUARDIANS": "Parents",
+      "STUDENTS": "Élèves",
+      "CLASS": "Une classe"
+    },
+    "body": "Message",
+    "privacy": "Une annonce est vue par tout un groupe : n'y mettez aucune information personnelle sur un élève.",
+    "published": "Annonce publiée — {{count}} destinataire(s) notifié(s).",
+    "publish": "Publier",
+    "empty": "Aucune annonce.",
+    "deleteConfirm": "Supprimer cette annonce ?",
+    "outbox": "File d'envoi des e-mails",
+    "process": "Envoyer maintenant",
+    "outboxHelp": "Chaque notification crée un envoi e-mail. Sans fournisseur configuré, les envois échouent de façon visible et peuvent être relancés.",
+    "processed": "{{processed}} traité(s) : {{sent}} envoyé(s), {{failed}} en échec.",
+    "deliveryStatuses": {
+      "PENDING": "En attente",
+      "SENT": "Envoyé",
+      "FAILED": "Échec"
+    },
+    "all": "Tous",
+    "destination": "Destinataire"
+  },
+  "hr": {
+    "tabs": {
+      "staff": "Personnel",
+      "leave": "Congés",
+      "contracts": "Contrats",
+      "compensation": "Rémunérations"
+    },
+    "requestLeave": "Demander un congé",
+    "leaveType": "Type",
+    "leaveTypes": {
+      "ANNUAL": "Congé annuel",
+      "SICK": "Maladie",
+      "MATERNITY": "Maternité",
+      "PATERNITY": "Paternité",
+      "UNPAID": "Sans solde",
+      "OTHER": "Autre"
+    },
+    "requested": "Demande envoyée ({{days}} jour(s) ouvré(s)).",
+    "submitRequest": "Envoyer la demande",
+    "requests": "Demandes",
+    "noRequests": "Aucune demande.",
+    "days": "Jours",
+    "statuses": {
+      "REQUESTED": "En attente",
+      "APPROVED": "Approuvé",
+      "REJECTED": "Refusé",
+      "CANCELLED": "Annulé"
+    },
+    "balances": "Soldes de congé annuel {{year}}",
+    "entitled": "Droits",
+    "approved": "Pris",
+    "pending": "En attente",
+    "remaining": "Restant",
+    "expiring": "Contrats arrivant à échéance (60 jours)",
+    "exportStaff": "Exporter le personnel (CSV)",
+    "noneExpiring": "Aucun contrat à échéance prochaine.",
+    "daysLeft": "fin le {{date}} ({{days}} j)",
+    "newContract": "Nouveau contrat",
+    "contracts": "Contrats",
+    "compensationTitle": "Rémunérations",
+    "exportCompensation": "Exporter (CSV)",
+    "confidential": "Données confidentielles : chaque consultation est enregistrée.",
+    "noCompensation": "Aucune rémunération enregistrée.",
+    "effectiveFrom": "À compter du",
+    "baseSalary": "Salaire de base",
+    "allowances": "Indemnités",
+    "recordChange": "Enregistrer"
   }
 }

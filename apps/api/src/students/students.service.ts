@@ -107,7 +107,9 @@ export class StudentsService {
           lastName: g.guardian.lastName,
           phone: g.guardian.phone,
           email: g.guardian.email,
+          portalEnabled: g.guardian.membershipId !== null,
         })),
+        portalEnabled: s.membershipId !== null,
         enrollments: s.enrollments.map((e) => ({
           id: e.id,
           status: e.status,

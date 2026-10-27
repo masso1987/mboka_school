@@ -10,5 +10,6 @@ import { FinanceSetupService } from './setup.service';
 @Module({
   controllers: [FinanceController, PaymentCallbacksController],
   providers: [FinanceCore, FinanceSetupService, BillingService, PaymentsService, ExpensesService, FinanceReportsService],
+  exports: [BillingService, FinanceReportsService],
 })
 export class FinanceModule {}

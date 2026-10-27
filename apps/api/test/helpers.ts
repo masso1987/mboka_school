@@ -60,9 +60,9 @@ export async function addMember(tenantId: string, email: string, roleKeys: strin
 }
 
 /** A logged-in client bound to one tenant, sending CSRF and tenant headers automatically. */
-export async function client(app: NestExpressApplication, email: string, tenantId: string) {
+export async function client(app: NestExpressApplication, email: string, tenantId: string, password = PASSWORD) {
   const agent = request.agent(app.getHttpServer());
-  const res = await agent.post('/api/v1/auth/login').send({ email, password: PASSWORD }).expect(200);
+  const res = await agent.post('/api/v1/auth/login').send({ email, password }).expect(200);
   const csrf = res.body.csrfToken as string;
   const base = '/api/v1';
   return {

@@ -52,13 +52,34 @@
     "community": "Community",
     "reports": "Reports",
     "resources": "Resources",
-    "administration": "Administration"
+    "administration": "Administration",
+    "portal": "My children"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
     "roles": "Your roles",
     "foundation": "Platform foundation (phase 0)",
-    "foundationText": "Authentication, school isolation, roles and the audit log are in place. Business modules arrive in the next phases."
+    "foundationText": "Authentication, school isolation, roles and the audit log are in place. Business modules arrive in the next phases.",
+    "enrolled": "Enrolled students ({{year}})",
+    "attendance30": "Attendance (30 days)",
+    "approvals": "Awaiting approval",
+    "pending": {
+      "expenses": "Expenses",
+      "refunds": "Refunds",
+      "leave": "Leave",
+      "gradeSheets": "Submitted marks"
+    },
+    "today": "My lessons today",
+    "noLessons": "No lessons today.",
+    "toDo": "To do",
+    "takeRegister": "Take the register — {{name}}",
+    "sheetsInProgress": "{{count}} mark sheet(s) in progress",
+    "allDone": "Nothing pending.",
+    "cashDesk": "Cash desk",
+    "collectedToday": "Collected today",
+    "paymentsToday": "Today's payments",
+    "pendingVerification": "Awaiting confirmation",
+    "openRegisters": "Open registers"
   },
   "academicYears": {
     "title": "Academic Years",
@@ -371,7 +392,14 @@
     "PERIOD_IN_OTHER_YEAR": "This period belongs to another year.",
     "REASON_REQUIRED": "A reason is required.",
     "GRADES_NOT_APPROVED": "Every mark must be approved before generating report cards:",
-    "NOTHING_TO_PUBLISH": "No draft report cards to publish."
+    "NOTHING_TO_PUBLISH": "No draft report cards to publish.",
+    "PORTAL_ALREADY_ENABLED": "This person already has portal access.",
+    "NOT_STAFF": "Your account is not linked to a staff record.",
+    "NO_WORKING_DAYS": "No working day in this period.",
+    "LEAVE_OVERLAP": "This period overlaps another request.",
+    "INSUFFICIENT_LEAVE_BALANCE": "Not enough annual leave left.",
+    "LEAVE_ALREADY_DECIDED": "This request has already been decided.",
+    "NOT_RETRYABLE": "Only failed deliveries can be retried."
   },
   "fees": {
     "tabs": {
@@ -577,7 +605,14 @@
       "d90plus": "Over 90 days"
     },
     "overdue": "Overdue",
-    "definitions": "Definitions"
+    "definitions": "Definitions",
+    "exportPayments": "Export payments (CSV)",
+    "annual": "Year-over-year comparison",
+    "enrolled": "Enrolled",
+    "attendanceRate": "Attendance",
+    "passRate": "Pass rate",
+    "ongoing": "ongoing",
+    "annualBasis": "Same definitions as the financial summary; the current year is measured up to today. Pass rate = published annual report cards at or above the pass mark."
   },
   "grades": {
     "period": "Period",
@@ -694,5 +729,110 @@
     "saveRulesConfirm": "Create a new version of the grading rules?",
     "saveRules": "Save as new version",
     "historyLine": "v{{version}}: {{count}} report card(s)"
+  },
+  "notifications": {
+    "title": "Notifications ({{count}} unread)",
+    "heading": "Notifications",
+    "markAll": "Mark all as read",
+    "empty": "No notifications."
+  },
+  "portal": {
+    "children": "My children",
+    "noChildren": "No child is linked to your account. Contact the school office.",
+    "fees": "Fees",
+    "attendance": "Attendance since {{date}}",
+    "noAbsence": "No absence or lateness.",
+    "reportCards": "Report cards",
+    "noReportCards": "No published report cards.",
+    "timetable": "Timetable",
+    "tempPassword": "Account created. Temporary password:",
+    "linkedExisting": "Access granted to the existing account.",
+    "enabled": "Portal access active",
+    "revokeConfirm": "Remove portal access? The student's file is kept.",
+    "revoke": "Remove access",
+    "grant": "Create account",
+    "grantAccess": "Give portal access",
+    "studentAccount": "Student account"
+  },
+  "community": {
+    "tabs": {
+      "feed": "Announcements",
+      "outbox": "Email deliveries"
+    },
+    "new": "New announcement",
+    "title": "Title",
+    "audience": "Audience",
+    "audiences": {
+      "ALL": "Whole school",
+      "STAFF": "Staff",
+      "GUARDIANS": "Parents",
+      "STUDENTS": "Students",
+      "CLASS": "One class"
+    },
+    "body": "Message",
+    "privacy": "An announcement is seen by a whole group: do not include personal information about a student.",
+    "published": "Announcement published — {{count}} recipient(s) notified.",
+    "publish": "Publish",
+    "empty": "No announcements.",
+    "deleteConfirm": "Delete this announcement?",
+    "outbox": "Email delivery queue",
+    "process": "Send now",
+    "outboxHelp": "Each notification creates an email delivery. Without a configured provider, deliveries fail visibly and can be retried.",
+    "processed": "{{processed}} processed: {{sent}} sent, {{failed}} failed.",
+    "deliveryStatuses": {
+      "PENDING": "Pending",
+      "SENT": "Sent",
+      "FAILED": "Failed"
+    },
+    "all": "All",
+    "destination": "Recipient"
+  },
+  "hr": {
+    "tabs": {
+      "staff": "Staff",
+      "leave": "Leave",
+      "contracts": "Contracts",
+      "compensation": "Compensation"
+    },
+    "requestLeave": "Request leave",
+    "leaveType": "Type",
+    "leaveTypes": {
+      "ANNUAL": "Annual leave",
+      "SICK": "Sick leave",
+      "MATERNITY": "Maternity",
+      "PATERNITY": "Paternity",
+      "UNPAID": "Unpaid",
+      "OTHER": "Other"
+    },
+    "requested": "Request sent ({{days}} working day(s)).",
+    "submitRequest": "Send request",
+    "requests": "Requests",
+    "noRequests": "No requests.",
+    "days": "Days",
+    "statuses": {
+      "REQUESTED": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Cancelled"
+    },
+    "balances": "Annual leave balances {{year}}",
+    "entitled": "Entitled",
+    "approved": "Taken",
+    "pending": "Pending",
+    "remaining": "Remaining",
+    "expiring": "Contracts ending soon (60 days)",
+    "exportStaff": "Export staff (CSV)",
+    "noneExpiring": "No contract ends soon.",
+    "daysLeft": "ends {{date}} ({{days}} d)",
+    "newContract": "New contract",
+    "contracts": "Contracts",
+    "compensationTitle": "Compensation",
+    "exportCompensation": "Export (CSV)",
+    "confidential": "Confidential data: every view is logged.",
+    "noCompensation": "No compensation recorded.",
+    "effectiveFrom": "Effective from",
+    "baseSalary": "Base salary",
+    "allowances": "Allowances",
+    "recordChange": "Record"
   }
 }

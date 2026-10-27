@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import type { AttendanceSubmitInput } from '@mboka/shared';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../community/notifications.service';
 import type { Actor } from '../common/actor';
 import { ApiException, Errors } from '../common/api-error';
 import { toDate, todayIn } from '../common/dates';
@@ -26,6 +27,7 @@ export class AttendanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
@@ -188,6 +190,22 @@ export class AttendanceService {
       } else {
         unchanged++;
       }
+    }
+
+    // Parents with a portal account are told about a new absence, once per student and day (ATT-006).
+    const newlyAbsent = input.records.filter((r) => r.status === 'ABSENT' && previous.get(r.studentId)?.status !== 'ABSENT');
+    if (newlyAbsent.length > 0) {
+      const schoolClass = await tx.schoolClass.findUniqueOrThrow({ where: { id: input.classId }, select: { name: true } });
+      await this.notifications.notifyAbsences(
+        tx,
+        a.tenantId,
+        schoolClass.name,
+        input.date,
+        newlyAbsent.map((r) => {
+          const e = roster.find((x) => x.studentId === r.studentId)!;
+          return { id: r.studentId, name: `${e.student.firstName} ${e.student.lastName}` };
+        }),
+      );
     }
 
     await this.audit.record(

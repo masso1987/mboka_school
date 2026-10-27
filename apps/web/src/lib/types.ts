@@ -105,7 +105,9 @@ export interface StudentFile extends Omit<StudentRow, 'currentClass' | 'currentY
     lastName: string;
     phone: string | null;
     email: string | null;
+    portalEnabled: boolean;
   }[];
+  portalEnabled: boolean;
   enrollments: {
     id: string;
     status: string;

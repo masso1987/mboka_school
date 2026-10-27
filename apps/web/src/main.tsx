@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import './i18n';
 import './index.css';
 import { AppLayout } from './components/AppLayout';
+import { ApiRequestError } from './lib/api';
 import { SessionProvider, useMe } from './lib/session';
 import { NAV_ITEMS } from './nav';
 import { AcademicYearsPage } from './pages/AcademicYearsPage';
@@ -20,12 +21,20 @@ import { GradesPage } from './pages/GradesPage';
 import { LoginPage } from './pages/LoginPage';
 import { ReportCardsPage } from './pages/ReportCardsPage';
 import { ReportsPage } from './pages/ReportsPage';
-import { StaffPage } from './pages/StaffPage';
+import { CommunityPage } from './pages/CommunityPage';
+import { HrPage } from './pages/HrPage';
+import { PortalChildPage, PortalPage } from './pages/PortalPage';
 import { StudentDetailPage, StudentsPage } from './pages/StudentsPage';
 import { TeachingPage } from './pages/TeachingPage';
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      // 4xx answers (forbidden, not found, validation) will not change on retry: show them at once.
+      retry: (count, error) => !(error instanceof ApiRequestError && error.status < 500) && count < 2,
+    },
+  },
 });
 
 function Root() {
@@ -47,7 +56,10 @@ function Root() {
           <Route path="classes/:id" element={<ClassDetailPage />} />
           <Route path="teaching" element={<TeachingPage />} />
           <Route path="attendance" element={<AttendancePage />} />
-          <Route path="hr" element={<StaffPage />} />
+          <Route path="hr" element={<HrPage />} />
+          <Route path="community" element={<CommunityPage />} />
+          <Route path="portal" element={<PortalPage />} />
+          <Route path="portal/children/:id" element={<PortalChildPage />} />
           <Route path="administration" element={<AdministrationPage />} />
           <Route path="fees" element={<FeesPage />} />
           <Route path="fees/invoices/:id" element={<InvoiceDetailPage />} />

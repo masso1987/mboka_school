@@ -63,9 +63,16 @@ export const PERMISSIONS = {
   'hr.staff.read': 'View staff records',
   'hr.staff.manage': 'Manage staff records and contracts',
   'hr.compensation.read': 'View compensation data',
+  'hr.compensation.manage': 'Record compensation changes',
+  'hr.leave.request': 'Request leave for oneself',
+  'hr.leave.approve': 'Approve or reject leave requests',
 
   // Communication
   'announcements.publish': 'Publish announcements',
+
+  // Portals
+  'portal.parent': 'Parent portal: see linked children only',
+  'portal.student': 'Student portal: see own records only',
 } as const satisfies Record<string, string>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
