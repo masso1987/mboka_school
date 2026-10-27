@@ -10,6 +10,7 @@
     "test": "node --test dist/**/*.test.js"
   },
   "dependencies": {
+    "decimal.js": "^10.6.0",
     "zod": "^4.1.5"
   },
   "devDependencies": {

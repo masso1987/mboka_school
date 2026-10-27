@@ -7,3 +7,4 @@ export * from './people';
 export * from './operations';
 export * from './admin';
 export * from './finance';
+export * from './grading';

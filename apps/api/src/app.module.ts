@@ -7,6 +7,7 @@ import { AdminModule } from './admin/admin.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
 import { FinanceModule } from './finance/finance.module';
+import { GradesModule } from './grades/grades.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionGuard } from './auth/session.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
@@ -32,6 +33,7 @@ import { TimetableModule } from './timetable/timetable.module';
     AttendanceModule,
     AdminModule,
     FinanceModule,
+    GradesModule,
   ],
   controllers: [HealthController],
   providers: [

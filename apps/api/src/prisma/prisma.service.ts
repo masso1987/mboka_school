@@ -24,6 +24,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    * policies see no tenant and return no rows. Services still filter by
    * tenantId explicitly — RLS is the safety net, not the only control.
    */
+  /** The one cross-tenant read of report cards: exact verification code only (migration 0006). */
+  async reportCardVerification(code: string) {
+    if (!/^[A-Z2-9]{5}-[A-Z2-9]{5}$/.test(code)) return null;
+    const rows = await this.$queryRaw<{ status: string; version: number; content: unknown; published_at: Date | null }[]>`
+      SELECT * FROM verify_report_card(${code})`;
+    const r = rows[0];
+    return r ? { status: r.status, version: r.version, content: r.content, publishedAt: r.published_at } : null;
+  }
+
   scoped<T>(scope: DbScope, fn: (tx: Tx) => Promise<T>): Promise<T> {
     return this.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT set_config('app.tenant_id', ${scope.tenantId ?? ''}, true), set_config('app.user_id', ${scope.userId ?? ''}, true)`;

@@ -134,6 +134,7 @@ export interface StaffRow {
 
 export interface Assignment {
   id: string;
+  classSubjectId: string;
   role: string;
   startDate: string;
   endDate: string | null;
