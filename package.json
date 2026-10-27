@@ -1,0 +1,23 @@
+{
+  "name": "mboka-school",
+  "private": true,
+  "description": "Mboka School System — multi-tenant school management SaaS",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build -w @mboka/shared && npm run build -w @mboka/api && npm run build -w @mboka/web",
+    "dev:api": "npm run dev -w @mboka/api",
+    "dev:web": "npm run dev -w @mboka/web",
+    "typecheck": "npm run build -w @mboka/shared && npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w @mboka/shared && npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e -w @mboka/api",
+    "db:up": "docker compose up -d postgres",
+    "db:migrate": "npm run prisma:migrate -w @mboka/api",
+    "db:seed": "npm run prisma:seed -w @mboka/api"
+  }
+}
