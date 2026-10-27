@@ -16,6 +16,8 @@ const envSchema = z.object({
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(300),
   /** Queries slower than this are logged as warnings (SQL text only, never parameter values); 0 = off. */
   SLOW_QUERY_MS: z.coerce.number().int().nonnegative().default(500),
+  /** Reverse proxies in front of the API (web nginx = 1; host nginx + web nginx = 2); sets req.ip. */
+  TRUST_PROXY_HOPS: z.coerce.number().int().nonnegative().default(1),
 });
 
 export type Env = z.infer<typeof envSchema>;
