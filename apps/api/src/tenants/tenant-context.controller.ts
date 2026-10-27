@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import type { Prisma } from '@prisma/client';
 import type { Response } from 'express';
 import { z } from 'zod';
+import { subscriptionAccess } from '@mboka/shared';
 import { AuditService } from '../audit/audit.service';
 import { RequirePermissions } from '../auth/decorators';
 import { ApiException } from '../common/api-error';
@@ -39,15 +40,19 @@ export class TenantContextController {
           defaultCurrency: true,
           settings: true,
           campuses: { where: { tenantId: t.tenantId, isActive: true }, select: { id: true, code: true, name: true } },
+          subscription: { select: { plan: true, status: true, trialEndsAt: true, currentUntil: true } },
         },
       });
       const roles = await tx.role.findMany({
         where: { tenantId: t.tenantId, assignments: { some: { membershipId: t.membershipId } } },
         select: { key: true, nameFr: true, nameEn: true },
       });
-      const { settings, ...rest } = tenant;
+      const { settings, subscription: sub, ...rest } = tenant;
+      // Drives the trial / renewal banner; details are on GET /subscription.
+      const access = sub ? subscriptionAccess(sub, new Date()) : null;
+      const subscription = sub && access ? { plan: sub.plan, state: access.state, writable: access.writable, endsAt: access.endsAt?.toISOString() ?? null, daysLeft: access.daysLeft } : null;
       const security = { requireMfaForPrivileged: Boolean((settings as { requireMfaForPrivileged?: boolean }).requireMfaForPrivileged) };
-      return { tenant: { ...rest, security }, roles, permissions: [...t.permissions].sort() };
+      return { tenant: { ...rest, security, subscription }, roles, permissions: [...t.permissions].sort() };
     });
   }
 

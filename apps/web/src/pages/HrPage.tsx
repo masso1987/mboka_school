@@ -7,9 +7,10 @@ import { useDateFormat, useSchoolToday, useTenantMutation, useTenantQuery } from
 import { useMoney } from '../lib/money';
 import { useSession } from '../lib/session';
 import type { Page, StaffRow } from '../lib/types';
+import { MyPayslipsTab, PayrollTab } from './PayrollTab';
 import { StaffPage } from './StaffPage';
 
-type Tab = 'staff' | 'leave' | 'contracts' | 'compensation';
+type Tab = 'staff' | 'leave' | 'contracts' | 'compensation' | 'payroll' | 'mypayslips';
 type StaffRef = { id: string; staffNumber: string; firstName: string; lastName: string };
 
 const leaveTone = (s: string) => (s === 'APPROVED' ? 'green' : s === 'REJECTED' ? 'red' : s === 'REQUESTED' ? 'amber' : 'slate');
@@ -23,6 +24,8 @@ export function HrPage() {
   if (can('hr.leave.request') || can('hr.leave.approve')) items.push({ key: 'leave', label: t('hr.tabs.leave') });
   if (can('hr.staff.read')) items.push({ key: 'contracts', label: t('hr.tabs.contracts') });
   if (can('hr.compensation.read')) items.push({ key: 'compensation', label: t('hr.tabs.compensation') });
+  if (can('hr.payroll.manage') || can('hr.payroll.approve')) items.push({ key: 'payroll', label: t('hr.tabs.payroll') });
+  if (can('hr.leave.request')) items.push({ key: 'mypayslips', label: t('hr.tabs.mypayslips') });
   const [tab, setTab] = useState<Tab>(items[0]?.key ?? 'leave');
   return (
     <div className="space-y-6">
@@ -32,6 +35,8 @@ export function HrPage() {
       {tab === 'leave' && <LeaveTab />}
       {tab === 'contracts' && <ContractsTab />}
       {tab === 'compensation' && <CompensationTab />}
+      {tab === 'payroll' && <PayrollTab />}
+      {tab === 'mypayslips' && <MyPayslipsTab />}
     </div>
   );
 }

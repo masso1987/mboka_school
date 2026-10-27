@@ -31,7 +31,12 @@
     "password": "Password",
     "submit": "Sign in",
     "invalid": "Incorrect email or password.",
-    "rateLimited": "Too many attempts. Wait a minute before trying again."
+    "rateLimited": "Too many attempts. Wait a minute before trying again.",
+    "newSchool": "New school?",
+    "signup": "Create a school account",
+    "notVerified": "Confirm your e-mail address first: open the link we sent you.",
+    "resend": "Send the confirmation link again",
+    "resent": "Link sent again: check your inbox."
   },
   "tenant": {
     "none": "Your account is not linked to any active school.",
@@ -293,7 +298,8 @@
     "tabs": {
       "users": "Users",
       "campuses": "Campuses",
-      "security": "Security"
+      "security": "Security",
+      "subscription": "Subscription"
     },
     "invite": "Add a user",
     "fullName": "Full name",
@@ -412,7 +418,21 @@
     "MFA_NOT_STARTED": "Start the setup first.",
     "MFA_NOT_ENABLED": "Two-factor authentication is off.",
     "INVALID_CREDENTIALS": "Incorrect password.",
-    "ROLLOVER_HAS_EXCEPTIONS": "Some students still need a decision or a class."
+    "ROLLOVER_HAS_EXCEPTIONS": "Some students still need a decision or a class.",
+    "PAYER_MSISDN_REQUIRED": "Enter the Mobile Money number to debit.",
+    "PROVIDER_HOST_NOT_ALLOWED": "This operator API address is not allowed.",
+    "PAYROLL_RUN_EXISTS": "Payroll for this month already exists.",
+    "PAYROLL_RUN_LOCKED": "This payroll can no longer be changed.",
+    "PAYROLL_WRONG_STATUS": "Not possible at this stage of the payroll.",
+    "PAYROLL_RUN_EMPTY": "There is no payslip to submit.",
+    "NEGATIVE_NET_PAY": "Deductions exceed this month's pay.",
+    "SUBSCRIPTION_EXPIRED": "Subscription expired: renew it to change data.",
+    "PLAN_TOO_SMALL": "Your school exceeds the limits of this plan.",
+    "EMAIL_NOT_VERIFIED": "Confirm your e-mail address first.",
+    "INVALID_VERIFICATION_LINK": "This link is invalid or has expired. Ask for a new one from the sign-in page.",
+    "SIGNUP_UNAVAILABLE": "Online sign-up is not available right now. Contact us.",
+    "UNKNOWN_PLAN": "Choose one of the offered plans.",
+    "INVOICE_NOT_OPEN": "This invoice is no longer awaiting payment."
   },
   "fees": {
     "tabs": {
@@ -539,7 +559,14 @@
     "creditLabel": "Unapplied credit",
     "remainingBalance": "Balance remaining after this payment",
     "issuedBy": "Issued by {{name}}",
-    "appliedResult": "{{created}} invoice(s) created; {{existing}} student(s) already billed."
+    "appliedResult": "{{created}} invoice(s) created; {{existing}} student(s) already billed.",
+    "payerMsisdn": "Payer's Mobile Money number",
+    "payerMsisdnHint": "International format without '+', e.g. 2376XXXXXXXX. Required for MTN MoMo.",
+    "providerFailed": "The payment failed or was declined by the operator. Nothing was collected.",
+    "providerConfirmed": "Payment confirmed by the operator; the receipt is in the statement.",
+    "orangePayHint": "The payer confirms on the Orange Money page:",
+    "verifyNow": "Check with the operator",
+    "stillPending": "The operator has no result yet; an automatic check runs every minute."
   },
   "expenses": {
     "tabs": {
@@ -806,7 +833,9 @@
       "staff": "Staff",
       "leave": "Leave",
       "contracts": "Contracts",
-      "compensation": "Compensation"
+      "compensation": "Compensation",
+      "payroll": "Payroll",
+      "mypayslips": "My payslips"
     },
     "requestLeave": "Request leave",
     "leaveType": "Type",
@@ -894,5 +923,141 @@
     "synced": "{{count}} register(s) synchronised.",
     "rejected": "{{count}} register(s) rejected by the server: open Attendance to redo them.",
     "signOutWarning": "{{count}} unsynchronised entr(y/ies) will be lost if you sign out. Continue?"
+  },
+  "payroll": {
+    "prepare": "Prepare this month's payroll",
+    "period": "Month",
+    "create": "Prepare",
+    "runs": "Payrolls",
+    "noRuns": "No payroll prepared yet.",
+    "headcount": "Headcount",
+    "gross": "Gross",
+    "net": "Net pay",
+    "employerCost": "Employer cost",
+    "open": "Open",
+    "statuses": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Submitted",
+      "APPROVED": "Approved",
+      "PAID": "Paid"
+    },
+    "runOf": "Payroll for",
+    "allPayslips": "All payslips (PDF)",
+    "declarationsCsv": "Declarations (CSV)",
+    "rules": "Rules: {{label}} — version {{version}}",
+    "skippedTitle": "Employees not included:",
+    "skipReasons": {
+      "NO_COMPENSATION": "no compensation recorded",
+      "OTHER_CURRENCY": "paid in a currency other than XAF",
+      "CONTRACT_ENDED": "contract ended before this month"
+    },
+    "refresh": "Refresh (salaries and rules)",
+    "submit": "Submit for approval",
+    "delete": "Delete draft",
+    "deleteConfirm": "Delete this payroll draft and its payslips?",
+    "approve": "Approve",
+    "returnReason": "Reason for sending back",
+    "sendBack": "Send back to draft",
+    "markPaid": "Mark as paid",
+    "payslips": "Payslips",
+    "noPayslips": "No payslips.",
+    "employee": "Employee",
+    "baseSalary": "Base salary",
+    "variables": "Monthly items",
+    "variablesCount": "{{count}} monthly item(s)",
+    "declarations": "Contributions and taxes to declare",
+    "item": "Item",
+    "base": "Base",
+    "employeeShare": "Employee",
+    "employerShare": "Employer",
+    "total": "Total",
+    "recurring": "Fixed allowances (compensation)",
+    "kind": "Type",
+    "kinds": {
+      "EARNING": "Earning",
+      "DEDUCTION": "Deduction"
+    },
+    "amount": "Amount (XAF)",
+    "taxable": "Taxable",
+    "addItem": "Add an item",
+    "unpaidDays": "Unpaid absence days",
+    "myPayslips": "My payslips",
+    "noMyPayslips": "No payslip available yet.",
+    "number": "No."
+  },
+  "signup": {
+    "title": "Create your school's account",
+    "subtitle": "30-day free trial, no commitment. You choose your plan afterwards.",
+    "plan": "Plan",
+    "perMonth": "/ month",
+    "limits": "{{students}} students · {{campuses}} campus(es) · {{users}} users",
+    "trial": "The first 30 days are free; no payment is asked now.",
+    "schoolName": "School name",
+    "city": "City",
+    "phone": "Phone",
+    "ownerName": "Your name (founder or head)",
+    "terms": "I accept the terms of use and confirm I am authorised to create this account for the school.",
+    "invalid": "Check the fields: all are required, the password needs at least 10 characters and the terms must be accepted.",
+    "submit": "Create my school",
+    "haveAccount": "I already have an account",
+    "checkInbox": "Check your inbox",
+    "checkInboxHelp": "If {{email}} can be used, an e-mail has just been sent to it. Open its link to activate your account (valid for 48 hours).",
+    "backToLogin": "Back to sign-in",
+    "verifyTitle": "Confirming your address",
+    "verified": "Address confirmed. You can sign in now.",
+    "toLogin": "Go to sign-in"
+  },
+  "subscription": {
+    "current": "Current subscription",
+    "states": {
+      "OK": "Active",
+      "TRIAL": "Free trial",
+      "GRACE": "Grace period",
+      "EXPIRED": "Expired — read-only"
+    },
+    "until": "until {{date}} ({{days}} day(s))",
+    "usage": {
+      "students": "Students",
+      "campuses": "Campuses",
+      "users": "Users"
+    },
+    "toPay": "Invoice to pay",
+    "invoiceLine": "Invoice {{number}} — {{plan}}, {{from}} to {{to}}",
+    "howToPay": "Quote reference {{reference}} with your payment.",
+    "choose": "Choose a plan",
+    "cycles": {
+      "MONTHLY": "Monthly",
+      "ANNUAL": "Annual"
+    },
+    "select": "Choose",
+    "invoices": "Subscription invoices",
+    "number": "No.",
+    "plan": "Plan",
+    "period": "Period",
+    "amount": "Amount",
+    "invoiceStatuses": {
+      "OPEN": "To pay",
+      "PAID": "Paid",
+      "VOID": "Cancelled"
+    },
+    "banner": {
+      "TRIAL": "Free trial: {{days}} day(s) left. Choose your plan to continue without interruption.",
+      "GRACE": "Your subscription has ended: {{days}} day(s) of grace before the school becomes read-only.",
+      "EXPIRED": "Subscription expired: your data stays readable but cannot be changed until you renew.",
+      "action": "Manage subscription"
+    }
+  },
+  "platform": {
+    "title": "Platform",
+    "schools": "Schools and subscriptions",
+    "school": "School",
+    "usage": "Usage",
+    "usageLine": "{{students}} students · {{users}} users",
+    "toConfirm": "Payment to confirm",
+    "reference": "Reference received",
+    "confirmPayment": "Confirm payment",
+    "plans": "Plans",
+    "plansHelp": "Prices in XAF. The initial prices are placeholders: set them before opening sign-ups.",
+    "limits": "Limits"
   }
 }

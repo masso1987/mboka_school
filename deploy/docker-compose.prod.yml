@@ -1,0 +1,72 @@
+# Production stack for one host behind the host's own nginx (docs/operations.md §Single-host deployment).
+# Only the web container is published, on loopback; the host nginx terminates TLS and proxies to it.
+# Secrets come from .env next to this file (created by deploy/server-init.sh, mode 600, never committed).
+name: mboka-school
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mboka
+      POSTGRES_USER: mboka
+      POSTGRES_PASSWORD: ${OWNER_DB_PASSWORD:?}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    # Loopback only: migrations run through an SSH tunnel; nothing else reaches the database.
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mboka -d mboka"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  api:
+    image: mboka-school-api:${RELEASE:?}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://mboka_app:${APP_DB_PASSWORD}@postgres:5432/mboka?schema=public
+      CORS_ORIGINS: https://${PUBLIC_HOST:?}
+      # host nginx -> web nginx -> api
+      TRUST_PROXY_HOPS: 2
+      APP_SECRETS_KEY: ${APP_SECRETS_KEY:?}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
+      PUBLIC_URL: https://${PUBLIC_HOST}
+      WEB_URL: https://${PUBLIC_HOST}
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-true}
+      PLATFORM_PAYMENT_INSTRUCTIONS: ${PLATFORM_PAYMENT_INSTRUCTIONS:-}
+      MOBILE_MONEY_POLL_SECONDS: ${MOBILE_MONEY_POLL_SECONDS:-60}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  web:
+    image: mboka-school-web:${RELEASE:?}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3110}:80"
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+volumes:
+  pgdata:

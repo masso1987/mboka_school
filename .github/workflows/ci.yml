@@ -26,6 +26,7 @@ jobs:
       # Test-only key; real environments use a secret store.
       APP_SECRETS_KEY: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
       ACCESS_LOG: "off"
+      MOBILE_MONEY_POLL_SECONDS: "0"
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4

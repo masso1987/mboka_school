@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Table, Tabs } from '../components/ui';
 import { useDateFormat, useLabel, useTenantMutation, useTenantQuery } from '../lib/hooks';
 import { useSession } from '../lib/session';
 import type { RoleRow, UserRow } from '../lib/types';
+import { SubscriptionTab } from './SubscriptionTab';
 
-type Tab = 'users' | 'campuses' | 'security';
+type Tab = 'users' | 'campuses' | 'security' | 'subscription';
 
 export function AdministrationPage() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>('users');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'subscription' ? 'subscription' : 'users');
   return (
     <div>
       <PageHeader title={t('nav.administration')} />
@@ -21,9 +24,10 @@ export function AdministrationPage() {
           { key: 'users', label: t('admin.tabs.users') },
           { key: 'campuses', label: t('admin.tabs.campuses') },
           { key: 'security', label: t('admin.tabs.security') },
+          { key: 'subscription', label: t('admin.tabs.subscription') },
         ]}
       />
-      {tab === 'users' ? <UsersTab /> : tab === 'campuses' ? <CampusesTab /> : <SecurityTab />}
+      {tab === 'users' ? <UsersTab /> : tab === 'campuses' ? <CampusesTab /> : tab === 'security' ? <SecurityTab /> : <SubscriptionTab />}
     </div>
   );
 }

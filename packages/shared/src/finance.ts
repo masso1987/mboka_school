@@ -95,6 +95,8 @@ export const paymentSchema = z.object({
   externalReference: z.string().trim().min(2).max(80).optional(),
   /** Mobile Money / provider payments start pending until the provider confirms. */
   provider: z.string().trim().min(2).max(30).optional(),
+  /** Payer's Mobile Money number, international format without '+' (e.g. 2376XXXXXXXX). */
+  payerMsisdn: z.string().trim().regex(/^\d{9,15}$/, 'invalid_msisdn').optional(),
   allocations: z.array(z.object({ invoiceId: z.uuid(), amount: money })).max(20).optional(),
   notes: optionalText(300),
 });
@@ -112,10 +114,46 @@ export type CashierOpenInput = z.infer<typeof cashierOpenSchema>;
 export const cashierCloseSchema = z.object({ countedAmount: moneyOrZero, notes: optionalText(500) });
 export type CashierCloseInput = z.infer<typeof cashierCloseSchema>;
 
-export const providerConfigSchema = z.object({
-  code: z.string().trim().toLowerCase().regex(/^[a-z0-9_-]{2,30}$/, 'invalid_code'),
-  secret: z.string().min(16).max(200),
-});
+const providerCode = z.string().trim().toLowerCase().regex(/^[a-z0-9_-]{2,30}$/, 'invalid_code');
+const credential = z.string().trim().min(1).max(200);
+
+export const PROVIDER_KINDS = ['SIGNED_WEBHOOK', 'MTN_MOMO', 'ORANGE_MONEY'] as const;
+export type ProviderKind = (typeof PROVIDER_KINDS)[number];
+
+/**
+ * A school's payment provider. SIGNED_WEBHOOK: an aggregator that posts HMAC-signed results.
+ * MTN_MOMO / ORANGE_MONEY: the operators' collection APIs; Mboka starts the payment and always
+ * asks the operator for the result (their notifications are not signed, so they are only a hint).
+ * Credentials are encrypted at rest and never returned.
+ */
+const providerConfigUnion = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('SIGNED_WEBHOOK'), code: providerCode, secret: z.string().min(16).max(200) }),
+  z.object({
+    kind: z.literal('MTN_MOMO'),
+    code: providerCode,
+    baseUrl: z.url(),
+    /** X-Target-Environment: `sandbox`, or the production value MTN assigns (e.g. `mtncameroon`). */
+    targetEnvironment: z.string().trim().regex(/^[a-z0-9]{3,30}$/),
+    subscriptionKey: credential,
+    apiUser: credential,
+    apiKey: credential,
+  }),
+  z.object({
+    kind: z.literal('ORANGE_MONEY'),
+    code: providerCode,
+    baseUrl: z.url(),
+    clientId: credential,
+    clientSecret: credential,
+    merchantKey: credential,
+    /** Where the payer's browser returns after paying on Orange's page. */
+    returnUrl: z.url(),
+  }),
+]);
+/** Bodies without `kind` are the original signed-webhook configuration. */
+export const providerConfigSchema = z.preprocess(
+  (v) => (v && typeof v === 'object' && !('kind' in v) ? { ...v, kind: 'SIGNED_WEBHOOK' } : v),
+  providerConfigUnion,
+);
 export type ProviderConfigInput = z.infer<typeof providerConfigSchema>;
 
 /** Body a payment provider posts to the callback URL, signed with HMAC-SHA256 (X-Mboka-Signature). */

@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Req, Res } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@mboka/shared';
 import type { Response } from 'express';
 import { AuditService } from '../audit/audit.service';
-import { Errors } from '../common/api-error';
+import { ApiException, Errors } from '../common/api-error';
 import { type AppRequest, type AuthContext, clientIp, CurrentAuth } from '../common/request-context';
 import { ApiZodBody, ZodBody } from '../common/zod';
 import { env } from '../config/env';
@@ -56,6 +56,11 @@ export class AuthController {
         ip: clientIp(req),
       });
       throw Errors.invalidCredentials();
+    }
+
+    if (user.emailVerificationRequired) {
+      await this.audit.record({ action: 'auth.login.failed', actorId: user.id, metadata: { reason: 'email_not_verified' }, ip: clientIp(req) });
+      throw new ApiException(HttpStatus.FORBIDDEN, 'EMAIL_NOT_VERIFIED', 'Confirm your e-mail address first: open the link we sent you');
     }
 
     const mfaRequired = user.mfaEnabledAt !== null;
