@@ -12,6 +12,7 @@ export interface NavItem {
 /** Navigation structure from spec §8.2, filtered by permission at render time. */
 export const NAV_ITEMS: NavItem[] = [
   { key: 'dashboard', path: '/', anyOf: [] },
+  { key: 'portal', path: '/portal', anyOf: ['portal.parent', 'portal.student'] },
   { key: 'academicYears', path: '/academic-years', anyOf: ['academics.years.read'] },
   { key: 'students', path: '/students', anyOf: ['students.read', 'admissions.manage'] },
   { key: 'classes', path: '/classes', anyOf: ['academics.structure.manage', 'academics.years.read'] },
@@ -21,8 +22,8 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'reportCards', path: '/report-cards', anyOf: ['reportcards.publish', 'grades.approve'] },
   { key: 'fees', path: '/fees', anyOf: ['fees.invoice.read', 'payments.record'] },
   { key: 'expenses', path: '/expenses', anyOf: ['expenses.create', 'expenses.approve', 'expenses.approve.unlimited', 'budgets.manage'] },
-  { key: 'hr', path: '/hr', anyOf: ['hr.staff.read'] },
-  { key: 'community', path: '/community', anyOf: ['announcements.publish'], phase: 4 },
+  { key: 'hr', path: '/hr', anyOf: ['hr.staff.read', 'hr.leave.request', 'hr.leave.approve'] },
+  { key: 'community', path: '/community', anyOf: [] },
   { key: 'reports', path: '/reports', anyOf: ['reports.financial.read'] },
   { key: 'resources', path: '/resources', anyOf: ['tenant.settings.update'], phase: 6 },
   { key: 'administration', path: '/administration', anyOf: ['tenant.settings.read', 'users.read'] },

@@ -475,6 +475,11 @@ model Staff {
   assignments      TeachingAssignment[]
   timetableEntries TimetableEntry[]
 
+  contracts     EmploymentContract[]
+  compensations Compensation[]
+  leaves        LeaveRequest[]
+  entitlements  LeaveEntitlement[]
+
   @@unique([tenantId, staffNumber])
   @@unique([tenantId, id])
   @@map("staff")
@@ -530,6 +535,8 @@ model Student {
   placeOfBirth String?       @map("place_of_birth")
   nationality  String?
   address      String?
+  /// Student portal account in this school (Phase 4).
+  membershipId String?       @unique @map("membership_id") @db.Uuid
   status       StudentStatus @default(ACTIVE)
   archivedAt   DateTime?     @map("archived_at") @db.Timestamptz(6)
   createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -549,15 +556,17 @@ model Student {
 }
 
 model Guardian {
-  id        String   @id @default(uuid()) @db.Uuid
-  tenantId  String   @map("tenant_id") @db.Uuid
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  phone     String?
-  email     String?
-  address   String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  phone        String?
+  email        String?
+  address      String?
+  /// Parent portal account in this school (Phase 4).
+  membershipId String?  @unique @map("membership_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   students StudentGuardian[]
 
@@ -1471,4 +1480,173 @@ model PromotionDecision {
 
   @@unique([tenantId, enrollmentId])
   @@map("promotion_decisions")
+}
+
+// ================================================================ Phase 4 — HR, communication, portals
+
+/// Employment contracts; history is kept, a renewal is a new row (HR-003, contract-expiry alerts HR-010).
+model EmploymentContract {
+  id        String         @id @default(uuid()) @db.Uuid
+  tenantId  String         @map("tenant_id") @db.Uuid
+  staffId   String         @map("staff_id") @db.Uuid
+  type      EmploymentType
+  position  String
+  startDate DateTime       @map("start_date") @db.Date
+  endDate   DateTime?      @map("end_date") @db.Date
+  notes     String?
+  createdBy String         @map("created_by") @db.Uuid
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  staff Staff @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, staffId])
+  @@map("employment_contracts")
+}
+
+/// Compensation history (HR-007). Confidential: readable only with hr.compensation.read. Insert-only.
+model Compensation {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  staffId       String   @map("staff_id") @db.Uuid
+  effectiveFrom DateTime @map("effective_from") @db.Date
+  currency      String   @db.Char(3)
+  baseSalary    Decimal  @map("base_salary") @db.Decimal(18, 2)
+  /// [{ label, amount }] monthly allowances.
+  allowances    Json     @default("[]")
+  createdBy     String   @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  staff Staff @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, staffId])
+  @@map("compensations")
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  MATERNITY
+  PATERNITY
+  UNPAID
+  OTHER
+}
+
+enum LeaveStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+/// Leave and permission requests with an approval history (HR-005/006).
+model LeaveRequest {
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.Uuid
+  staffId      String      @map("staff_id") @db.Uuid
+  type         LeaveType
+  startDate    DateTime    @map("start_date") @db.Date
+  endDate      DateTime    @map("end_date") @db.Date
+  /// Working days (Monday–Friday) counted at request time.
+  days         Int
+  reason       String?
+  status       LeaveStatus @default(REQUESTED)
+  requestedBy  String      @map("requested_by") @db.Uuid
+  decidedBy    String?     @map("decided_by") @db.Uuid
+  decidedAt    DateTime?   @map("decided_at") @db.Timestamptz(6)
+  decisionNote String?     @map("decision_note")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  staff Staff @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, staffId])
+  @@map("leave_requests")
+}
+
+/// Days of paid annual leave granted for a calendar year.
+model LeaveEntitlement {
+  tenantId String @map("tenant_id") @db.Uuid
+  staffId  String @map("staff_id") @db.Uuid
+  year     Int
+  days     Int
+
+  staff Staff @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
+
+  @@id([tenantId, staffId, year])
+  @@map("leave_entitlements")
+}
+
+enum Audience {
+  ALL
+  STAFF
+  GUARDIANS
+  STUDENTS
+  CLASS
+}
+
+/// School announcement targeted by audience (COM-002/003). Contains no per-student data.
+model Announcement {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  title       String
+  body        String
+  audience    Audience
+  classId     String?   @map("class_id") @db.Uuid
+  authorId    String    @map("author_id") @db.Uuid
+  publishedAt DateTime  @default(now()) @map("published_at") @db.Timestamptz(6)
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  @@index([tenantId, publishedAt])
+  @@map("announcements")
+}
+
+/// One message to one user, in-app, with read status (COM-004/005).
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  kind      String
+  title     String
+  body      String
+  link      String?
+  /// Idempotency of automatic notifications (e.g. one absence alert per student and day).
+  dedupeKey String?   @map("dedupe_key")
+  readAt    DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  deliveries NotificationDelivery[]
+
+  @@unique([tenantId, userId, dedupeKey])
+  @@unique([tenantId, id])
+  @@index([tenantId, userId, readAt])
+  @@map("notifications")
+}
+
+enum DeliveryChannel {
+  EMAIL
+  SMS
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+/// External delivery attempt (email/SMS); creation is distinct from delivery (COM AC), failures are retryable.
+model NotificationDelivery {
+  id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @map("tenant_id") @db.Uuid
+  notificationId String          @map("notification_id") @db.Uuid
+  channel        DeliveryChannel
+  destination    String
+  status         DeliveryStatus  @default(PENDING)
+  attempts       Int             @default(0)
+  lastError      String?         @map("last_error")
+  sentAt         DateTime?       @map("sent_at") @db.Timestamptz(6)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  notification Notification @relation(fields: [tenantId, notificationId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@map("notification_deliveries")
 }

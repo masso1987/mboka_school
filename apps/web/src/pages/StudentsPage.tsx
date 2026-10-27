@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import { GUARDIAN_RELATIONSHIPS } from '@mboka/shared';
+import { PortalAccess } from '../components/PortalAccess';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Select, Table } from '../components/ui';
 import { ApiRequestError } from '../lib/api';
 import { useCurrentYear, useDateFormat, useSchoolToday, useTenantMutation, useTenantQuery } from '../lib/hooks';
@@ -242,6 +243,12 @@ export function StudentDetailPage() {
               <Badge tone={statusTone(s.status)}>{t(`students.statuses.${s.status}`)}</Badge>
             </dd>
           </dl>
+          {can('students.update') && (
+            <div className="mt-3 border-t border-slate-100 pt-2 text-sm">
+              <span className="text-slate-500">{t('portal.studentAccount')}</span>
+              <PortalAccess kind="students" id={s.id} enabled={s.portalEnabled} studentId={s.id} />
+            </div>
+          )}
         </Card>
 
         <Card title={t('students.guardians')}>
@@ -258,6 +265,7 @@ export function StudentDetailPage() {
                     {t(`students.relationships.${g.relationship}`)}
                     {g.phone && <> · <a href={`tel:${g.phone}`} className="tabular hover:underline">{g.phone}</a></>}
                   </p>
+                  {can('students.update') && <PortalAccess kind="guardians" id={g.guardianId} enabled={g.portalEnabled} studentId={s.id} />}
                 </li>
               ))}
             </ul>

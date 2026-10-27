@@ -8,6 +8,8 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
 import { FinanceModule } from './finance/finance.module';
 import { GradesModule } from './grades/grades.module';
+import { CommunityModule, NotificationsModule } from './community/community.module';
+import { HrModule } from './hr/hr.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionGuard } from './auth/session.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
@@ -34,6 +36,9 @@ import { TimetableModule } from './timetable/timetable.module';
     AdminModule,
     FinanceModule,
     GradesModule,
+    NotificationsModule,
+    CommunityModule,
+    HrModule,
   ],
   controllers: [HealthController],
   providers: [

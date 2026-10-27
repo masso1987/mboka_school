@@ -5,6 +5,7 @@ import { LOCALES, type Locale } from '@mboka/shared';
 import { setLocale } from '../i18n';
 import { useSession } from '../lib/session';
 import { visibleNavItems } from '../nav';
+import { NotificationBell } from './NotificationBell';
 
 export function AppLayout() {
   const { t, i18n } = useTranslation();
@@ -84,6 +85,7 @@ export function AppLayout() {
           )}
 
           <div className="ml-auto flex items-center gap-3">
+            {context && <NotificationBell />}
             <label className="text-sm">
               <span className="sr-only">{t('common.language')}</span>
               <select

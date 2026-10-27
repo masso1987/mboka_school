@@ -6,7 +6,7 @@ import { useTenantMutation, useTenantQuery } from '../lib/hooks';
 import { useSession } from '../lib/session';
 import type { Page, StaffRow, UserRow } from '../lib/types';
 
-export function StaffPage() {
+export function StaffPage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { can } = useSession();
   const [q, setQ] = useState('');
@@ -16,7 +16,7 @@ export function StaffPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('nav.hr')}
+        title={embedded ? '' : t('nav.hr')}
         actions={can('hr.staff.manage') && <Button onClick={() => setCreating((v) => !v)}>{creating ? t('common.cancel') : t('staff.new')}</Button>}
       />
       {creating && <NewStaffForm onDone={() => setCreating(false)} />}

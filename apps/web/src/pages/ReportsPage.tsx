@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Badge, Card, ErrorMessage, Field, Input, Loading, PageHeader, Table } from '../components/ui';
+import { Badge, Button, Card, ErrorMessage, Field, Input, Loading, PageHeader, Table } from '../components/ui';
+import { openBlob } from '../lib/api';
 import type { Aging, FinanceSummary } from '../lib/finance-types';
 import { useCurrentYear, useLabel, useSchoolToday, useTenantQuery } from '../lib/hooks';
 import { useMoney } from '../lib/money';
@@ -14,6 +15,7 @@ export function ReportsPage() {
   const { current } = useCurrentYear();
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const [exportError, setExportError] = useState<unknown>(null);
   const start = from || current?.startDate || today;
   const end = to || today;
   const summary = useTenantQuery<FinanceSummary>(['summary', start, end], `/finance/reports/summary?from=${start}&to=${end}`);
@@ -29,7 +31,11 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('reports.financialTitle')} />
+      <PageHeader
+        title={t('reports.financialTitle')}
+        actions={<Button variant="secondary" onClick={() => openBlob(`/exports/payments.csv?from=${start}&to=${end}`).catch(setExportError)}>{t('reports.exportPayments')}</Button>}
+      />
+      <ErrorMessage error={exportError} />
       <div className="flex flex-wrap items-end gap-4">
         <Field label={t('reports.from')}>
           <Input type="date" value={start} max={end} onChange={(e) => setFrom(e.target.value)} />
@@ -124,6 +130,8 @@ export function ReportsPage() {
         ) : null}
       </Card>
 
+      <AnnualComparison />
+
       {s && (
         <Card title={t('reports.definitions')}>
           <dl className="space-y-2 text-sm">
@@ -137,5 +145,40 @@ export function ReportsPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+/** Year-over-year view (Module 10 annual dashboard, REP-007). */
+function AnnualComparison() {
+  const { t } = useTranslation();
+  const money = useMoney();
+  const data = useTenantQuery<{
+    years: { id: string; name: string; complete: boolean; enrolled: number; attendanceRate: number | null; passRate: number | null; currency?: string; billed?: string; collected?: string; expenses?: string; collectionRate?: number | null; operatingResult?: string }[];
+    basis: string;
+  }>(['annual-comparison'], '/reports/annual-comparison');
+  if (data.isPending) return <Loading />;
+  if (data.isError) return <ErrorMessage error={data.error} />;
+  const pct = (v: number | null | undefined) => (v === null || v === undefined ? '—' : `${v} %`);
+  return (
+    <Card title={t('reports.annual')}>
+      <Table head={[t('common.academicYear'), t('reports.enrolled'), t('reports.attendanceRate'), t('reports.passRate'), t('reports.kpi.billed'), t('reports.kpi.collected'), t('reports.kpi.collectionRate'), t('reports.kpi.expenses'), t('reports.kpi.operatingResult')]}>
+        {data.data.years.map((y) => (
+          <tr key={y.id}>
+            <td className="font-medium">
+              {y.name} {!y.complete && <Badge tone="amber">{t('reports.ongoing')}</Badge>}
+            </td>
+            <td className="tabular">{y.enrolled}</td>
+            <td className="tabular">{pct(y.attendanceRate)}</td>
+            <td className="tabular">{pct(y.passRate)}</td>
+            <td className="tabular">{y.currency ? money(y.billed, y.currency) : '—'}</td>
+            <td className="tabular">{y.currency ? money(y.collected, y.currency) : '—'}</td>
+            <td className="tabular">{pct(y.collectionRate)}</td>
+            <td className="tabular">{y.currency ? money(y.expenses, y.currency) : '—'}</td>
+            <td className="tabular">{y.currency ? money(y.operatingResult, y.currency) : '—'}</td>
+          </tr>
+        ))}
+      </Table>
+      <p className="mt-3 text-xs text-slate-500">{t('reports.annualBasis')}</p>
+    </Card>
   );
 }

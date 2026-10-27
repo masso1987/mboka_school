@@ -13,7 +13,8 @@ describe('navigation filtering', () => {
     expect(keys).toContain('attendance');
     expect(keys).toContain('grades');
     expect(keys).not.toContain('fees');
-    expect(keys).not.toContain('hr');
+    expect(keys).toContain('hr'); // own leave requests
+    expect(keys).not.toContain('portal');
     expect(keys).not.toContain('administration');
   });
 
@@ -23,11 +24,16 @@ describe('navigation filtering', () => {
     expect(keys).not.toContain('grades');
   });
 
-  it('shows the director everything', () => {
+  it('shows the director everything except the family portal', () => {
+    expect(visibleNavItems(canFor('director')).map((i) => i.key)).not.toContain('portal');
     expect(visibleNavItems(canFor('director'))).toHaveLength(15);
   });
 
-  it('always shows the dashboard', () => {
-    expect(visibleNavItems(() => false).map((i) => i.key)).toEqual(['dashboard']);
+  it('always shows the dashboard and announcements', () => {
+    expect(visibleNavItems(() => false).map((i) => i.key)).toEqual(['dashboard', 'community']);
+  });
+
+  it('shows a parent only the dashboard, the portal and announcements', () => {
+    expect(visibleNavItems(canFor('parent')).map((i) => i.key)).toEqual(['dashboard', 'portal', 'community']);
   });
 });

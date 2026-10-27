@@ -28,6 +28,14 @@ async function main() {
   // Only adds: permissions a school removed from a system role are not re-added unless new to the template.
   let added = 0;
   for (const template of DEFAULT_ROLES) {
+    // Create system roles added to the templates since a school was provisioned (e.g. parent, student).
+    for (const t of await prisma.tenant.findMany({ select: { id: true } })) {
+      await prisma.role.upsert({
+        where: { tenantId_key: { tenantId: t.id, key: template.key } },
+        create: { tenantId: t.id, key: template.key, nameFr: template.name.fr, nameEn: template.name.en, isSystem: true },
+        update: {},
+      });
+    }
     const roles = await prisma.role.findMany({ where: { key: template.key, isSystem: true }, select: { id: true, tenantId: true } });
     for (const role of roles) {
       const res = await prisma.rolePermission.createMany({
