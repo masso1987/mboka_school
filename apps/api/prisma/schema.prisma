@@ -70,17 +70,17 @@ enum PlatformRole {
 }
 
 model User {
-  id            String       @id @default(uuid()) @db.Uuid
-  email         String       @unique
-  fullName      String       @map("full_name")
-  passwordHash  String?      @map("password_hash")
-  locale        String?
-  platformRole  PlatformRole @default(NONE) @map("platform_role")
-  mfaSecret     String?      @map("mfa_secret")
-  isActive      Boolean      @default(true) @map("is_active")
-  lastLoginAt   DateTime?    @map("last_login_at") @db.Timestamptz(6)
-  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id           String       @id @default(uuid()) @db.Uuid
+  email        String       @unique
+  fullName     String       @map("full_name")
+  passwordHash String?      @map("password_hash")
+  locale       String?
+  platformRole PlatformRole @default(NONE) @map("platform_role")
+  mfaSecret    String?      @map("mfa_secret")
+  isActive     Boolean      @default(true) @map("is_active")
+  lastLoginAt  DateTime?    @map("last_login_at") @db.Timestamptz(6)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   sessions    Session[]
   memberships Membership[]
@@ -90,15 +90,15 @@ model User {
 
 /// Server-managed session. Only the SHA-256 of the token is stored.
 model Session {
-  id         String    @id @default(uuid()) @db.Uuid
-  userId     String    @map("user_id") @db.Uuid
-  tokenHash  String    @unique @map("token_hash")
-  csrfToken  String    @map("csrf_token")
-  ip         String?
-  userAgent  String?   @map("user_agent")
-  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
-  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  csrfToken String    @map("csrf_token")
+  ip        String?
+  userAgent String?   @map("user_agent")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -143,14 +143,14 @@ model Permission {
 }
 
 model Role {
-  id          String   @id @default(uuid()) @db.Uuid
-  tenantId    String   @map("tenant_id") @db.Uuid
-  key         String
-  nameFr      String   @map("name_fr")
-  nameEn      String   @map("name_en")
-  isSystem    Boolean  @default(false) @map("is_system")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  key       String
+  nameFr    String   @map("name_fr")
+  nameEn    String   @map("name_en")
+  isSystem  Boolean  @default(false) @map("is_system")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   permissions RolePermission[]
@@ -238,6 +238,9 @@ model AcademicYear {
   admissions       Admission[]
   assignments      TeachingAssignment[]
   timetableEntries TimetableEntry[]
+  feeSchedules     FeeSchedule[]
+  invoices         Invoice[]
+  budgets          Budget[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -496,8 +499,8 @@ model TeachingAssignment {
   classSubject ClassSubject @relation(fields: [tenantId, classSubjectId], references: [tenantId, id], onDelete: Restrict)
   staff        Staff        @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
 
-  @@index([tenantId, staffId])
   @@unique([tenantId, id])
+  @@index([tenantId, staffId])
   @@map("teaching_assignments")
 }
 
@@ -532,6 +535,8 @@ model Student {
   enrollments Enrollment[]
   admissions  Admission[]
   attendance  AttendanceRecord[]
+  invoices    Invoice[]
+  payments    Payment[]
 
   @@unique([tenantId, matricule])
   @@unique([tenantId, id])
@@ -642,8 +647,8 @@ model Enrollment {
   schoolClass  SchoolClass        @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
   attendance   AttendanceRecord[]
 
-  @@index([tenantId, classId])
   @@unique([tenantId, id])
+  @@index([tenantId, classId])
   @@map("enrollments")
 }
 
@@ -742,4 +747,497 @@ model TimetableEntry {
 
   @@unique([tenantId, id])
   @@map("timetable_entries")
+}
+
+// ================================================================ Phase 3 — finance
+// Money: NUMERIC(18,2) with the ISO 4217 code beside every amount; decimals beyond the
+// currency's minor units (XAF: 0) are rejected by the API. Rates: NUMERIC(20,10), always read
+// as "1 <base> = <rate> <quote>". Posted rows (payments, allocations, receipts, rates, provider
+// events) are append-only for the runtime role (grants in 0004); corrections are new rows.
+
+/// ISO 4217 reference data (global, not tenant-owned).
+model Currency {
+  code       String @id @db.Char(3)
+  minorUnits Int    @map("minor_units")
+  nameFr     String @map("name_fr")
+  nameEn     String @map("name_en")
+
+  @@map("currencies")
+}
+
+model FinanceSettings {
+  tenantId                 String   @id @map("tenant_id") @db.Uuid
+  reportingCurrency        String   @map("reporting_currency") @db.Char(3)
+  enabledCurrencies        String[] @map("enabled_currencies")
+  /// Expenses above this amount (reporting currency) need `expenses.approve.unlimited` (EXP-004).
+  expenseApprovalThreshold Decimal  @map("expense_approval_threshold") @db.Decimal(18, 2)
+  updatedAt                DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("finance_settings")
+}
+
+/// Append-only rate history. "1 base = rate quote" from effective_date until the next rate (CUR-005/006/011).
+model ExchangeRate {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  baseCurrency  String   @map("base_currency") @db.Char(3)
+  quoteCurrency String   @map("quote_currency") @db.Char(3)
+  rate          Decimal  @db.Decimal(20, 10)
+  effectiveDate DateTime @map("effective_date") @db.Date
+  source        String   @default("MANUAL")
+  createdBy     String   @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, baseCurrency, quoteCurrency, effectiveDate])
+  @@map("exchange_rates")
+}
+
+enum FinancialPeriodStatus {
+  OPEN
+  CLOSED
+}
+
+/// Transactions dated inside a closed period are refused; corrections post in an open period.
+model FinancialPeriod {
+  id        String                @id @default(uuid()) @db.Uuid
+  tenantId  String                @map("tenant_id") @db.Uuid
+  name      String
+  startDate DateTime              @map("start_date") @db.Date
+  endDate   DateTime              @map("end_date") @db.Date
+  status    FinancialPeriodStatus @default(OPEN)
+  closedAt  DateTime?             @map("closed_at") @db.Timestamptz(6)
+  closedBy  String?               @map("closed_by") @db.Uuid
+  createdAt DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@map("financial_periods")
+}
+
+// ---------------------------------------------------------------- billing
+
+enum FeeKind {
+  REGISTRATION
+  TUITION
+  EXAM
+  TRANSPORT
+  CANTEEN
+  UNIFORM
+  OTHER
+}
+
+model FeeCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String
+  nameFr    String   @map("name_fr")
+  nameEn    String   @map("name_en")
+  kind      FeeKind
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  schedules FeeSchedule[]
+  lines     InvoiceLine[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@map("fee_categories")
+}
+
+/// A fee for one academic year, optionally limited to a level or a class, payable in installments (FIN-001/003).
+model FeeSchedule {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  categoryId     String   @map("category_id") @db.Uuid
+  name           String
+  currency       String   @db.Char(3)
+  amount         Decimal  @db.Decimal(18, 2)
+  levelId        String?  @map("level_id") @db.Uuid
+  classId        String?  @map("class_id") @db.Uuid
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  academicYear AcademicYear           @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  category     FeeCategory            @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Restrict)
+  installments FeeInstallment[]
+  assignments  StudentFeeAssignment[]
+
+  @@unique([tenantId, id])
+  @@map("fee_schedules")
+}
+
+model FeeInstallment {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  scheduleId String   @map("schedule_id") @db.Uuid
+  position   Int
+  label      String
+  dueDate    DateTime @map("due_date") @db.Date
+  amount     Decimal  @db.Decimal(18, 2)
+
+  schedule FeeSchedule @relation(fields: [tenantId, scheduleId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, scheduleId, position])
+  @@map("fee_installments")
+}
+
+/// Records that a schedule was billed to an enrollment — makes re-applying a schedule a no-op.
+model StudentFeeAssignment {
+  tenantId     String   @map("tenant_id") @db.Uuid
+  scheduleId   String   @map("schedule_id") @db.Uuid
+  enrollmentId String   @map("enrollment_id") @db.Uuid
+  invoiceId    String   @map("invoice_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  schedule FeeSchedule @relation(fields: [tenantId, scheduleId], references: [tenantId, id], onDelete: Restrict)
+  invoice  Invoice     @relation(fields: [tenantId, invoiceId], references: [tenantId, id], onDelete: Restrict)
+
+  @@id([scheduleId, enrollmentId])
+  @@index([tenantId])
+  @@map("student_fee_assignments")
+}
+
+enum InvoiceStatus {
+  ISSUED
+  CANCELLED
+}
+
+model Invoice {
+  id                String        @id @default(uuid()) @db.Uuid
+  tenantId          String        @map("tenant_id") @db.Uuid
+  number            String
+  studentId         String        @map("student_id") @db.Uuid
+  academicYearId    String        @map("academic_year_id") @db.Uuid
+  enrollmentId      String?       @map("enrollment_id") @db.Uuid
+  currency          String        @db.Char(3)
+  issueDate         DateTime      @map("issue_date") @db.Date
+  status            InvoiceStatus @default(ISSUED)
+  /// Invoice→reporting currency rate at issue, for realized exchange differences (CUR-009).
+  reportingCurrency String        @map("reporting_currency") @db.Char(3)
+  reportingRate     Decimal       @map("reporting_rate") @db.Decimal(20, 10)
+  notes             String?
+  cancelledReason   String?       @map("cancelled_reason")
+  createdBy         String        @map("created_by") @db.Uuid
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student      Student                @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Restrict)
+  academicYear AcademicYear           @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  lines        InvoiceLine[]
+  allocations  PaymentAllocation[]
+  assignments  StudentFeeAssignment[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@map("invoices")
+}
+
+enum InvoiceLineKind {
+  CHARGE
+  DISCOUNT
+}
+
+enum DiscountKind {
+  DISCOUNT
+  SCHOLARSHIP
+  WAIVER
+}
+
+/// Charges and approved reductions; amounts are positive, DISCOUNT lines subtract (FIN-004).
+model InvoiceLine {
+  id            String          @id @default(uuid()) @db.Uuid
+  tenantId      String          @map("tenant_id") @db.Uuid
+  invoiceId     String          @map("invoice_id") @db.Uuid
+  kind          InvoiceLineKind
+  categoryId    String?         @map("category_id") @db.Uuid
+  description   String
+  amount        Decimal         @db.Decimal(18, 2)
+  dueDate       DateTime?       @map("due_date") @db.Date
+  installmentId String?         @map("installment_id") @db.Uuid
+  discountKind  DiscountKind?   @map("discount_kind")
+  reason        String?
+  createdBy     String          @map("created_by") @db.Uuid
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  invoice  Invoice      @relation(fields: [tenantId, invoiceId], references: [tenantId, id], onDelete: Restrict)
+  category FeeCategory? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, invoiceId])
+  @@map("invoice_lines")
+}
+
+// ---------------------------------------------------------------- payments
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  MOBILE_MONEY
+  CHEQUE
+}
+
+enum PaymentStatus {
+  PENDING_VERIFICATION
+  CONFIRMED
+  FAILED
+  REVERSED
+}
+
+/// Immutable once confirmed: only status moves (→ REVERSED) with reversal metadata (FIN-013/017).
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  tenantId          String        @map("tenant_id") @db.Uuid
+  studentId         String        @map("student_id") @db.Uuid
+  method            PaymentMethod
+  currency          String        @db.Char(3)
+  amount            Decimal       @db.Decimal(18, 2)
+  receivedOn        DateTime      @map("received_on") @db.Date
+  status            PaymentStatus
+  externalReference String?       @map("external_reference")
+  provider          String?
+  idempotencyKey    String        @map("idempotency_key") @db.Uuid
+  cashierSessionId  String?       @map("cashier_session_id") @db.Uuid
+  recordedBy        String?       @map("recorded_by") @db.Uuid
+  /// Payment→reporting conversion snapshot at the payment date (CUR-006/008).
+  reportingCurrency String        @map("reporting_currency") @db.Char(3)
+  reportingRate     Decimal       @map("reporting_rate") @db.Decimal(20, 10)
+  reportingAmount   Decimal       @map("reporting_amount") @db.Decimal(18, 2)
+  notes             String?
+  confirmedAt       DateTime?     @map("confirmed_at") @db.Timestamptz(6)
+  reversedAt        DateTime?     @map("reversed_at") @db.Timestamptz(6)
+  reversedBy        String?       @map("reversed_by") @db.Uuid
+  reversalReason    String?       @map("reversal_reason")
+  /// Accounting date of the reversal entry (an open period), distinct from the original receivedOn.
+  reversalDate      DateTime?     @map("reversal_date") @db.Date
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student     Student             @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Restrict)
+  allocations PaymentAllocation[]
+  receipt     Receipt?
+  refunds     Refund[]
+
+  @@unique([tenantId, idempotencyKey])
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@index([tenantId, receivedOn])
+  @@map("payments")
+}
+
+/// Part of a payment applied to an invoice, with the conversion used when currencies differ (FIN-011, CUR-004).
+model PaymentAllocation {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  paymentId          String   @map("payment_id") @db.Uuid
+  invoiceId          String   @map("invoice_id") @db.Uuid
+  amount             Decimal  @db.Decimal(18, 2)
+  invoiceAmount      Decimal  @map("invoice_amount") @db.Decimal(18, 2)
+  /// "1 payment currency = rate invoice currency" (1 when equal).
+  rate               Decimal  @db.Decimal(20, 10)
+  /// Realized difference in reporting currency between the invoice's and the payment's rates.
+  exchangeDifference Decimal  @default(0) @map("exchange_difference") @db.Decimal(18, 2)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payment Payment @relation(fields: [tenantId, paymentId], references: [tenantId, id], onDelete: Restrict)
+  invoice Invoice @relation(fields: [tenantId, invoiceId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, invoiceId])
+  @@index([tenantId, paymentId])
+  @@map("payment_allocations")
+}
+
+model Receipt {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  number    String
+  paymentId String   @unique @map("payment_id") @db.Uuid
+  issuedAt  DateTime @default(now()) @map("issued_at") @db.Timestamptz(6)
+  issuedBy  String?  @map("issued_by") @db.Uuid
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, number])
+  @@map("receipts")
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+}
+
+/// Refund of a payment's unallocated credit. The approver must differ from the requester (§3.3).
+model Refund {
+  id           String       @id @default(uuid()) @db.Uuid
+  tenantId     String       @map("tenant_id") @db.Uuid
+  paymentId    String       @map("payment_id") @db.Uuid
+  amount       Decimal      @db.Decimal(18, 2)
+  reason       String
+  status       RefundStatus @default(REQUESTED)
+  requestedBy  String       @map("requested_by") @db.Uuid
+  decidedBy    String?      @map("decided_by") @db.Uuid
+  decidedAt    DateTime?    @map("decided_at") @db.Timestamptz(6)
+  decisionNote String?      @map("decision_note")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payment Payment @relation(fields: [tenantId, paymentId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, paymentId])
+  @@map("refunds")
+}
+
+/// Per-school provider credentials; the HMAC secret is stored encrypted (AES-256-GCM, PAYMENT_SECRETS_KEY).
+model PaymentProvider {
+  tenantId        String   @map("tenant_id") @db.Uuid
+  code            String
+  secretEncrypted String   @map("secret_encrypted")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([tenantId, code])
+  @@map("payment_providers")
+}
+
+/// Every authenticated provider callback, once per (transaction, status): replays are no-ops (FIN-009/010).
+model PaymentProviderEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  provider       String
+  providerTxId   String   @map("provider_tx_id")
+  providerStatus String   @map("provider_status")
+  payload        Json
+  paymentId      String?  @map("payment_id") @db.Uuid
+  outcome        String
+  receivedAt     DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, provider, providerTxId, providerStatus])
+  @@map("payment_provider_events")
+}
+
+enum CashierSessionStatus {
+  OPEN
+  CLOSED
+}
+
+/// A cashier's till for one currency; closing compares counted cash with recorded cash (FIN-014).
+model CashierSession {
+  id             String               @id @default(uuid()) @db.Uuid
+  tenantId       String               @map("tenant_id") @db.Uuid
+  cashierId      String               @map("cashier_id") @db.Uuid
+  currency       String               @db.Char(3)
+  openingFloat   Decimal              @map("opening_float") @db.Decimal(18, 2)
+  openedAt       DateTime             @default(now()) @map("opened_at") @db.Timestamptz(6)
+  status         CashierSessionStatus @default(OPEN)
+  closedAt       DateTime?            @map("closed_at") @db.Timestamptz(6)
+  expectedAmount Decimal?             @map("expected_amount") @db.Decimal(18, 2)
+  countedAmount  Decimal?             @map("counted_amount") @db.Decimal(18, 2)
+  discrepancy    Decimal?             @db.Decimal(18, 2)
+  notes          String?
+
+  @@unique([tenantId, id])
+  @@map("cashier_sessions")
+}
+
+// ---------------------------------------------------------------- expenses and budgets
+
+model ExpenseCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String
+  nameFr    String   @map("name_fr")
+  nameEn    String   @map("name_en")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  expenses    Expense[]
+  budgetLines BudgetLine[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@map("expense_categories")
+}
+
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+model Expense {
+  id               String        @id @default(uuid()) @db.Uuid
+  tenantId         String        @map("tenant_id") @db.Uuid
+  number           String
+  categoryId       String        @map("category_id") @db.Uuid
+  supplier         String?
+  description      String
+  amount           Decimal       @db.Decimal(18, 2)
+  currency         String        @db.Char(3)
+  expenseDate      DateTime      @map("expense_date") @db.Date
+  status           ExpenseStatus @default(SUBMITTED)
+  reportingAmount  Decimal       @map("reporting_amount") @db.Decimal(18, 2)
+  reportingRate    Decimal       @map("reporting_rate") @db.Decimal(20, 10)
+  submittedBy      String        @map("submitted_by") @db.Uuid
+  approvedBy       String?       @map("approved_by") @db.Uuid
+  approvedAt       DateTime?     @map("approved_at") @db.Timestamptz(6)
+  paidAt           DateTime?     @map("paid_at") @db.Timestamptz(6)
+  paymentReference String?       @map("payment_reference")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category ExpenseCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Restrict)
+  events   ExpenseEvent[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, expenseDate])
+  @@map("expenses")
+}
+
+/// Approval history (EXP-003, `expense_approvals` in the spec): one row per status change.
+model ExpenseEvent {
+  id         String         @id @default(uuid()) @db.Uuid
+  tenantId   String         @map("tenant_id") @db.Uuid
+  expenseId  String         @map("expense_id") @db.Uuid
+  fromStatus ExpenseStatus? @map("from_status")
+  toStatus   ExpenseStatus  @map("to_status")
+  actorId    String         @map("actor_id") @db.Uuid
+  comment    String?
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  expense Expense @relation(fields: [tenantId, expenseId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, expenseId])
+  @@map("expense_events")
+}
+
+model Budget {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  name           String
+  currency       String   @db.Char(3)
+  createdBy      String   @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  academicYear AcademicYear @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  lines        BudgetLine[]
+
+  @@unique([tenantId, academicYearId])
+  @@unique([tenantId, id])
+  @@map("budgets")
+}
+
+model BudgetLine {
+  id         String  @id @default(uuid()) @db.Uuid
+  tenantId   String  @map("tenant_id") @db.Uuid
+  budgetId   String  @map("budget_id") @db.Uuid
+  categoryId String  @map("category_id") @db.Uuid
+  amount     Decimal @db.Decimal(18, 2)
+
+  budget   Budget          @relation(fields: [tenantId, budgetId], references: [tenantId, id], onDelete: Cascade)
+  category ExpenseCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, budgetId, categoryId])
+  @@map("budget_lines")
 }

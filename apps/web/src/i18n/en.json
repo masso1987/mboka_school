@@ -1,5 +1,7 @@
 {
-  "app": { "name": "Mboka School" },
+  "app": {
+    "name": "Mboka School"
+  },
   "common": {
     "loading": "Loading…",
     "save": "Save",
@@ -68,10 +70,18 @@
     "status": "Status",
     "empty": "No academic years yet. Create the first one to start configuring the school.",
     "created": "Academic year created.",
-    "statuses": { "DRAFT": "Draft", "ACTIVE": "Active", "CLOSED": "Closed" }
+    "statuses": {
+      "DRAFT": "Draft",
+      "ACTIVE": "Active",
+      "CLOSED": "Closed"
+    }
   },
   "classes": {
-    "tabs": { "classes": "Classes", "levels": "Levels", "subjects": "Subjects" },
+    "tabs": {
+      "classes": "Classes",
+      "levels": "Levels",
+      "subjects": "Subjects"
+    },
     "new": "New class",
     "needLevels": "Create at least one level first (Levels tab).",
     "level": "Level",
@@ -117,12 +127,21 @@
     "lastName": "Last name",
     "firstName": "First name",
     "gender": "Sex",
-    "genders": { "F": "Female", "M": "Male" },
+    "genders": {
+      "F": "Female",
+      "M": "Male"
+    },
     "placeOfBirth": "Place of birth",
     "guardian": "Parent or guardian",
     "phone": "Phone",
     "relationship": "Relationship",
-    "relationships": { "FATHER": "Father", "MOTHER": "Mother", "GUARDIAN": "Guardian", "SIBLING": "Sibling", "OTHER": "Other" },
+    "relationships": {
+      "FATHER": "Father",
+      "MOTHER": "Mother",
+      "GUARDIAN": "Guardian",
+      "SIBLING": "Sibling",
+      "OTHER": "Other"
+    },
     "possibleDuplicate": "A student with the same name and date of birth already exists. Check that this is not the same child.",
     "confirmDifferent": "I confirm this is a different child",
     "matriculeAuto": "The matricule is assigned automatically.",
@@ -157,8 +176,18 @@
     "noStudents": "No students enrolled in this class on this date.",
     "recordedVersion": "Register saved (version {{version}})",
     "notYetTaken": "Register not taken yet",
-    "statuses": { "PRESENT": "Present", "ABSENT": "Absent", "LATE": "Late", "EXCUSED": "Excused" },
-    "short": { "PRESENT": "P", "ABSENT": "A", "LATE": "L", "EXCUSED": "E" },
+    "statuses": {
+      "PRESENT": "Present",
+      "ABSENT": "Absent",
+      "LATE": "Late",
+      "EXCUSED": "Excused"
+    },
+    "short": {
+      "PRESENT": "P",
+      "ABSENT": "A",
+      "LATE": "L",
+      "EXCUSED": "E"
+    },
     "arrival": "Arrival time",
     "correctionReason": "Reason for correction",
     "correctionHint": "Required to change a register already saved.",
@@ -175,9 +204,21 @@
     }
   },
   "teaching": {
-    "tabs": { "timetable": "Timetable", "assignments": "Assignments", "rooms": "Rooms" },
+    "tabs": {
+      "timetable": "Timetable",
+      "assignments": "Assignments",
+      "rooms": "Rooms"
+    },
     "noLessons": "No lessons scheduled for this class.",
-    "weekdays": { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "7": "Sunday" },
+    "weekdays": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    },
     "deleteConfirm": "Remove this lesson from the timetable?",
     "newLesson": "Add a lesson",
     "day": "Day",
@@ -185,10 +226,18 @@
     "end": "End",
     "teacher": "Teacher",
     "room": "Room",
-    "conflictOn": { "class": "class already busy", "teacher": "teacher already busy", "room": "room already busy" },
+    "conflictOn": {
+      "class": "class already busy",
+      "teacher": "teacher already busy",
+      "room": "room already busy"
+    },
     "newAssignment": "New assignment",
     "role": "Role",
-    "roles": { "MAIN": "Main teacher", "CO_TEACHER": "Co-teacher", "REPLACEMENT": "Replacement" },
+    "roles": {
+      "MAIN": "Main teacher",
+      "CO_TEACHER": "Co-teacher",
+      "REPLACEMENT": "Replacement"
+    },
     "assign": "Assign",
     "noAssignments": "No assignments for this year.",
     "period": "Period",
@@ -209,12 +258,20 @@
     "accountHint": "Required for a teacher to sign in and take attendance.",
     "teacher": "Teacher",
     "linked": "Linked",
-    "types": { "PERMANENT": "Permanent", "CONTRACT": "Contract", "PART_TIME": "Part-time", "TEMPORARY": "Temporary" },
+    "types": {
+      "PERMANENT": "Permanent",
+      "CONTRACT": "Contract",
+      "PART_TIME": "Part-time",
+      "TEMPORARY": "Temporary"
+    },
     "hireDate": "Hire date",
     "isTeacher": "Teaching staff"
   },
   "admin": {
-    "tabs": { "users": "Users", "campuses": "Campuses" },
+    "tabs": {
+      "users": "Users",
+      "campuses": "Campuses"
+    },
     "invite": "Add a user",
     "fullName": "Full name",
     "email": "Email address",
@@ -224,7 +281,11 @@
     "tempPasswordWarning": "Share it securely: it will not be shown again.",
     "lastLogin": "Last sign-in",
     "you": "you",
-    "statuses": { "ACTIVE": "Active", "INVITED": "Invited", "REVOKED": "Revoked" },
+    "statuses": {
+      "ACTIVE": "Active",
+      "INVITED": "Invited",
+      "REVOKED": "Revoked"
+    },
     "editRoles": "Edit roles",
     "newCampus": "New campus",
     "address": "Address"
@@ -268,6 +329,242 @@
     "PLAN_LIMIT_REACHED": "Your subscription does not allow adding more.",
     "ALREADY_MEMBER": "This person already has access to the school.",
     "UNKNOWN_ROLE": "Unknown role.",
-    "end_before_start": "The end date must come after the start date."
+    "end_before_start": "The end date must come after the start date.",
+    "AMOUNT_PRECISION": "Too many decimals for this currency (CFA francs have none).",
+    "UNKNOWN_CURRENCY": "Unknown currency.",
+    "CURRENCY_NOT_ENABLED": "This currency is not enabled for the school.",
+    "RATE_MISSING": "No exchange rate in force on that date for these currencies.",
+    "RATE_EXISTS": "A rate already exists for this pair and date.",
+    "REPORTING_CURRENCY_REQUIRED": "The reporting currency must stay enabled.",
+    "PERIOD_CLOSED": "This financial period is closed.",
+    "PERIOD_ALREADY_CLOSED": "Period already closed.",
+    "PENDING_PAYMENTS_IN_PERIOD": "Some payments in this period still await confirmation.",
+    "OPEN_CASHIER_SESSIONS": "Some cash registers are still open for this period.",
+    "SCHEDULE_INACTIVE": "This fee schedule is inactive.",
+    "DISCOUNT_EXCEEDS_BALANCE": "The reduction exceeds the remaining balance.",
+    "INVOICE_HAS_PAYMENTS": "Reverse this invoice's payments first.",
+    "INVOICE_CANCELLED": "This invoice is cancelled.",
+    "NO_OPEN_CASHIER_SESSION": "Open your cash register before taking cash.",
+    "REFERENCE_REQUIRED": "Enter the bank, card or Mobile Money reference.",
+    "PROVIDER_NOT_CONFIGURED": "This payment provider is not configured.",
+    "IDEMPOTENCY_KEY_REUSED": "This payment was already recorded with different values. Reload the page.",
+    "INVOICE_NOT_PAYABLE": "This invoice cannot be paid for this student.",
+    "ALLOCATION_EXCEEDS_BALANCE": "The applied amount exceeds the invoice balance.",
+    "ALLOCATION_EXCEEDS_PAYMENT": "Allocations exceed the payment amount.",
+    "PAYMENT_NOT_CONFIRMED": "Only a confirmed payment can be reversed or refunded.",
+    "PAYMENT_HAS_REFUNDS": "This payment has refunds in progress.",
+    "REFUND_EXCEEDS_CREDIT": "The refund exceeds the available credit.",
+    "REFUND_ALREADY_DECIDED": "This refund has already been decided.",
+    "SESSION_ALREADY_OPEN": "You already have an open register in this currency.",
+    "SESSION_CLOSED": "This register is already closed.",
+    "ABOVE_APPROVAL_THRESHOLD": "This amount exceeds your approval limit.",
+    "SECRETS_KEY_MISSING": "Server configuration incomplete (encryption key).",
+    "INVALID_SIGNATURE": "Invalid signature."
+  },
+  "fees": {
+    "tabs": {
+      "desk": "Cash desk",
+      "invoices": "Invoices",
+      "schedules": "Fee schedules",
+      "refunds": "Refunds",
+      "settings": "Settings"
+    },
+    "findStudent": "Find a student",
+    "noInvoices": "No invoices.",
+    "balanceDue": "Balance due",
+    "paidOf": "{{paid}} paid of {{total}}",
+    "invoice": "Invoice",
+    "issued": "Issued",
+    "total": "Total",
+    "paid": "Paid",
+    "balance": "Balance",
+    "paymentStatuses": {
+      "UNPAID": "Unpaid",
+      "PARTIALLY_PAID": "Partially paid",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled",
+      "PENDING_VERIFICATION": "Awaiting confirmation",
+      "CONFIRMED": "Confirmed",
+      "FAILED": "Failed",
+      "REVERSED": "Reversed"
+    },
+    "paymentHistory": "Payments",
+    "date": "Date",
+    "method": "Payment method",
+    "amount": "Amount",
+    "receipt": "Receipt",
+    "credit": "Credit: {{amount}}",
+    "methods": {
+      "CASH": "Cash",
+      "BANK_TRANSFER": "Bank transfer",
+      "CARD": "Card",
+      "MOBILE_MONEY": "Mobile Money",
+      "CHEQUE": "Cheque"
+    },
+    "recordPayment": "Record a payment",
+    "currency": "Currency",
+    "reference": "Reference",
+    "referenceHintMomo": "Mobile Money transaction number.",
+    "provider": "Provider",
+    "manualConfirmation": "Manual confirmation",
+    "recorded": "{{amount}} received — receipt {{receipt}}.",
+    "printReceipt": "Print receipt",
+    "pendingVerification": "Payment awaiting the provider's confirmation. The balance updates once it is confirmed.",
+    "cashRegister": "My cash register",
+    "registerOpen": "Register open ({{currency}})",
+    "openingFloat": "Opening float",
+    "cashTaken": "Cash taken",
+    "expected": "Expected amount",
+    "countedCash": "Cash counted",
+    "closeRegister": "Close register",
+    "closeConfirm": "Close the register? This cannot be undone.",
+    "registerClosedHelp": "Open your register to take cash payments.",
+    "closedSummary": "Register closed: expected {{expected}}, counted {{counted}}, difference {{gap}}.",
+    "openRegister": "Open register",
+    "searchInvoices": "Invoice number, name or matricule",
+    "outstandingOnly": "Unsettled invoices only",
+    "lines": "Lines",
+    "description": "Description",
+    "dueDate": "Due date",
+    "noPayments": "No payments.",
+    "applied": "Applied",
+    "grantReduction": "Grant a reduction",
+    "reductionKind": "Type",
+    "discountKinds": {
+      "DISCOUNT": "Discount",
+      "SCHOLARSHIP": "Scholarship",
+      "WAIVER": "Waiver"
+    },
+    "grant": "Grant",
+    "applyConfirm": "Bill this schedule to every matching student who has not received it yet?",
+    "category": "Category",
+    "installments": "Installments",
+    "billed": "Students billed",
+    "apply": "Bill",
+    "noSchedules": "No fee schedules for this academic year.",
+    "newSchedule": "New fee schedule",
+    "allLevels": "All levels",
+    "installment": "Installment",
+    "addInstallment": "Add installment",
+    "newCategory": "New fee category",
+    "kind": "Kind",
+    "kinds": {
+      "REGISTRATION": "Registration",
+      "TUITION": "Tuition",
+      "EXAM": "Exam",
+      "TRANSPORT": "Transport",
+      "CANTEEN": "Canteen",
+      "UNIFORM": "Uniform",
+      "OTHER": "Other"
+    },
+    "noRefunds": "No refund requests.",
+    "refundStatuses": {
+      "REQUESTED": "Requested",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "cannotApproveOwn": "Your request: another manager must approve it",
+    "approve": "Approve",
+    "reject": "Reject",
+    "currencies": "Currencies",
+    "reportingCurrency": "Reporting currency: {{currency}} (cannot be changed).",
+    "exchangeRates": "Exchange rates",
+    "from": "From",
+    "to": "To",
+    "rate": "Rate",
+    "effective": "Effective date",
+    "rateHelp": "Read as: 1 unit of \"From\" = rate × \"To\". Rates are never edited: enter a new rate with a later effective date.",
+    "since": "since {{date}}",
+    "periods": "Financial periods",
+    "closed": "Closed",
+    "closePeriod": "Close",
+    "closePeriodConfirm": "Close this period? No transaction can be dated in it afterwards.",
+    "print": "Print",
+    "reversedStamp": "Payment reversed",
+    "receivedFrom": "Received from",
+    "appliedTo": "Applied to",
+    "creditLabel": "Unapplied credit",
+    "remainingBalance": "Balance remaining after this payment",
+    "issuedBy": "Issued by {{name}}",
+    "appliedResult": "{{created}} invoice(s) created; {{existing}} student(s) already billed."
+  },
+  "expenses": {
+    "tabs": {
+      "expenses": "Expenses",
+      "budget": "Budget"
+    },
+    "new": "New expense",
+    "category": "Category",
+    "description": "Description",
+    "supplier": "Supplier",
+    "submit": "Submit",
+    "budgetWarning": "Warning: budget overrun for this category ({{after}} committed against {{budgeted}} budgeted).",
+    "allStatuses": "All statuses",
+    "statuses": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Submitted",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled"
+    },
+    "empty": "No expenses.",
+    "number": "No.",
+    "paymentReference": "Payment reference (optional)",
+    "markPaid": "Mark paid",
+    "cancelConfirm": "Cancel this expense?",
+    "budgetFor": "Budget {{year}}",
+    "noBudget": "No budget defined.",
+    "budgeted": "Budgeted",
+    "actual": "Actual",
+    "remaining": "Remaining",
+    "utilization": "Utilization",
+    "editBudget": "Edit budget",
+    "addCategory": "Add category",
+    "basis": "Actual = expenses approved or paid, dated within the academic year, in reporting currency at each expense's recorded rate."
+  },
+  "reports": {
+    "financialTitle": "Financial reports",
+    "from": "From",
+    "to": "To",
+    "status": {
+      "FINAL": "Final (period closed)",
+      "PROVISIONAL": "Provisional"
+    },
+    "kpi": {
+      "billed": "Billed",
+      "collected": "Collected",
+      "refunds": "Refunds",
+      "outstanding": "Outstanding",
+      "collectionRate": "Collection rate",
+      "expenses": "Expenses",
+      "netCashResult": "Net cash result",
+      "operatingResult": "Operating result",
+      "exchangeDifferences": "Exchange differences"
+    },
+    "definitionText": {
+      "billed": "Charges minus discounts of invoices issued in the range (cancelled invoices excluded), at each invoice's rate.",
+      "collected": "Payments received in the range (confirmed, or reversed later) minus reversals dated in the range. Pending and failed payments are excluded.",
+      "refunds": "Refunds approved in the range.",
+      "outstanding": "Balance at the end date of invoices issued by then, counting only payments received and not reversed by then.",
+      "collectionRate": "Eligible collections ÷ amounts due × 100. Due = installments due by the end date, less discounts. Collections are capped at the amount due per invoice, so prepayments and credit do not inflate the rate; amounts not yet due are excluded.",
+      "expenses": "Expenses approved or paid, dated in the range.",
+      "netCashResult": "Collected − refunds − expenses paid in the range. A cash view, not profitability.",
+      "operatingResult": "Billed − expenses (approved or paid) in the range. Validate against the school's accounting policy.",
+      "exchangeDifferences": "Realized gains (+) or losses (−) on payments in the range, between the invoice's rate and the payment's rate."
+    },
+    "pending": "{{count}} payment(s) awaiting confirmation ({{amount}}) are not included.",
+    "byMethod": "Collections by payment method",
+    "byCategory": "Expenses by category",
+    "aging": "Overdue aging as of {{date}}",
+    "buckets": {
+      "notDue": "Not due",
+      "d0_30": "0–30 days",
+      "d31_60": "31–60 days",
+      "d61_90": "61–90 days",
+      "d90plus": "Over 90 days"
+    },
+    "overdue": "Overdue",
+    "definitions": "Definitions"
   }
 }

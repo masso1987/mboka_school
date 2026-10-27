@@ -14,7 +14,10 @@ import { AttendancePage } from './pages/AttendancePage';
 import { ClassDetailPage, ClassesPage } from './pages/ClassesPage';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { ExpensesPage } from './pages/ExpensesPage';
+import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
 import { LoginPage } from './pages/LoginPage';
+import { ReportsPage } from './pages/ReportsPage';
 import { StaffPage } from './pages/StaffPage';
 import { StudentDetailPage, StudentsPage } from './pages/StudentsPage';
 import { TeachingPage } from './pages/TeachingPage';
@@ -44,6 +47,11 @@ function Root() {
           <Route path="attendance" element={<AttendancePage />} />
           <Route path="hr" element={<StaffPage />} />
           <Route path="administration" element={<AdministrationPage />} />
+          <Route path="fees" element={<FeesPage />} />
+          <Route path="fees/invoices/:id" element={<InvoiceDetailPage />} />
+          <Route path="fees/receipts/:id" element={<ReceiptPage />} />
+          <Route path="expenses" element={<ExpensesPage />} />
+          <Route path="reports" element={<ReportsPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}

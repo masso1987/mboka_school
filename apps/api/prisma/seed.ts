@@ -10,7 +10,7 @@ import { DEFAULT_ROLES, PERMISSIONS } from '@mboka/shared';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '../src/auth/password';
 import { provisionTenant } from '../src/tenants/provision';
-import { seedDemoAcademics } from './demo-data';
+import { seedDemoAcademics, seedDemoFinance } from './demo-data';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
@@ -81,6 +81,9 @@ async function main() {
     const demo = await prisma.tenant.findUnique({ where: { slug: 'demo' } });
     if (demo && (await seedDemoAcademics(prisma, demo.id, process.env.SEED_DEMO_PASSWORD ?? 'Demo!2026'))) {
       console.log('demo academics created: levels, subjects, classes, 24 students, teacher enseignant@demo.mboka.local');
+    }
+    if (demo && (await seedDemoFinance(prisma, demo.id))) {
+      console.log('demo finance created: XAF/EUR, tuition schedule billed to every student, expense budget');
     }
   }
 }

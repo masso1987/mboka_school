@@ -33,6 +33,91 @@ const SUBJECTS = [
 const FIRST = ['Amina', 'Junior', 'Brenda', 'Cédric', 'Danielle', 'Emmanuel', 'Fadimatou', 'Gaël', 'Hervé', 'Inès', 'Jordan', 'Kelly'];
 const LAST = ['Mbarga', 'Nkoulou', 'Tchoupo', 'Fotso', 'Ngono', 'Essomba', 'Bello', 'Kamga', 'Abena', 'Owona', 'Djoumessi', 'Atangana'];
 
+/**
+ * Demo finance setup (development only, runs once): XAF + EUR, an EUR rate, fee categories,
+ * a 3-installment tuition schedule billed to every demo enrollment, expense categories and a budget.
+ */
+export async function seedDemoFinance(prisma: PrismaClient, tenantId: string): Promise<boolean> {
+  if ((await prisma.feeCategory.count({ where: { tenantId } })) > 0) return false;
+  const year = await prisma.academicYear.findFirst({ where: { tenantId, name: '2026-2027' } });
+  if (!year) return false;
+  const director = await prisma.user.findUniqueOrThrow({ where: { email: 'directeur@demo.mboka.local' } });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.financeSettings.upsert({
+      where: { tenantId },
+      create: { tenantId, reportingCurrency: 'XAF', enabledCurrencies: ['XAF', 'EUR'], expenseApprovalThreshold: 500000 },
+      update: { enabledCurrencies: ['XAF', 'EUR'] },
+    });
+    await tx.exchangeRate.create({
+      data: { tenantId, baseCurrency: 'EUR', quoteCurrency: 'XAF', rate: '655.957', effectiveDate: year.startDate, createdBy: director.id },
+    });
+    const tuition = await tx.feeCategory.create({ data: { tenantId, code: 'SCO', nameFr: 'Scolarité', nameEn: 'Tuition', kind: 'TUITION' } });
+    await tx.feeCategory.create({ data: { tenantId, code: 'INS', nameFr: 'Inscription', nameEn: 'Registration', kind: 'REGISTRATION' } });
+    const installments = [
+      ['Tranche 1', '2026-09-30', 50000],
+      ['Tranche 2', '2027-01-15', 40000],
+      ['Tranche 3', '2027-04-15', 40000],
+    ] as const;
+    const schedule = await tx.feeSchedule.create({
+      data: {
+        tenantId,
+        academicYearId: year.id,
+        categoryId: tuition.id,
+        name: 'Scolarité 2026-2027',
+        currency: 'XAF',
+        amount: 130000,
+        installments: {
+          create: installments.map(([label, due, amount], n) => ({ position: n + 1, label, dueDate: d(due), amount })),
+        },
+      },
+      include: { installments: true },
+    });
+    const enrollments = await tx.enrollment.findMany({ where: { tenantId, academicYearId: year.id, status: 'ENROLLED' } });
+    for (const [n, e] of enrollments.entries()) {
+      const invoice = await tx.invoice.create({
+        data: {
+          tenantId,
+          number: `INV-2026-${String(n + 1).padStart(5, '0')}`,
+          studentId: e.studentId,
+          academicYearId: year.id,
+          enrollmentId: e.id,
+          currency: 'XAF',
+          issueDate: year.startDate,
+          reportingCurrency: 'XAF',
+          reportingRate: 1,
+          createdBy: director.id,
+          lines: {
+            create: schedule.installments.map((i) => ({
+              kind: 'CHARGE' as const,
+              categoryId: tuition.id,
+              description: `${schedule.name} — ${i.label}`,
+              amount: i.amount,
+              dueDate: i.dueDate,
+              installmentId: i.id,
+              createdBy: director.id,
+            })),
+          },
+        },
+      });
+      await tx.studentFeeAssignment.create({ data: { tenantId, scheduleId: schedule.id, enrollmentId: e.id, invoiceId: invoice.id } });
+    }
+    await tx.tenantCounter.create({ data: { tenantId, key: 'INV:2026', value: enrollments.length } });
+
+    const cats = [
+      ['FOURN', 'Fournitures scolaires', 'School supplies', 1500000],
+      ['MAINT', 'Entretien et réparations', 'Maintenance', 2000000],
+      ['ENERG', 'Eau et électricité', 'Utilities', 1200000],
+    ] as const;
+    const budget = await tx.budget.create({ data: { tenantId, academicYearId: year.id, name: 'Budget 2026-2027', currency: 'XAF', createdBy: director.id } });
+    for (const [code, nameFr, nameEn, amount] of cats) {
+      const c = await tx.expenseCategory.create({ data: { tenantId, code, nameFr, nameEn } });
+      await tx.budgetLine.create({ data: { tenantId, budgetId: budget.id, categoryId: c.id, amount } });
+    }
+  });
+  return true;
+}
+
 export async function seedDemoAcademics(prisma: PrismaClient, tenantId: string, password: string): Promise<boolean> {
   if ((await prisma.educationLevel.count({ where: { tenantId } })) > 0) return false;
 

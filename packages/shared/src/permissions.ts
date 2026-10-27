@@ -45,12 +45,18 @@ export const PERMISSIONS = {
   'reportcards.publish': 'Publish report cards',
 
   // Finance
+  'finance.settings.manage': 'Configure currencies, exchange rates and payment providers',
+  'finance.periods.close': 'Open and close financial periods',
   'fees.invoice.read': 'View invoices and balances',
   'fees.invoice.create': 'Create invoices and fee schedules',
-  'payments.record': 'Record payments',
+  'fees.adjust': 'Grant discounts, scholarships and waivers; cancel invoices',
+  'payments.record': 'Record payments and run a cash register',
   'payments.reverse': 'Reverse payments',
+  'payments.refund.approve': 'Approve refunds requested by others',
   'expenses.create': 'Record expenses',
-  'expenses.approve': 'Approve expenses',
+  'expenses.approve': 'Approve expenses up to the threshold',
+  'expenses.approve.unlimited': 'Approve expenses above the threshold',
+  'budgets.manage': 'Create and edit budgets',
   'reports.financial.read': 'View financial reports',
 
   // HR
