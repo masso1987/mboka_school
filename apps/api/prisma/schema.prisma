@@ -317,7 +317,9 @@ model AcademicPeriod {
   createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  academicYear AcademicYear @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  academicYear AcademicYear      @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  assessments  Assessment[]
+  submissions  GradeSubmission[]
 
   @@unique([tenantId, academicYearId, kind, position])
   @@unique([tenantId, id])
@@ -428,6 +430,8 @@ model ClassSubject {
   schoolClass SchoolClass          @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
   subject     Subject              @relation(fields: [tenantId, subjectId], references: [tenantId, id], onDelete: Restrict)
   assignments TeachingAssignment[]
+  assessments Assessment[]
+  submissions GradeSubmission[]
 
   @@unique([tenantId, classId, subjectId])
   @@unique([tenantId, id])
@@ -646,6 +650,9 @@ model Enrollment {
   academicYear AcademicYear       @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
   schoolClass  SchoolClass        @relation(fields: [tenantId, classId], references: [tenantId, id], onDelete: Restrict)
   attendance   AttendanceRecord[]
+  marks        StudentMark[]
+  reportCards  ReportCard[]
+  promotion    PromotionDecision?
 
   @@unique([tenantId, id])
   @@index([tenantId, classId])
@@ -1240,4 +1247,228 @@ model BudgetLine {
 
   @@unique([tenantId, budgetId, categoryId])
   @@map("budget_lines")
+}
+
+// ================================================================ Phase 2 — assessments and report cards
+// Rules are versioned: a report card references the exact rule version that produced it, and its
+// content is stored as a snapshot, so a published card stays reproducible after rules change (GRD-013).
+
+/// The grading policy of a school; `currentVersion` points at the rules used for new computations.
+model GradingScheme {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  name           String
+  isDefault      Boolean  @default(false) @map("is_default")
+  currentVersion Int      @default(1) @map("current_version")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  versions GradingSchemeVersion[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+  @@map("grading_schemes")
+}
+
+/// Immutable snapshot of a scheme version (insert-only for the runtime role).
+model GradingSchemeVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  schemeId  String   @map("scheme_id") @db.Uuid
+  version   Int
+  rules     Json
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  scheme      GradingScheme @relation(fields: [tenantId, schemeId], references: [tenantId, id], onDelete: Restrict)
+  reportCards ReportCard[]
+
+  @@unique([tenantId, schemeId, version])
+  @@unique([tenantId, id])
+  @@map("grading_scheme_versions")
+}
+
+enum AssessmentKind {
+  TEST
+  EXAM
+  ASSIGNMENT
+  PRACTICAL
+  ORAL
+}
+
+/// A marked piece of work in one class subject and period, with its own maximum and weight (GRD-001/002).
+model Assessment {
+  id             String         @id @default(uuid()) @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  classSubjectId String         @map("class_subject_id") @db.Uuid
+  periodId       String         @map("period_id") @db.Uuid
+  name           String
+  kind           AssessmentKind
+  maxScore       Decimal        @map("max_score") @db.Decimal(6, 2)
+  weight         Decimal        @db.Decimal(6, 2)
+  heldOn         DateTime?      @map("held_on") @db.Date
+  createdBy      String         @map("created_by") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  classSubject ClassSubject   @relation(fields: [tenantId, classSubjectId], references: [tenantId, id], onDelete: Restrict)
+  period       AcademicPeriod @relation(fields: [tenantId, periodId], references: [tenantId, id], onDelete: Restrict)
+  marks        StudentMark[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, classSubjectId, periodId])
+  @@map("assessments")
+}
+
+enum SubmissionStatus {
+  OPEN
+  SUBMITTED
+  APPROVED
+  REOPENED
+}
+
+/// Workflow state of one subject and period: entry, submitted, approved, possibly reopened.
+model GradeSubmission {
+  id             String           @id @default(uuid()) @db.Uuid
+  tenantId       String           @map("tenant_id") @db.Uuid
+  classSubjectId String           @map("class_subject_id") @db.Uuid
+  periodId       String           @map("period_id") @db.Uuid
+  status         SubmissionStatus @default(OPEN)
+  submittedBy    String?          @map("submitted_by") @db.Uuid
+  submittedAt    DateTime?        @map("submitted_at") @db.Timestamptz(6)
+  approvedBy     String?          @map("approved_by") @db.Uuid
+  approvedAt     DateTime?        @map("approved_at") @db.Timestamptz(6)
+  reopenedBy     String?          @map("reopened_by") @db.Uuid
+  reopenedAt     DateTime?        @map("reopened_at") @db.Timestamptz(6)
+  reopenReason   String?          @map("reopen_reason")
+  /// Set once approved: later mark changes are recorded in grade_change_history.
+  everApproved   Boolean          @default(false) @map("ever_approved")
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  classSubject ClassSubject   @relation(fields: [tenantId, classSubjectId], references: [tenantId, id], onDelete: Restrict)
+  period       AcademicPeriod @relation(fields: [tenantId, periodId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, classSubjectId, periodId])
+  @@map("grade_submissions")
+}
+
+enum MarkStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+  EXEMPT
+  NOT_ASSESSED
+}
+
+model StudentMark {
+  id           String     @id @default(uuid()) @db.Uuid
+  tenantId     String     @map("tenant_id") @db.Uuid
+  assessmentId String     @map("assessment_id") @db.Uuid
+  enrollmentId String     @map("enrollment_id") @db.Uuid
+  studentId    String     @map("student_id") @db.Uuid
+  score        Decimal?   @db.Decimal(6, 2)
+  status       MarkStatus
+  updatedBy    String     @map("updated_by") @db.Uuid
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  assessment Assessment @relation(fields: [tenantId, assessmentId], references: [tenantId, id], onDelete: Restrict)
+  enrollment Enrollment @relation(fields: [tenantId, enrollmentId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, assessmentId, enrollmentId])
+  @@index([tenantId, studentId])
+  @@map("student_marks")
+}
+
+/// Who changed which mark after approval, when and why (GRD-012). Insert-only.
+model GradeChange {
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.Uuid
+  assessmentId String      @map("assessment_id") @db.Uuid
+  studentId    String      @map("student_id") @db.Uuid
+  fromScore    Decimal?    @map("from_score") @db.Decimal(6, 2)
+  fromStatus   MarkStatus? @map("from_status")
+  toScore      Decimal?    @map("to_score") @db.Decimal(6, 2)
+  toStatus     MarkStatus  @map("to_status")
+  reason       String
+  changedBy    String      @map("changed_by") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([tenantId, assessmentId])
+  @@map("grade_change_history")
+}
+
+/// Teacher appreciation for a student in a subject and period (GRD-008).
+model SubjectComment {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  classSubjectId String   @map("class_subject_id") @db.Uuid
+  periodId       String   @map("period_id") @db.Uuid
+  enrollmentId   String   @map("enrollment_id") @db.Uuid
+  comment        String
+  updatedBy      String   @map("updated_by") @db.Uuid
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, classSubjectId, periodId, enrollmentId])
+  @@map("subject_comments")
+}
+
+enum ReportCardStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+/// A generated report card. `content` is the full snapshot shown to families; regenerating creates a
+/// new version and supersedes (never edits) the previous one (GRD-009/013, scenario 5 of section 13.2).
+model ReportCard {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @map("tenant_id") @db.Uuid
+  enrollmentId     String           @map("enrollment_id") @db.Uuid
+  studentId        String           @map("student_id") @db.Uuid
+  classId          String           @map("class_id") @db.Uuid
+  academicYearId   String           @map("academic_year_id") @db.Uuid
+  /// A period id, or ANNUAL for the year-end card.
+  scope            String
+  version          Int
+  status           ReportCardStatus @default(DRAFT)
+  schemeVersionId  String           @map("scheme_version_id") @db.Uuid
+  content          Json
+  inputHash        String           @map("input_hash")
+  verificationCode String           @unique @map("verification_code")
+  generatedBy      String           @map("generated_by") @db.Uuid
+  generatedAt      DateTime         @default(now()) @map("generated_at") @db.Timestamptz(6)
+  publishedBy      String?          @map("published_by") @db.Uuid
+  publishedAt      DateTime?        @map("published_at") @db.Timestamptz(6)
+
+  enrollment    Enrollment           @relation(fields: [tenantId, enrollmentId], references: [tenantId, id], onDelete: Restrict)
+  schemeVersion GradingSchemeVersion @relation(fields: [tenantId, schemeVersionId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, enrollmentId, scope, version])
+  @@index([tenantId, classId, scope])
+  @@map("report_cards")
+}
+
+enum PromotionOutcome {
+  PROMOTED
+  REPEAT
+  GRADUATED
+  EXCLUDED
+}
+
+/// Class council decision for the year (GRD-010); the proposal comes from the annual average.
+model PromotionDecision {
+  id             String           @id @default(uuid()) @db.Uuid
+  tenantId       String           @map("tenant_id") @db.Uuid
+  enrollmentId   String           @map("enrollment_id") @db.Uuid
+  academicYearId String           @map("academic_year_id") @db.Uuid
+  decision       PromotionOutcome
+  proposed       PromotionOutcome
+  annualAverage  String?          @map("annual_average")
+  note           String?
+  decidedBy      String           @map("decided_by") @db.Uuid
+  decidedAt      DateTime         @default(now()) @map("decided_at") @db.Timestamptz(6)
+
+  enrollment Enrollment @relation(fields: [tenantId, enrollmentId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, enrollmentId])
+  @@map("promotion_decisions")
 }

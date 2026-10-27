@@ -16,7 +16,9 @@ import { ComingSoonPage } from './pages/ComingSoonPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
+import { GradesPage } from './pages/GradesPage';
 import { LoginPage } from './pages/LoginPage';
+import { ReportCardsPage } from './pages/ReportCardsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { StaffPage } from './pages/StaffPage';
 import { StudentDetailPage, StudentsPage } from './pages/StudentsPage';
@@ -52,6 +54,8 @@ function Root() {
           <Route path="fees/receipts/:id" element={<ReceiptPage />} />
           <Route path="expenses" element={<ExpensesPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="grades" element={<GradesPage />} />
+          <Route path="report-cards" element={<ReportCardsPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}
