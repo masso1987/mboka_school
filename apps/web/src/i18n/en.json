@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Mboka School" },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "language": "Language",
+    "signOut": "Sign out",
+    "school": "School",
+    "comingSoon": "This module arrives in phase {{phase}}.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "menu": "Menu"
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Access your school's management workspace.",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalid": "Incorrect email or password.",
+    "rateLimited": "Too many attempts. Wait a minute before trying again."
+  },
+  "tenant": {
+    "none": "Your account is not linked to any active school.",
+    "suspended": "This school's account is suspended. Contact the platform administrators."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "academicYears": "Academic Years",
+    "students": "Admissions & Students",
+    "classes": "Classes & Subjects",
+    "teaching": "Teaching & Timetable",
+    "attendance": "Attendance",
+    "grades": "Exams & Grades",
+    "reportCards": "Report Cards",
+    "fees": "Fees & Payments",
+    "expenses": "Expenses & Budgets",
+    "hr": "Staff & HR",
+    "community": "Community",
+    "reports": "Reports",
+    "resources": "Resources",
+    "administration": "Administration"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "roles": "Your roles",
+    "foundation": "Platform foundation (phase 0)",
+    "foundationText": "Authentication, school isolation, roles and the audit log are in place. Business modules arrive in the next phases."
+  },
+  "academicYears": {
+    "title": "Academic Years",
+    "new": "New academic year",
+    "name": "Name",
+    "namePlaceholder": "2026-2027",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "status": "Status",
+    "empty": "No academic years yet. Create the first one to start configuring the school.",
+    "created": "Academic year created.",
+    "statuses": { "DRAFT": "Draft", "ACTIVE": "Active", "CLOSED": "Closed" }
+  },
+  "errors": {
+    "ACADEMIC_YEAR_OVERLAP": "This period overlaps an existing academic year.",
+    "ACADEMIC_YEAR_NAME_TAKEN": "An academic year with this name already exists.",
+    "FORBIDDEN": "You do not have permission to do this.",
+    "VALIDATION_FAILED": "Some fields are invalid.",
+    "end_before_start": "The end date must come after the start date."
+  }
+}

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: mboka
+          POSTGRES_USER: mboka
+          POSTGRES_PASSWORD: mboka_dev
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mboka -d mboka"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://mboka_app:mboka_app_dev@localhost:5432/mboka?schema=public
+      DIRECT_DATABASE_URL: postgresql://mboka:mboka_dev@localhost:5432/mboka?schema=public
+      SEED_ADMIN_PASSWORD: ci-admin-password
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Create runtime database role
+        run: psql postgresql://mboka:mboka_dev@localhost:5432/mboka -f docker/postgres/init/01-roles.sql
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run test:e2e
+      - run: npm run build

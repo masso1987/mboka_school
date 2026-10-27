@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Mboka School" },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "language": "Langue",
+    "signOut": "Se déconnecter",
+    "school": "Établissement",
+    "comingSoon": "Ce module arrive en phase {{phase}}.",
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+    "menu": "Menu"
+  },
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Accédez à l'espace de gestion de votre établissement.",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "invalid": "Adresse e-mail ou mot de passe incorrect.",
+    "rateLimited": "Trop de tentatives. Patientez une minute avant de réessayer."
+  },
+  "tenant": {
+    "none": "Votre compte n'est rattaché à aucun établissement actif.",
+    "suspended": "Le compte de cet établissement est suspendu. Contactez l'administration de la plateforme."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "academicYears": "Années scolaires",
+    "students": "Admissions et élèves",
+    "classes": "Classes et matières",
+    "teaching": "Cours et planning",
+    "attendance": "Présences",
+    "grades": "Examens et notes",
+    "reportCards": "Bulletins",
+    "fees": "Scolarité et paiements",
+    "expenses": "Dépenses et budgets",
+    "hr": "Personnel et RH",
+    "community": "Communauté",
+    "reports": "Rapports",
+    "resources": "Ressources",
+    "administration": "Administration"
+  },
+  "dashboard": {
+    "welcome": "Bienvenue, {{name}}",
+    "roles": "Vos rôles",
+    "foundation": "Fondation de la plateforme (phase 0)",
+    "foundationText": "L'authentification, l'isolation des établissements, les rôles et le journal d'audit sont en place. Les modules métier arrivent dans les prochaines phases."
+  },
+  "academicYears": {
+    "title": "Années scolaires",
+    "new": "Nouvelle année scolaire",
+    "name": "Libellé",
+    "namePlaceholder": "2026-2027",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "status": "Statut",
+    "empty": "Aucune année scolaire. Créez la première pour commencer à configurer l'établissement.",
+    "created": "Année scolaire créée.",
+    "statuses": { "DRAFT": "Brouillon", "ACTIVE": "Active", "CLOSED": "Clôturée" }
+  },
+  "errors": {
+    "ACADEMIC_YEAR_OVERLAP": "Cette période chevauche une année scolaire existante.",
+    "ACADEMIC_YEAR_NAME_TAKEN": "Une année scolaire porte déjà ce libellé.",
+    "FORBIDDEN": "Vous n'avez pas l'autorisation d'effectuer cette action.",
+    "VALIDATION_FAILED": "Certains champs sont invalides.",
+    "end_before_start": "La date de fin doit suivre la date de début."
+  }
+}

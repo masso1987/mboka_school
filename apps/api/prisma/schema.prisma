@@ -1,0 +1,255 @@
+// Mboka School System — Phase 0 foundation schema.
+// Conventions (spec §6.5): UUID keys, timestamptz in UTC, DATE for calendar dates,
+// snake_case tables/columns, tenant_id on every tenant-owned table.
+// Tenant isolation: see docs/adr/0001-tenant-isolation.md. RLS policies live in
+// the hand-written migration 0002_rls — re-check them whenever a tenant table is added.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- platform
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+model Tenant {
+  id              String       @id @default(uuid()) @db.Uuid
+  slug            String       @unique
+  legalName       String       @map("legal_name")
+  tradingName     String?      @map("trading_name")
+  status          TenantStatus @default(ACTIVE)
+  defaultLocale   String       @default("fr") @map("default_locale")
+  timezone        String       @default("Africa/Douala")
+  defaultCurrency String       @default("XAF") @map("default_currency") @db.Char(3)
+  /// Free-form school settings (branding, formats…) until each gets a typed home.
+  settings        Json         @default("{}")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  campuses      Campus[]
+  memberships   Membership[]
+  roles         Role[]
+  academicYears AcademicYear[]
+  subscription  Subscription?
+
+  @@map("tenants")
+}
+
+model Subscription {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @unique @map("tenant_id") @db.Uuid
+  plan         String    @default("starter")
+  maxCampuses  Int       @default(1) @map("max_campuses")
+  maxUsers     Int       @default(50) @map("max_users")
+  modules      String[]  @default([])
+  currentUntil DateTime? @map("current_until") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@map("subscriptions")
+}
+
+// ---------------------------------------------------------------- identity
+
+enum PlatformRole {
+  NONE
+  SUPER_ADMIN
+  SUPPORT
+}
+
+model User {
+  id            String       @id @default(uuid()) @db.Uuid
+  email         String       @unique
+  fullName      String       @map("full_name")
+  passwordHash  String?      @map("password_hash")
+  locale        String?
+  platformRole  PlatformRole @default(NONE) @map("platform_role")
+  mfaSecret     String?      @map("mfa_secret")
+  isActive      Boolean      @default(true) @map("is_active")
+  lastLoginAt   DateTime?    @map("last_login_at") @db.Timestamptz(6)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sessions    Session[]
+  memberships Membership[]
+
+  @@map("users")
+}
+
+/// Server-managed session. Only the SHA-256 of the token is stored.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  csrfToken  String    @map("csrf_token")
+  ip         String?
+  userAgent  String?   @map("user_agent")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  REVOKED
+}
+
+/// Explicit authorization of a user inside one tenant (spec §6.3).
+model Membership {
+  id        String           @id @default(uuid()) @db.Uuid
+  tenantId  String           @map("tenant_id") @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  status    MembershipStatus @default(ACTIVE)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments UserRoleAssignment[]
+
+  @@unique([tenantId, userId])
+  @@unique([tenantId, id])
+  @@index([userId])
+  @@map("user_tenant_memberships")
+}
+
+/// Global permission catalogue, synchronised from @mboka/shared at seed time.
+model Permission {
+  key         String @id
+  description String
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  key         String
+  nameFr      String   @map("name_fr")
+  nameEn      String   @map("name_en")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  permissions RolePermission[]
+  assignments UserRoleAssignment[]
+
+  @@unique([tenantId, key])
+  @@unique([tenantId, id])
+  @@map("roles")
+}
+
+model RolePermission {
+  tenantId      String @map("tenant_id") @db.Uuid
+  roleId        String @map("role_id") @db.Uuid
+  permissionKey String @map("permission_key")
+
+  role       Role       @relation(fields: [tenantId, roleId], references: [tenantId, id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionKey], references: [key], onDelete: Restrict)
+
+  @@id([roleId, permissionKey])
+  @@index([tenantId])
+  @@map("role_permissions")
+}
+
+/// Composite keys (tenant_id, …) make a cross-tenant role assignment impossible at the database level.
+model UserRoleAssignment {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  membershipId String   @map("membership_id") @db.Uuid
+  roleId       String   @map("role_id") @db.Uuid
+  /// Optional contextual restriction (campus); null means tenant-wide.
+  campusId     String?  @map("campus_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  membership Membership @relation(fields: [tenantId, membershipId], references: [tenantId, id], onDelete: Cascade)
+  role       Role       @relation(fields: [tenantId, roleId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([membershipId, roleId, campusId])
+  @@index([tenantId])
+  @@map("user_role_assignments")
+}
+
+// ---------------------------------------------------------------- school
+
+model Campus {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String
+  name      String
+  address   String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@map("campuses")
+}
+
+enum AcademicYearStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+/// First tenant-scoped business entity; overlap is prevented by an exclusion constraint (migration 0002).
+model AcademicYear {
+  id        String             @id @default(uuid()) @db.Uuid
+  tenantId  String             @map("tenant_id") @db.Uuid
+  name      String
+  startDate DateTime           @map("start_date") @db.Date
+  endDate   DateTime           @map("end_date") @db.Date
+  status    AcademicYearStatus @default(DRAFT)
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?            @map("created_by") @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+  @@map("academic_years")
+}
+
+// ---------------------------------------------------------------- audit
+
+/// Append-only: the application role has no UPDATE/DELETE grant on this table (migration 0002).
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String?  @map("tenant_id") @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  metadata   Json     @default("{}")
+  ip         String?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([tenantId, createdAt])
+  @@index([actorId])
+  @@map("audit_logs")
+}
