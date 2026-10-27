@@ -414,7 +414,12 @@
     "INVALID_CREDENTIALS": "Incorrect password.",
     "ROLLOVER_HAS_EXCEPTIONS": "Some students still need a decision or a class.",
     "PAYER_MSISDN_REQUIRED": "Enter the Mobile Money number to debit.",
-    "PROVIDER_HOST_NOT_ALLOWED": "This operator API address is not allowed."
+    "PROVIDER_HOST_NOT_ALLOWED": "This operator API address is not allowed.",
+    "PAYROLL_RUN_EXISTS": "Payroll for this month already exists.",
+    "PAYROLL_RUN_LOCKED": "This payroll can no longer be changed.",
+    "PAYROLL_WRONG_STATUS": "Not possible at this stage of the payroll.",
+    "PAYROLL_RUN_EMPTY": "There is no payslip to submit.",
+    "NEGATIVE_NET_PAY": "Deductions exceed this month's pay."
   },
   "fees": {
     "tabs": {
@@ -815,7 +820,9 @@
       "staff": "Staff",
       "leave": "Leave",
       "contracts": "Contracts",
-      "compensation": "Compensation"
+      "compensation": "Compensation",
+      "payroll": "Payroll",
+      "mypayslips": "My payslips"
     },
     "requestLeave": "Request leave",
     "leaveType": "Type",
@@ -903,5 +910,66 @@
     "synced": "{{count}} register(s) synchronised.",
     "rejected": "{{count}} register(s) rejected by the server: open Attendance to redo them.",
     "signOutWarning": "{{count}} unsynchronised entr(y/ies) will be lost if you sign out. Continue?"
+  },
+  "payroll": {
+    "prepare": "Prepare this month's payroll",
+    "period": "Month",
+    "create": "Prepare",
+    "runs": "Payrolls",
+    "noRuns": "No payroll prepared yet.",
+    "headcount": "Headcount",
+    "gross": "Gross",
+    "net": "Net pay",
+    "employerCost": "Employer cost",
+    "open": "Open",
+    "statuses": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Submitted",
+      "APPROVED": "Approved",
+      "PAID": "Paid"
+    },
+    "runOf": "Payroll for",
+    "allPayslips": "All payslips (PDF)",
+    "declarationsCsv": "Declarations (CSV)",
+    "rules": "Rules: {{label}} — version {{version}}",
+    "skippedTitle": "Employees not included:",
+    "skipReasons": {
+      "NO_COMPENSATION": "no compensation recorded",
+      "OTHER_CURRENCY": "paid in a currency other than XAF",
+      "CONTRACT_ENDED": "contract ended before this month"
+    },
+    "refresh": "Refresh (salaries and rules)",
+    "submit": "Submit for approval",
+    "delete": "Delete draft",
+    "deleteConfirm": "Delete this payroll draft and its payslips?",
+    "approve": "Approve",
+    "returnReason": "Reason for sending back",
+    "sendBack": "Send back to draft",
+    "markPaid": "Mark as paid",
+    "payslips": "Payslips",
+    "noPayslips": "No payslips.",
+    "employee": "Employee",
+    "baseSalary": "Base salary",
+    "variables": "Monthly items",
+    "variablesCount": "{{count}} monthly item(s)",
+    "declarations": "Contributions and taxes to declare",
+    "item": "Item",
+    "base": "Base",
+    "employeeShare": "Employee",
+    "employerShare": "Employer",
+    "total": "Total",
+    "recurring": "Fixed allowances (compensation)",
+    "kind": "Type",
+    "kinds": {
+      "EARNING": "Earning",
+      "DEDUCTION": "Deduction"
+    },
+    "amount": "Amount (XAF)",
+    "taxable": "Taxable",
+    "addItem": "Add an item",
+    "unpaidDays": "Unpaid absence days",
+    "myPayslips": "My payslips",
+    "noMyPayslips": "No payslip available yet.",
+    "number": "No."
   }
 }

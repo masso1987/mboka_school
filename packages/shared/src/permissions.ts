@@ -65,6 +65,8 @@ export const PERMISSIONS = {
   'hr.staff.manage': 'Manage staff records and contracts',
   'hr.compensation.read': 'View compensation data',
   'hr.compensation.manage': 'Record compensation changes',
+  'hr.payroll.manage': 'Prepare monthly payroll and payslips',
+  'hr.payroll.approve': 'Approve payroll prepared by someone else',
   'hr.leave.request': 'Request leave for oneself',
   'hr.leave.approve': 'Approve or reject leave requests',
 

@@ -414,7 +414,12 @@
     "INVALID_CREDENTIALS": "Mot de passe incorrect.",
     "ROLLOVER_HAS_EXCEPTIONS": "Des élèves attendent une décision ou une classe.",
     "PAYER_MSISDN_REQUIRED": "Saisissez le numéro Mobile Money à débiter.",
-    "PROVIDER_HOST_NOT_ALLOWED": "Cette adresse d'API opérateur n'est pas autorisée."
+    "PROVIDER_HOST_NOT_ALLOWED": "Cette adresse d'API opérateur n'est pas autorisée.",
+    "PAYROLL_RUN_EXISTS": "La paie de ce mois existe déjà.",
+    "PAYROLL_RUN_LOCKED": "Cette paie n'est plus modifiable.",
+    "PAYROLL_WRONG_STATUS": "Action impossible à cette étape de la paie.",
+    "PAYROLL_RUN_EMPTY": "Aucun bulletin à soumettre.",
+    "NEGATIVE_NET_PAY": "Les retenues dépassent la paie du mois."
   },
   "fees": {
     "tabs": {
@@ -815,7 +820,9 @@
       "staff": "Personnel",
       "leave": "Congés",
       "contracts": "Contrats",
-      "compensation": "Rémunérations"
+      "compensation": "Rémunérations",
+      "payroll": "Paie",
+      "mypayslips": "Mes bulletins"
     },
     "requestLeave": "Demander un congé",
     "leaveType": "Type",
@@ -903,5 +910,66 @@
     "synced": "{{count}} appel(s) synchronisé(s).",
     "rejected": "{{count}} appel(s) refusé(s) par le serveur : ouvrez Présences pour les reprendre.",
     "signOutWarning": "{{count}} saisie(s) non synchronisée(s) seront perdues si vous vous déconnectez. Continuer ?"
+  },
+  "payroll": {
+    "prepare": "Préparer la paie du mois",
+    "period": "Mois",
+    "create": "Préparer",
+    "runs": "Paies",
+    "noRuns": "Aucune paie préparée.",
+    "headcount": "Effectif",
+    "gross": "Brut",
+    "net": "Net à payer",
+    "employerCost": "Coût employeur",
+    "open": "Ouvrir",
+    "statuses": {
+      "DRAFT": "Brouillon",
+      "SUBMITTED": "Soumise",
+      "APPROVED": "Approuvée",
+      "PAID": "Payée"
+    },
+    "runOf": "Paie de",
+    "allPayslips": "Tous les bulletins (PDF)",
+    "declarationsCsv": "Déclarations (CSV)",
+    "rules": "Règles : {{label}} — version {{version}}",
+    "skippedTitle": "Salariés non inclus :",
+    "skipReasons": {
+      "NO_COMPENSATION": "aucune rémunération enregistrée",
+      "OTHER_CURRENCY": "rémunération dans une autre devise que le XAF",
+      "CONTRACT_ENDED": "contrat terminé avant ce mois"
+    },
+    "refresh": "Actualiser (salaires et règles)",
+    "submit": "Soumettre pour approbation",
+    "delete": "Supprimer le brouillon",
+    "deleteConfirm": "Supprimer ce brouillon de paie et ses bulletins ?",
+    "approve": "Approuver",
+    "returnReason": "Motif du renvoi",
+    "sendBack": "Renvoyer en brouillon",
+    "markPaid": "Marquer comme payée",
+    "payslips": "Bulletins",
+    "noPayslips": "Aucun bulletin.",
+    "employee": "Salarié",
+    "baseSalary": "Salaire de base",
+    "variables": "Éléments variables",
+    "variablesCount": "{{count}} élément(s) variable(s)",
+    "declarations": "Cotisations et impôts à déclarer",
+    "item": "Rubrique",
+    "base": "Base",
+    "employeeShare": "Part salariale",
+    "employerShare": "Part patronale",
+    "total": "Total",
+    "recurring": "Primes fixes (rémunération)",
+    "kind": "Type",
+    "kinds": {
+      "EARNING": "Gain",
+      "DEDUCTION": "Retenue"
+    },
+    "amount": "Montant (XAF)",
+    "taxable": "Imposable",
+    "addItem": "Ajouter un élément",
+    "unpaidDays": "Jours d'absence non payés",
+    "myPayslips": "Mes bulletins de paie",
+    "noMyPayslips": "Aucun bulletin disponible pour le moment.",
+    "number": "N°"
   }
 }

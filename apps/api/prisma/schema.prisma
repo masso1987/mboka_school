@@ -491,6 +491,7 @@ model Staff {
   compensations Compensation[]
   leaves        LeaveRequest[]
   entitlements  LeaveEntitlement[]
+  payslips      Payslip[]
 
   @@unique([tenantId, staffNumber])
   @@unique([tenantId, id])
@@ -1670,4 +1671,78 @@ model NotificationDelivery {
 
   @@index([tenantId, status])
   @@map("notification_deliveries")
+}
+
+// ---------------------------------------------------------------- payroll (Phase 6)
+
+/// A school's payroll rules; a change is a new version, runs keep a snapshot of the one they used.
+model PayrollRuleVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  version   Int
+  rules     Json
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, version])
+  @@map("payroll_rule_versions")
+}
+
+enum PayrollRunStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PAID
+}
+
+/// One month's payroll: drafted, submitted, approved by someone else, then paid. Approved runs are frozen.
+model PayrollRun {
+  id           String           @id @default(uuid()) @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  /// First day of the month paid.
+  period       DateTime         @db.Date
+  status       PayrollRunStatus @default(DRAFT)
+  currency     String           @db.Char(3)
+  rulesVersion Int?             @map("rules_version")
+  rules        Json
+  createdBy    String           @map("created_by") @db.Uuid
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  submittedBy  String?          @map("submitted_by") @db.Uuid
+  submittedAt  DateTime?        @map("submitted_at") @db.Timestamptz(6)
+  approvedBy   String?          @map("approved_by") @db.Uuid
+  approvedAt   DateTime?        @map("approved_at") @db.Timestamptz(6)
+  paidBy       String?          @map("paid_by") @db.Uuid
+  paidAt       DateTime?        @map("paid_at") @db.Timestamptz(6)
+
+  payslips Payslip[]
+
+  @@unique([tenantId, period])
+  @@unique([tenantId, id])
+  @@map("payroll_runs")
+}
+
+/// One employee's payslip in a run: inputs (variables) and the computed result.
+model Payslip {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  runId        String   @map("run_id") @db.Uuid
+  staffId      String   @map("staff_id") @db.Uuid
+  number       String
+  /// Name, staff number and position as printed, so later staff edits do not change a past payslip.
+  employee     Json
+  baseSalary   Decimal  @map("base_salary") @db.Decimal(18, 2)
+  input        Json
+  result       Json
+  gross        Decimal  @db.Decimal(18, 2)
+  net          Decimal  @db.Decimal(18, 2)
+  employerCost Decimal  @map("employer_cost") @db.Decimal(18, 2)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  run   PayrollRun @relation(fields: [tenantId, runId], references: [tenantId, id], onDelete: Cascade)
+  staff Staff      @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([runId, staffId])
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@map("payslips")
 }

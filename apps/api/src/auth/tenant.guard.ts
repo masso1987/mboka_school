@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { REQUIRED_PERMISSIONS } from './metadata';
 
 /** Permissions whose holders a school can require to use MFA. */
-export const PRIVILEGED = ['users.permissions.manage', 'finance.settings.manage', 'payments.reverse', 'payments.refund.approve', 'hr.compensation.manage', 'tenant.data.export'];
+export const PRIVILEGED = ['users.permissions.manage', 'finance.settings.manage', 'payments.reverse', 'payments.refund.approve', 'hr.compensation.manage', 'tenant.data.export', 'hr.payroll.manage', 'hr.payroll.approve'];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
