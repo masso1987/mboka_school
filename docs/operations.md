@@ -192,3 +192,20 @@ Each school configures its own merchant account (`PUT /api/v1/finance/providers`
 4. Nightly backup (root crontab):
    `15 2 * * * cd /opt/mboka-school && set -a && . ./.env && PG_DUMP='docker compose --env-file .env exec -T postgres pg_dump' bash backup.sh backups && find backups -mtime +14 -delete`
 5. The first super-admin password is in `/opt/mboka-school/.env` (`SEED_ADMIN_PASSWORD`); MFA enrolment is forced at first sign-in.
+
+## 11. Subscriptions and self-service sign-up
+
+- **Plans** live in the `plans` table, seeded once with placeholder prices (`essentiel`, `standard`, `premium`).
+  The platform admin sets prices and limits on the Platform page (or `PUT /api/v1/platform/plans/<code>`) before
+  opening sign-ups.
+- **Sign-up** (`/signup`): the school starts a 30-day trial on the chosen plan; the owner signs in only after
+  confirming the e-mail link (48 h, single use, carried in the URL fragment so it never reaches server logs).
+  In production it needs real mail: `EMAIL_PROVIDER=smtp`, `SMTP_URL`, `MAIL_FROM` (the host's mail server works);
+  without it, sign-up answers 503 rather than create accounts nobody can confirm. `SIGNUP_ENABLED=false` closes it.
+- **Billing**: a school chooses a plan and cycle (Administration → Subscription), which issues one open invoice
+  (`SUB-YYYY-NNNNNN`) starting when the current period or trial ends. It pays by bank or Mobile Money quoting that
+  reference (`PLATFORM_PAYMENT_INSTRUCTIONS` is shown with the invoice). The platform admin confirms the payment
+  with the reference received; the subscription then moves to the paid plan and period.
+- **Lapsed subscriptions**: 7 days of grace, then the school is read-only (HTTP 402 `SUBSCRIPTION_EXPIRED` on
+  changes). Reading, exports and paying stay available; data is never withheld.
+- Online payment of subscription invoices (Mobile Money to the platform's own merchant account) is not built yet.

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { loginSchema } from '@mboka/shared';
+import { Link } from 'react-router';
 import { api, ApiRequestError, setCsrfToken } from '../lib/api';
 
 export function LoginPage() {
@@ -10,6 +11,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const resend = useMutation({ mutationFn: () => api('/signup/resend', { method: 'POST', body: { email } }) });
   const login = useMutation({
     mutationFn: (body: { email: string; password: string }) =>
       api<{ csrfToken: string }>('/auth/login', { method: 'POST', body }),
@@ -26,7 +28,7 @@ export function LoginPage() {
   }
 
   const error = login.error instanceof ApiRequestError
-    ? login.error.status === 429 ? t('auth.rateLimited') : login.error.status === 401 ? t('auth.invalid') : t('common.errorGeneric')
+    ? login.error.status === 429 ? t('auth.rateLimited') : login.error.status === 401 ? t('auth.invalid') : login.error.code === 'EMAIL_NOT_VERIFIED' ? t('auth.notVerified') : t('common.errorGeneric')
     : login.error ? t('common.errorGeneric') : null;
 
   return (
@@ -66,6 +68,11 @@ export function LoginPage() {
             {error}
           </p>
         )}
+        {login.error instanceof ApiRequestError && login.error.code === 'EMAIL_NOT_VERIFIED' && (
+          <button type="button" disabled={resend.isPending || resend.isSuccess} onClick={() => resend.mutate()} className="text-sm font-medium text-accent-700 hover:underline disabled:opacity-60">
+            {resend.isSuccess ? t('auth.resent') : t('auth.resend')}
+          </button>
+        )}
 
         <button
           type="submit"
@@ -74,6 +81,12 @@ export function LoginPage() {
         >
           {login.isPending ? t('common.loading') : t('auth.submit')}
         </button>
+        <p className="text-center text-sm text-slate-600">
+          {t('auth.newSchool')}{' '}
+          <Link to="/signup" className="font-medium text-accent-700 hover:underline">
+            {t('auth.signup')}
+          </Link>
+        </p>
       </form>
     </div>
   );

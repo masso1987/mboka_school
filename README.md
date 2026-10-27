@@ -14,6 +14,7 @@ Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/s
 |---|---|
 | Mobile Money | MTN MoMo (request to pay) and Orange Money (web payment) per school, credentials encrypted; payments settle only from the operator's own status answer, once, for the exact amount; unsigned notifications only trigger a check; periodic reconciliation and a "Check with the operator" button; operator hosts allow-listed |
 | Payroll | Monthly payroll for Cameroon: CNPS (pension, family benefits, work accident, ceiling), IRPP with CAC, CFC, FNE, RAV, TDL; versioned, school-editable rules (defaults to validate with the accountant); draft → submitted → approved by someone else → paid, frozen by the database once submitted; monthly variables, unpaid days, PDF payslips, CNPS/tax declaration CSV; employees see their own payslips |
+| Subscriptions | Self-service sign-up with e-mail confirmation and a 30-day trial; plans with student, campus and user limits; subscription invoices confirmed by the platform; 7-day grace then read-only (data always readable); Platform page for plans and payments ([operations §11](docs/operations.md)) |
 | Hosting | Single-host deployment kit for school.mboketech.com (`deploy/`, [operations §10](docs/operations.md)) |
 
 ## What Phase 5 adds — resilience, security, production readiness

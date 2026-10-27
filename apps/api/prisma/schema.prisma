@@ -46,15 +46,20 @@ model Tenant {
 }
 
 model Subscription {
-  id           String    @id @default(uuid()) @db.Uuid
-  tenantId     String    @unique @map("tenant_id") @db.Uuid
-  plan         String    @default("starter")
-  maxCampuses  Int       @default(1) @map("max_campuses")
-  maxUsers     Int       @default(50) @map("max_users")
-  modules      String[]  @default([])
-  currentUntil DateTime? @map("current_until") @db.Timestamptz(6)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id           String             @id @default(uuid()) @db.Uuid
+  tenantId     String             @unique @map("tenant_id") @db.Uuid
+  plan         String             @default("starter")
+  /// TRIALING until trialEndsAt; ACTIVE until currentUntil (+ grace); no date = no expiry (contracts outside self-service).
+  status       SubscriptionStatus @default(ACTIVE)
+  billingCycle String             @default("MONTHLY") @map("billing_cycle")
+  trialEndsAt  DateTime?          @map("trial_ends_at") @db.Timestamptz(6)
+  maxStudents  Int                @default(1000) @map("max_students")
+  maxCampuses  Int                @default(1) @map("max_campuses")
+  maxUsers     Int                @default(50) @map("max_users")
+  modules      String[]           @default([])
+  currentUntil DateTime?          @map("current_until") @db.Timestamptz(6)
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
 
@@ -70,26 +75,30 @@ enum PlatformRole {
 }
 
 model User {
-  id                String       @id @default(uuid()) @db.Uuid
-  email             String       @unique
-  fullName          String       @map("full_name")
-  passwordHash      String?      @map("password_hash")
-  locale            String?
-  platformRole      PlatformRole @default(NONE) @map("platform_role")
+  id                        String       @id @default(uuid()) @db.Uuid
+  email                     String       @unique
+  fullName                  String       @map("full_name")
+  passwordHash              String?      @map("password_hash")
+  locale                    String?
+  platformRole              PlatformRole @default(NONE) @map("platform_role")
   /// TOTP secret, AES-256-GCM encrypted (APP_SECRETS_KEY). Set once enrollment is confirmed.
-  mfaSecret         String?      @map("mfa_secret")
+  mfaSecret                 String?      @map("mfa_secret")
   /// Secret being enrolled, until the first valid code confirms it.
-  mfaPendingSecret  String?      @map("mfa_pending_secret")
-  mfaEnabledAt      DateTime?    @map("mfa_enabled_at") @db.Timestamptz(6)
+  mfaPendingSecret          String?      @map("mfa_pending_secret")
+  mfaEnabledAt              DateTime?    @map("mfa_enabled_at") @db.Timestamptz(6)
   /// SHA-256 of each unused single-use recovery code.
-  mfaRecoveryCodes  String[]     @default([]) @map("mfa_recovery_codes")
+  mfaRecoveryCodes          String[]     @default([]) @map("mfa_recovery_codes")
   /// Last accepted TOTP time step: a code is never accepted twice.
-  mfaLastStep       Int?         @map("mfa_last_step")
-  passwordChangedAt DateTime?    @map("password_changed_at") @db.Timestamptz(6)
-  isActive          Boolean      @default(true) @map("is_active")
-  lastLoginAt       DateTime?    @map("last_login_at") @db.Timestamptz(6)
-  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  mfaLastStep               Int?         @map("mfa_last_step")
+  passwordChangedAt         DateTime?    @map("password_changed_at") @db.Timestamptz(6)
+  /// Self-service sign-up: no sign-in until the e-mail address is confirmed.
+  emailVerificationRequired Boolean      @default(false) @map("email_verification_required")
+  emailVerifyTokenHash      String?      @map("email_verify_token_hash")
+  emailVerifyExpiresAt      DateTime?    @map("email_verify_expires_at") @db.Timestamptz(6)
+  isActive                  Boolean      @default(true) @map("is_active")
+  lastLoginAt               DateTime?    @map("last_login_at") @db.Timestamptz(6)
+  createdAt                 DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   sessions    Session[]
   memberships Membership[]
@@ -1745,4 +1754,59 @@ model Payslip {
   @@unique([tenantId, number])
   @@unique([tenantId, id])
   @@map("payslips")
+}
+
+// ---------------------------------------------------------------- subscriptions (Phase 6)
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  CANCELED
+}
+
+/// SaaS plans offered by the platform (not school data: no tenant, no RLS). Prices are XAF per cycle.
+model Plan {
+  code          String   @id
+  nameFr        String   @map("name_fr")
+  nameEn        String   @map("name_en")
+  descriptionFr String?  @map("description_fr")
+  descriptionEn String?  @map("description_en")
+  monthlyPrice  Decimal  @map("monthly_price") @db.Decimal(18, 0)
+  annualPrice   Decimal  @map("annual_price") @db.Decimal(18, 0)
+  maxStudents   Int      @map("max_students")
+  maxCampuses   Int      @map("max_campuses")
+  maxUsers      Int      @map("max_users")
+  isPublic      Boolean  @default(true) @map("is_public")
+  sortOrder     Int      @default(0) @map("sort_order")
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("plans")
+}
+
+enum SubscriptionInvoiceStatus {
+  OPEN
+  PAID
+  VOID
+}
+
+/// What a school owes the platform for one period of a plan. Paid invoices extend the subscription.
+model SubscriptionInvoice {
+  id            String                    @id @default(uuid()) @db.Uuid
+  tenantId      String                    @map("tenant_id") @db.Uuid
+  number        String                    @unique
+  plan          String
+  billingCycle  String                    @map("billing_cycle")
+  periodStart   DateTime                  @map("period_start") @db.Date
+  periodEnd     DateTime                  @map("period_end") @db.Date
+  amount        Decimal                   @db.Decimal(18, 0)
+  currency      String                    @default("XAF") @db.Char(3)
+  status        SubscriptionInvoiceStatus @default(OPEN)
+  createdBy     String                    @map("created_by") @db.Uuid
+  createdAt     DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  paidAt        DateTime?                 @map("paid_at") @db.Timestamptz(6)
+  paidReference String?                   @map("paid_reference")
+  confirmedBy   String?                   @map("confirmed_by") @db.Uuid
+
+  @@index([tenantId, createdAt])
+  @@map("subscription_invoices")
 }

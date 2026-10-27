@@ -18,6 +18,8 @@ import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { StaffModule } from './staff/staff.module';
 import { StudentsModule } from './students/students.module';
+import { MailerModule } from './common/mailer';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { TimetableModule } from './timetable/timetable.module';
 
@@ -28,6 +30,8 @@ import { TimetableModule } from './timetable/timetable.module';
     AuditModule,
     AuthModule,
     TenantsModule,
+    MailerModule,
+    SubscriptionsModule,
     AcademicYearsModule,
     AcademicsModule,
     StudentsModule,

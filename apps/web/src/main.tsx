@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import './i18n';
 import './index.css';
@@ -23,6 +23,7 @@ import { LoginPage } from './pages/LoginPage';
 import { ReportCardsPage } from './pages/ReportCardsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { SignupPage, VerifyEmailPage } from './pages/SignupPage';
 import { HrPage } from './pages/HrPage';
 import { PortalChildPage, PortalPage } from './pages/PortalPage';
 import { StudentDetailPage, StudentsPage } from './pages/StudentsPage';
@@ -41,9 +42,12 @@ const queryClient = new QueryClient({
 function Root() {
   const { t } = useTranslation();
   const me = useMe();
+  const location = useLocation();
   if (me.isPending) return <p className="p-8 text-slate-500">{t('common.loading')}</p>;
   if (me.isError) return <p className="p-8 text-danger-600">{t('common.errorGeneric')}</p>;
-  if (!me.data) return <LoginPage />;
+  // Sign-up and e-mail confirmation work without a session (and the link must work even when signed in).
+  if (location.pathname === '/verify-email') return <VerifyEmailPage />;
+  if (!me.data) return location.pathname === '/signup' ? <SignupPage /> : <LoginPage />;
   if (me.data.security?.mfaPending) return <MfaVerifyPage />;
   if (me.data.security?.mfaSetupRequired) {
     return (

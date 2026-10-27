@@ -31,7 +31,12 @@
     "password": "Mot de passe",
     "submit": "Se connecter",
     "invalid": "Adresse e-mail ou mot de passe incorrect.",
-    "rateLimited": "Trop de tentatives. Patientez une minute avant de réessayer."
+    "rateLimited": "Trop de tentatives. Patientez une minute avant de réessayer.",
+    "newSchool": "Nouvelle école ?",
+    "signup": "Créer un compte école",
+    "notVerified": "Confirmez d'abord votre adresse e-mail : ouvrez le lien que nous vous avons envoyé.",
+    "resend": "Renvoyer le lien de confirmation",
+    "resent": "Lien renvoyé : vérifiez votre boîte de réception."
   },
   "tenant": {
     "none": "Votre compte n'est rattaché à aucun établissement actif.",
@@ -293,7 +298,8 @@
     "tabs": {
       "users": "Utilisateurs",
       "campuses": "Campus",
-      "security": "Sécurité"
+      "security": "Sécurité",
+      "subscription": "Abonnement"
     },
     "invite": "Ajouter un utilisateur",
     "fullName": "Nom complet",
@@ -419,7 +425,14 @@
     "PAYROLL_RUN_LOCKED": "Cette paie n'est plus modifiable.",
     "PAYROLL_WRONG_STATUS": "Action impossible à cette étape de la paie.",
     "PAYROLL_RUN_EMPTY": "Aucun bulletin à soumettre.",
-    "NEGATIVE_NET_PAY": "Les retenues dépassent la paie du mois."
+    "NEGATIVE_NET_PAY": "Les retenues dépassent la paie du mois.",
+    "SUBSCRIPTION_EXPIRED": "Abonnement expiré : renouvelez-le pour pouvoir modifier les données.",
+    "PLAN_TOO_SMALL": "Votre école dépasse les limites de cette formule.",
+    "EMAIL_NOT_VERIFIED": "Confirmez d'abord votre adresse e-mail.",
+    "INVALID_VERIFICATION_LINK": "Ce lien est invalide ou a expiré. Demandez-en un nouveau depuis la page de connexion.",
+    "SIGNUP_UNAVAILABLE": "L'inscription en ligne n'est pas disponible pour le moment. Contactez-nous.",
+    "UNKNOWN_PLAN": "Choisissez une des formules proposées.",
+    "INVOICE_NOT_OPEN": "Cette facture n'est plus en attente de paiement."
   },
   "fees": {
     "tabs": {
@@ -971,5 +984,80 @@
     "myPayslips": "Mes bulletins de paie",
     "noMyPayslips": "Aucun bulletin disponible pour le moment.",
     "number": "N°"
+  },
+  "signup": {
+    "title": "Créer le compte de votre école",
+    "subtitle": "Essai gratuit de 30 jours, sans engagement. Vous choisissez ensuite votre formule.",
+    "plan": "Formule",
+    "perMonth": "/ mois",
+    "limits": "{{students}} élèves · {{campuses}} campus · {{users}} utilisateurs",
+    "trial": "Les 30 premiers jours sont gratuits ; aucun paiement n'est demandé maintenant.",
+    "schoolName": "Nom de l'établissement",
+    "city": "Ville",
+    "phone": "Téléphone",
+    "ownerName": "Votre nom (fondateur ou directeur)",
+    "terms": "J'accepte les conditions d'utilisation et je confirme être autorisé(e) à créer ce compte pour l'établissement.",
+    "invalid": "Vérifiez les champs : tous sont obligatoires, le mot de passe fait au moins 10 caractères et les conditions doivent être acceptées.",
+    "submit": "Créer mon école",
+    "haveAccount": "J'ai déjà un compte",
+    "checkInbox": "Vérifiez votre boîte de réception",
+    "checkInboxHelp": "Si l'adresse {{email}} peut être utilisée, un e-mail vient de lui être envoyé. Ouvrez le lien qu'il contient pour activer votre compte (valable 48 heures).",
+    "backToLogin": "Retour à la connexion",
+    "verifyTitle": "Confirmation de votre adresse",
+    "verified": "Adresse confirmée. Vous pouvez maintenant vous connecter.",
+    "toLogin": "Aller à la connexion"
+  },
+  "subscription": {
+    "current": "Abonnement actuel",
+    "states": {
+      "OK": "Actif",
+      "TRIAL": "Essai gratuit",
+      "GRACE": "Délai de grâce",
+      "EXPIRED": "Expiré — lecture seule"
+    },
+    "until": "jusqu'au {{date}} ({{days}} jour(s))",
+    "usage": {
+      "students": "Élèves",
+      "campuses": "Campus",
+      "users": "Utilisateurs"
+    },
+    "toPay": "Facture à régler",
+    "invoiceLine": "Facture {{number}} — {{plan}}, du {{from}} au {{to}}",
+    "howToPay": "Indiquez la référence {{reference}} avec votre paiement.",
+    "choose": "Choisir une formule",
+    "cycles": {
+      "MONTHLY": "Mensuel",
+      "ANNUAL": "Annuel"
+    },
+    "select": "Choisir",
+    "invoices": "Factures d'abonnement",
+    "number": "N°",
+    "plan": "Formule",
+    "period": "Période",
+    "amount": "Montant",
+    "invoiceStatuses": {
+      "OPEN": "À payer",
+      "PAID": "Payée",
+      "VOID": "Annulée"
+    },
+    "banner": {
+      "TRIAL": "Essai gratuit : il reste {{days}} jour(s). Choisissez votre formule pour continuer sans interruption.",
+      "GRACE": "Votre abonnement est arrivé à échéance : {{days}} jour(s) de grâce avant le passage en lecture seule.",
+      "EXPIRED": "Abonnement expiré : vos données restent consultables, mais plus modifiables jusqu'au renouvellement.",
+      "action": "Gérer l'abonnement"
+    }
+  },
+  "platform": {
+    "title": "Plateforme",
+    "schools": "Écoles et abonnements",
+    "school": "École",
+    "usage": "Utilisation",
+    "usageLine": "{{students}} élèves · {{users}} utilisateurs",
+    "toConfirm": "Paiement à confirmer",
+    "reference": "Référence reçue",
+    "confirmPayment": "Confirmer le paiement",
+    "plans": "Formules",
+    "plansHelp": "Prix en FCFA. Les prix initiaux sont provisoires : fixez-les avant d'ouvrir les inscriptions.",
+    "limits": "Limites"
   }
 }

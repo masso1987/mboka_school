@@ -27,6 +27,7 @@ export interface TenantContextResponse {
     defaultCurrency: string;
     campuses: { id: string; code: string; name: string }[];
     security?: { requireMfaForPrivileged: boolean };
+    subscription?: { plan: string; state: 'OK' | 'TRIAL' | 'GRACE' | 'EXPIRED'; writable: boolean; endsAt: string | null; daysLeft: number | null } | null;
   };
   roles: { key: string; nameFr: string; nameEn: string }[];
   permissions: string[];

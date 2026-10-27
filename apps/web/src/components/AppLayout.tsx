@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PlatformPage } from '../pages/PlatformPage';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { AccountPage } from '../pages/AccountPage';
@@ -122,6 +123,8 @@ export function AppLayout() {
             <Outlet />
           ) : contextError?.code === 'MFA_SETUP_REQUIRED' ? (
             <AccountPage mandatory />
+          ) : !tenantId && me.user.platformRole === 'SUPER_ADMIN' ? (
+            <PlatformPage />
           ) : !tenantId ? (
             <Notice>{t('tenant.none')}</Notice>
           ) : contextError?.code === 'TENANT_SUSPENDED' ? (
@@ -131,7 +134,10 @@ export function AppLayout() {
           ) : !context ? (
             <p className="text-slate-500">{t('common.loading')}</p>
           ) : (
-            <Outlet />
+            <>
+              <SubscriptionBanner />
+              <Outlet />
+            </>
           )}
         </main>
       </div>
@@ -141,4 +147,21 @@ export function AppLayout() {
 
 function Notice({ children }: { children: React.ReactNode }) {
   return <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900">{children}</div>;
+}
+
+/** Trial countdown, renewal reminder, or the read-only notice once the subscription has lapsed. */
+function SubscriptionBanner() {
+  const { t } = useTranslation();
+  const { context } = useSession();
+  const sub = context?.tenant.subscription;
+  if (!sub || sub.state === 'OK' || (sub.state === 'TRIAL' && (sub.daysLeft ?? 99) > 14)) return null;
+  const tone = sub.state === 'EXPIRED' ? 'border-red-300 bg-red-50 text-red-900' : 'border-amber-300 bg-amber-50 text-amber-900';
+  return (
+    <div role="status" className={`mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border px-4 py-2 text-sm ${tone}`}>
+      <span>{t(`subscription.banner.${sub.state}`, { days: sub.daysLeft ?? 0 })}</span>
+      <Link to="/administration?tab=subscription" className="font-medium underline">
+        {t('subscription.banner.action')}
+      </Link>
+    </div>
+  );
 }

@@ -6,7 +6,7 @@
  */
 import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { DEFAULT_ROLES, PERMISSIONS } from '@mboka/shared';
+import { DEFAULT_PLANS, DEFAULT_ROLES, PERMISSIONS } from '@mboka/shared';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '../src/auth/password';
 import { provisionTenant } from '../src/tenants/provision';
@@ -23,6 +23,10 @@ async function main() {
     await prisma.permission.upsert({ where: { key }, create: { key, description }, update: { description } });
   }
   console.log(`permissions: ${Object.keys(PERMISSIONS).length} synchronised`);
+
+  // Plans are inserted once; prices and limits edited by the platform admin are never overwritten.
+  const plans = await prisma.plan.createMany({ data: DEFAULT_PLANS.map((p) => ({ ...p })), skipDuplicates: true });
+  if (plans.count > 0) console.log(`plans: ${plans.count} created (placeholder prices — set them before go-live)`);
 
   // Grant permissions newly added to a role template to that system role in every school.
   // Only adds: permissions a school removed from a system role are not re-added unless new to the template.
