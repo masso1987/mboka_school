@@ -49,3 +49,16 @@ export interface ApiError {
     details?: unknown;
   };
 }
+
+/** A 6-digit authenticator code, or a recovery code like 7KQ2-M9XA. */
+export const mfaCodeSchema = z.object({ code: z.string().trim().min(6).max(12) });
+export type MfaCodeInput = z.infer<typeof mfaCodeSchema>;
+
+export const mfaDisableSchema = z.object({ password: z.string().min(1).max(256), code: z.string().trim().min(6).max(12) });
+export type MfaDisableInput = z.infer<typeof mfaDisableSchema>;
+
+/** Length over composition rules (NIST SP 800-63B): at least 10 characters, never the current one. */
+export const passwordChangeSchema = z
+  .object({ currentPassword: z.string().min(1).max(256), newPassword: z.string().min(10, 'password_too_short').max(256) })
+  .refine((v) => v.newPassword !== v.currentPassword, { message: 'password_unchanged', path: ['newPassword'] });
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;

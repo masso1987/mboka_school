@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ATTENDANCE_STATUSES, type AttendanceSubmitInput } from '@mboka/shared';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Select } from '../components/ui';
 import { api, ApiRequestError } from '../lib/api';
 import { useCurrentYear, useDateFormat, useSchoolToday, useTenantQuery } from '../lib/hooks';
+import { isNetworkError, pendingKey, readJson, registerCacheKey, writeJson } from '../lib/offline';
 import { useSession } from '../lib/session';
 import type { Assignment, AttendanceStatus, Register, SchoolClass } from '../lib/types';
 
@@ -17,29 +18,8 @@ const tone: Record<AttendanceStatus, string> = {
   EXCUSED: 'bg-slate-600 text-white',
 };
 
-/**
- * Pending submissions are kept in localStorage with their operation id until the server
- * confirms them, so a reload or a dropped connection never loses or duplicates a register (§10).
- */
-function pendingKey(tenantId: string, classId: string, date: string) {
-  return `mboka.attendance.pending.${tenantId}.${classId}.${date}`;
-}
-function readPending(key: string): AttendanceSubmitInput | null {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as AttendanceSubmitInput) : null;
-  } catch {
-    return null;
-  }
-}
-function writePending(key: string, value: AttendanceSubmitInput | null) {
-  try {
-    if (value) localStorage.setItem(key, JSON.stringify(value));
-    else localStorage.removeItem(key);
-  } catch {
-    // Storage unavailable: the in-memory retry still works for this page.
-  }
-}
+const readPending = (key: string) => (key ? readJson<AttendanceSubmitInput>(key) : null);
+const writePending = (key: string, value: AttendanceSubmitInput | null) => key && writeJson(key, value);
 
 export function AttendancePage() {
   const { t } = useTranslation();
@@ -63,10 +43,23 @@ export function AttendancePage() {
   const [date, setDate] = useState(today);
   const activeClass = classId || classOptions[0]?.id || '';
 
-  const register = useTenantQuery<Register>(
-    ['register', activeClass, date],
-    activeClass ? `/attendance/register?classId=${activeClass}&date=${date}` : null,
-  );
+  // Each loaded register is kept on the device so it can be taken again offline (§10.2).
+  const cacheKey = tenantId && activeClass ? registerCacheKey(tenantId, activeClass, date) : '';
+  const register = useQuery({
+    queryKey: [tenantId, 'register', activeClass, date],
+    enabled: Boolean(activeClass),
+    queryFn: async (): Promise<Register & { offline?: boolean }> => {
+      try {
+        const fresh = await api<Register>(`/attendance/register?classId=${activeClass}&date=${date}`);
+        writeJson(cacheKey, fresh);
+        return fresh;
+      } catch (e) {
+        const cached = isNetworkError(e) ? readJson<Register>(cacheKey) : null;
+        if (cached) return { ...cached, offline: true };
+        throw e;
+      }
+    },
+  });
 
   const [marks, setMarks] = useState<Record<string, { status: AttendanceStatus; arrivalTime?: string }>>({});
   const [reason, setReason] = useState('');
@@ -193,6 +186,9 @@ export function AttendancePage() {
             </span>
           }
         >
+          {reg.offline && (
+            <p role="status" className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('attendance.offlineCopy')}</p>
+          )}
           <div className="mb-4 flex flex-wrap gap-2 text-sm">
             {ATTENDANCE_STATUSES.map((s) => (
               <span key={s} className="rounded-full bg-slate-100 px-3 py-1">

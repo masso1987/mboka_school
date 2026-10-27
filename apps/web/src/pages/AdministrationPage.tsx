@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Table, Tabs } from '../components/ui';
 import { useDateFormat, useLabel, useTenantMutation, useTenantQuery } from '../lib/hooks';
 import { useSession } from '../lib/session';
 import type { RoleRow, UserRow } from '../lib/types';
 
-type Tab = 'users' | 'campuses';
+type Tab = 'users' | 'campuses' | 'security';
 
 export function AdministrationPage() {
   const { t } = useTranslation();
@@ -19,9 +20,10 @@ export function AdministrationPage() {
         items={[
           { key: 'users', label: t('admin.tabs.users') },
           { key: 'campuses', label: t('admin.tabs.campuses') },
+          { key: 'security', label: t('admin.tabs.security') },
         ]}
       />
-      {tab === 'users' ? <UsersTab /> : <CampusesTab />}
+      {tab === 'users' ? <UsersTab /> : tab === 'campuses' ? <CampusesTab /> : <SecurityTab />}
     </div>
   );
 }
@@ -216,5 +218,33 @@ function CampusesTab() {
         )}
       </Card>
     </div>
+  );
+}
+
+/** School security policy (§11.1): require two-factor authentication for privileged staff. */
+function SecurityTab() {
+  const { t } = useTranslation();
+  const { can, context } = useSession();
+  const qc = useQueryClient();
+  const current = context?.tenant.security?.requireMfaForPrivileged ?? false;
+  const save = useTenantMutation<{ requireMfaForPrivileged: boolean }>('PUT', '/tenant/security');
+  return (
+    <Card title={t('admin.securityTitle')}>
+      <p className="mb-3 text-sm text-slate-600">{t('admin.securityHelp')}</p>
+      <label className="flex items-center gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={current}
+          disabled={!can('tenant.settings.update') || save.isPending}
+          onChange={(e) =>
+            save.mutate({ requireMfaForPrivileged: e.target.checked }, { onSuccess: () => void qc.invalidateQueries({ queryKey: ['tenant-context'] }) })
+          }
+        />
+        {t('admin.requireMfa')}
+      </label>
+      <div className="mt-3">
+        <ErrorMessage error={save.error} />
+      </div>
+    </Card>
   );
 }

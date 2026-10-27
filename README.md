@@ -3,8 +3,21 @@
 Multi-tenant school management SaaS for primary, secondary, technical and vocational schools
 (Cameroon first). French and English, multi-currency, online-first with offline resilience.
 
-**Status: Phases 0 to 4 delivered** (each phase is its own stacked pull request).
+**Status: Phases 0 to 5 delivered** (each phase is its own stacked pull request).
 See [docs/architecture.md](docs/architecture.md) and [ADR 0001 — Tenant isolation](docs/adr/0001-tenant-isolation.md).
+Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/security.md) ·
+[performance baseline](docs/performance.md) · [UAT checklist](docs/uat-checklist.md).
+
+## What Phase 5 adds — resilience, security, production readiness
+
+| Area | Delivered |
+|---|---|
+| Accounts | Two-factor authentication (TOTP, replay rejected, 10 single-use recovery codes), mandatory for platform admins and optionally for a school's privileged roles; password change; list and sign out sessions |
+| Year rollover | Preview from class-council decisions with exceptions, then an idempotent commit (scenario 7): new enrollments, graduates, source year closed |
+| Offline | Installable app shell (service worker, no API caching); attendance registers kept on the device and sent on reconnection; mark drafts restored; sync status and sign-out warning |
+| Observability | Request ids end to end, JSON access log without personal data, Prometheus metrics (token-protected), liveness and readiness probes, slow-query warnings |
+| Data | Full school export (JSON, exact amounts, audited); encrypted backups and a restore test that proves them |
+| Delivery | Production Docker images (API, web, migrator), `.dockerignore`, nginx cache and security headers; measured load baseline |
 
 ## What Phase 2 adds — assessments and report cards
 
@@ -65,7 +78,7 @@ classes 6e A and 3e B with 24 students and guardians, rooms, a timetable and a t
 
 Not yet in Phase 1: Excel/CSV student import (STD-011), document uploads (STD-007), certificates
 and student cards (STD-013), disciplinary records (ATT-008), absence notifications (ATT-006, needs
-Phase 4 messaging), automatic timetable generation, and full offline mode (Phase 5).
+Phase 4 messaging), automatic timetable generation, and offline mode (delivered in Phase 5).
 
 ## What Phase 0 contains
 
@@ -132,7 +145,8 @@ Open http://localhost:5173. Development accounts created by the seed:
 | Demo school director | `directeur@demo.mboka.local` | `SEED_DEMO_PASSWORD` |
 
 The platform admin has no school membership, so the web app shows "no school" for it —
-by design; it uses the `/api/v1/platform/tenants` endpoints.
+by design; it uses the `/api/v1/platform/tenants` endpoints. At its first sign-in it must set up
+two-factor authentication (any authenticator app) before anything else works.
 
 ## Tests
 

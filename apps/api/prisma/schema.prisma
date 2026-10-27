@@ -70,17 +70,26 @@ enum PlatformRole {
 }
 
 model User {
-  id           String       @id @default(uuid()) @db.Uuid
-  email        String       @unique
-  fullName     String       @map("full_name")
-  passwordHash String?      @map("password_hash")
-  locale       String?
-  platformRole PlatformRole @default(NONE) @map("platform_role")
-  mfaSecret    String?      @map("mfa_secret")
-  isActive     Boolean      @default(true) @map("is_active")
-  lastLoginAt  DateTime?    @map("last_login_at") @db.Timestamptz(6)
-  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                String       @id @default(uuid()) @db.Uuid
+  email             String       @unique
+  fullName          String       @map("full_name")
+  passwordHash      String?      @map("password_hash")
+  locale            String?
+  platformRole      PlatformRole @default(NONE) @map("platform_role")
+  /// TOTP secret, AES-256-GCM encrypted (APP_SECRETS_KEY). Set once enrollment is confirmed.
+  mfaSecret         String?      @map("mfa_secret")
+  /// Secret being enrolled, until the first valid code confirms it.
+  mfaPendingSecret  String?      @map("mfa_pending_secret")
+  mfaEnabledAt      DateTime?    @map("mfa_enabled_at") @db.Timestamptz(6)
+  /// SHA-256 of each unused single-use recovery code.
+  mfaRecoveryCodes  String[]     @default([]) @map("mfa_recovery_codes")
+  /// Last accepted TOTP time step: a code is never accepted twice.
+  mfaLastStep       Int?         @map("mfa_last_step")
+  passwordChangedAt DateTime?    @map("password_changed_at") @db.Timestamptz(6)
+  isActive          Boolean      @default(true) @map("is_active")
+  lastLoginAt       DateTime?    @map("last_login_at") @db.Timestamptz(6)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   sessions    Session[]
   memberships Membership[]
@@ -90,15 +99,18 @@ model User {
 
 /// Server-managed session. Only the SHA-256 of the token is stored.
 model Session {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  tokenHash String    @unique @map("token_hash")
-  csrfToken String    @map("csrf_token")
-  ip        String?
-  userAgent String?   @map("user_agent")
-  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
-  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(6)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  tokenHash   String    @unique @map("token_hash")
+  csrfToken   String    @map("csrf_token")
+  ip          String?
+  userAgent   String?   @map("user_agent")
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(6)
+  /// False until the second factor is presented, for accounts with MFA.
+  mfaVerified Boolean   @default(true) @map("mfa_verified")
+  lastSeenAt  DateTime? @map("last_seen_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

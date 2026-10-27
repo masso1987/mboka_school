@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { applyTenantDefaultLocale } from '../i18n';
+import i18n, { applyTenantDefaultLocale } from '../i18n';
+import { clearLocalSchoolData, hasUnsyncedWork } from './offline';
 import { api, ApiRequestError, setActiveTenant, setCsrfToken } from './api';
 import type { Me, TenantContextResponse } from './types';
 
@@ -78,15 +79,19 @@ export function SessionProvider({ me, children }: { me: Me; children: ReactNode 
         } catch {
           // Non-persistent choice is acceptable.
         }
-        // Drop every cached tenant-scoped response before switching (spec §10.3: clear tenant data on context change).
+        // Drop every cached tenant-scoped response before switching (§10.3). Offline data is namespaced per school, so it stays.
         qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });
         setTenantId(id);
       },
       signOut: async () => {
+        // Unsent registers or mark drafts would be lost: ask first (§10.3 "warn before removing pending work").
+        const unsynced = hasUnsyncedWork();
+        if (unsynced > 0 && !window.confirm(i18n.t('offline.signOutWarning', { count: unsynced }))) return;
         await api('/auth/logout', { method: 'POST' }).catch(() => undefined);
         setCsrfToken(undefined);
         setActiveTenant(undefined);
-        // Drop all school data, then mark the session signed out so the root renders the login page.
+        // Drop all school data (server cache and this device's offline copies), then show the login page.
+        clearLocalSchoolData();
         qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });
         qc.setQueryData(['me'], null);
       },

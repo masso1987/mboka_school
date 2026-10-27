@@ -9,6 +9,9 @@ export interface AuthContext {
   email: string;
   platformRole: PlatformRole;
   csrfToken: string;
+  /** False between the password and the second factor. */
+  mfaVerified: boolean;
+  mfaEnabled: boolean;
 }
 
 export interface TenantContext {

@@ -15,7 +15,7 @@ import { ApiException, Errors } from '../common/api-error';
 import { toDate, toIso } from '../common/dates';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 import { Decimal, FinanceCore, round, sum, ZERO, type Dec } from './finance-core';
-import { decryptSecret, signatureValid } from './secrets';
+import { decryptSecret, signatureValid } from '../common/secrets';
 
 const paymentInclude = {
   student: { select: { id: true, matricule: true, firstName: true, lastName: true } },

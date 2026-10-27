@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { AccountPage } from '../pages/AccountPage';
 import { LOCALES, type Locale } from '@mboka/shared';
 import { setLocale } from '../i18n';
 import { useSession } from '../lib/session';
 import { visibleNavItems } from '../nav';
 import { NotificationBell } from './NotificationBell';
+import { OfflineIndicator } from './OfflineIndicator';
 
 export function AppLayout() {
   const { t, i18n } = useTranslation();
   const { me, tenantId, selectTenant, can, signOut, context, contextError } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
   const items = visibleNavItems(can);
 
   return (
@@ -85,6 +88,7 @@ export function AppLayout() {
           )}
 
           <div className="ml-auto flex items-center gap-3">
+            <OfflineIndicator />
             {context && <NotificationBell />}
             <label className="text-sm">
               <span className="sr-only">{t('common.language')}</span>
@@ -100,7 +104,9 @@ export function AppLayout() {
                 ))}
               </select>
             </label>
-            <span className="hidden text-sm text-slate-600 sm:inline">{me.user.fullName}</span>
+            <Link to="/account" className="hidden text-sm text-slate-600 hover:underline sm:inline">
+              {me.user.fullName}
+            </Link>
             <button
               type="button"
               onClick={() => void signOut()}
@@ -112,7 +118,11 @@ export function AppLayout() {
         </header>
 
         <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:px-8">
-          {!tenantId ? (
+          {location.pathname === '/account' ? (
+            <Outlet />
+          ) : contextError?.code === 'MFA_SETUP_REQUIRED' ? (
+            <AccountPage mandatory />
+          ) : !tenantId ? (
             <Notice>{t('tenant.none')}</Notice>
           ) : contextError?.code === 'TENANT_SUSPENDED' ? (
             <Notice>{t('tenant.suspended')}</Notice>

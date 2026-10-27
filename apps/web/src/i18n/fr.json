@@ -222,7 +222,8 @@
       "pending": "En attente de synchronisation",
       "conflict": "Conflit à résoudre",
       "error": "Non enregistré"
-    }
+    },
+    "offlineCopy": "Vous êtes hors ligne : copie de l'appel enregistrée sur cet appareil. L'appel sera envoyé au retour de la connexion."
   },
   "teaching": {
     "tabs": {
@@ -291,7 +292,8 @@
   "admin": {
     "tabs": {
       "users": "Utilisateurs",
-      "campuses": "Campus"
+      "campuses": "Campus",
+      "security": "Sécurité"
     },
     "invite": "Ajouter un utilisateur",
     "fullName": "Nom complet",
@@ -309,7 +311,10 @@
     },
     "editRoles": "Modifier les rôles",
     "newCampus": "Nouveau campus",
-    "address": "Adresse"
+    "address": "Adresse",
+    "securityTitle": "Politique de sécurité",
+    "securityHelp": "Exiger la double authentification pour les comptes qui gèrent les utilisateurs, les paramètres financiers, les annulations et remboursements, ou les rémunérations.",
+    "requireMfa": "Exiger la double authentification pour les rôles sensibles"
   },
   "errors": {
     "ACADEMIC_YEAR_OVERLAP": "Cette période chevauche une année scolaire existante.",
@@ -399,7 +404,15 @@
     "LEAVE_OVERLAP": "Cette période chevauche une autre demande.",
     "INSUFFICIENT_LEAVE_BALANCE": "Solde de congé annuel insuffisant.",
     "LEAVE_ALREADY_DECIDED": "Cette demande a déjà été traitée.",
-    "NOT_RETRYABLE": "Seuls les envois en échec peuvent être relancés."
+    "NOT_RETRYABLE": "Seuls les envois en échec peuvent être relancés.",
+    "MFA_REQUIRED": "Saisissez le code de votre application d'authentification.",
+    "MFA_SETUP_REQUIRED": "Activez d'abord la double authentification sur votre compte.",
+    "INVALID_MFA_CODE": "Code invalide ou déjà utilisé.",
+    "MFA_ALREADY_ENABLED": "La double authentification est déjà activée.",
+    "MFA_NOT_STARTED": "Commencez par la configuration.",
+    "MFA_NOT_ENABLED": "La double authentification n'est pas activée.",
+    "INVALID_CREDENTIALS": "Mot de passe incorrect.",
+    "ROLLOVER_HAS_EXCEPTIONS": "Des élèves attendent une décision ou une classe."
   },
   "fees": {
     "tabs": {
@@ -663,7 +676,8 @@
       "duplicate_row": "élève en double",
       "invalid_value": "valeur illisible",
       "above_maximum": "note au-dessus du maximum"
-    }
+    },
+    "draftRestored": "Brouillon restauré : des notes saisies sur cet appareil ne sont pas encore enregistrées."
   },
   "reportCards": {
     "annual": "Bulletin annuel",
@@ -834,5 +848,51 @@
     "baseSalary": "Salaire de base",
     "allowances": "Indemnités",
     "recordChange": "Enregistrer"
+  },
+  "account": {
+    "title": "Mon compte",
+    "mfaMandatory": "La double authentification est obligatoire pour votre rôle. Activez-la pour continuer.",
+    "mfa": "Double authentification",
+    "on": "Activée",
+    "off": "Désactivée",
+    "enabled": "Double authentification activée.",
+    "recoveryIntro": "Notez ces codes de secours et gardez-les en lieu sûr. Chacun ne sert qu'une fois, si vous perdez votre téléphone. Ils ne seront plus affichés.",
+    "continue": "Continuer",
+    "recoveryLeft": "{{count}} code(s) de secours restant(s).",
+    "disable": "Désactiver la double authentification",
+    "code": "Code",
+    "disableConfirm": "Désactiver",
+    "qrAlt": "QR code à scanner avec votre application d'authentification",
+    "scan": "Scannez ce QR code avec une application d'authentification (Google Authenticator, Microsoft Authenticator…), puis saisissez le code à 6 chiffres affiché.",
+    "manual": "Saisie manuelle :",
+    "activate": "Activer",
+    "mfaHelp": "Protégez votre compte avec un code à 6 chiffres généré par votre téléphone, demandé à chaque connexion.",
+    "setup": "Configurer",
+    "password": "Mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "passwordHint": "Au moins 10 caractères ; une phrase est plus sûre et plus facile à retenir.",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "mismatch": "Les deux mots de passe ne correspondent pas.",
+    "passwordChanged": "Mot de passe modifié. {{count}} autre(s) session(s) déconnectée(s).",
+    "changePassword": "Changer le mot de passe",
+    "sessions": "Sessions ouvertes",
+    "signOutOthers": "Déconnecter les autres sessions",
+    "device": "Appareil",
+    "lastSeen": "Dernière activité",
+    "thisDevice": "Cet appareil",
+    "revoke": "Déconnecter",
+    "verifyTitle": "Vérification",
+    "verifyHelp": "Saisissez le code de votre application d'authentification, ou un code de secours.",
+    "verify": "Valider"
+  },
+  "offline": {
+    "offline": "Hors ligne",
+    "pending": "{{count}} en attente",
+    "syncNow": "Synchroniser",
+    "waiting": "Sera envoyé au retour de la connexion",
+    "synced": "{{count}} appel(s) synchronisé(s).",
+    "rejected": "{{count}} appel(s) refusé(s) par le serveur : ouvrez Présences pour les reprendre.",
+    "signOutWarning": "{{count}} saisie(s) non synchronisée(s) seront perdues si vous vous déconnectez. Continuer ?"
   }
 }

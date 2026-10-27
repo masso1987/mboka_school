@@ -1,0 +1,12 @@
+# Keep secrets, host-built artefacts and local data out of the build context.
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/.vite
+**/coverage
+.git
+backups
+graphify-out
+*.log

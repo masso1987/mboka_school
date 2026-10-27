@@ -12,6 +12,7 @@ import { provisionTenant } from '../src/tenants/provision';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 process.env.LOGIN_RATE_LIMIT = '1000';
+process.env.ACCESS_LOG ??= 'off';
 
 export const PASSWORD = 'E2e-Passw0rd!';
 

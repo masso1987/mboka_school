@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   academicPeriodSchema,
@@ -18,6 +18,7 @@ import { RequirePermissions } from '../auth/decorators';
 import { type Actor, CurrentActor } from '../common/actor';
 import { ApiZodBody, ZodBody } from '../common/zod';
 import { AcademicsService } from './academics.service';
+import { type RolloverInput, rolloverSchema, RolloverService } from './rollover.service';
 
 const READ = 'academics.years.read' as const;
 const MANAGE = 'academics.structure.manage' as const;
@@ -25,7 +26,27 @@ const MANAGE = 'academics.structure.manage' as const;
 @ApiTags('academics')
 @Controller()
 export class AcademicsController {
-  constructor(private readonly academics: AcademicsService) {}
+  constructor(
+    private readonly academics: AcademicsService,
+    private readonly rollover: RolloverService,
+  ) {}
+
+  /** Year-end rollover: what would happen, with every exception to resolve first (ACA-011). */
+  @Post('academic-years/:yearId/rollover/preview')
+  @HttpCode(200)
+  @RequirePermissions('academics.years.close')
+  @ApiZodBody(rolloverSchema)
+  previewRollover(@CurrentActor() a: Actor, @Param('yearId', ParseUUIDPipe) yearId: string, @ZodBody(rolloverSchema) body: RolloverInput) {
+    return this.rollover.preview(a, yearId, body);
+  }
+
+  @Post('academic-years/:yearId/rollover')
+  @HttpCode(200)
+  @RequirePermissions('academics.years.close')
+  @ApiZodBody(rolloverSchema)
+  commitRollover(@CurrentActor() a: Actor, @Param('yearId', ParseUUIDPipe) yearId: string, @ZodBody(rolloverSchema) body: RolloverInput) {
+    return this.rollover.commit(a, yearId, body);
+  }
 
   @Get('academic-years/:yearId/periods')
   @RequirePermissions(READ)
