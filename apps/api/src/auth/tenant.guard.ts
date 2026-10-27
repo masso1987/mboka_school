@@ -33,7 +33,7 @@ export class TenantGuard implements CanActivate {
     const resolved = await this.prisma.scoped({ tenantId, userId }, async (tx) => {
       const membership = await tx.membership.findUnique({
         where: { tenantId_userId: { tenantId, userId } },
-        select: { id: true, status: true, tenant: { select: { status: true } } },
+        select: { id: true, status: true, tenant: { select: { status: true, timezone: true } } },
       });
       if (!membership || membership.status !== 'ACTIVE') return null;
       const grants = await tx.rolePermission.findMany({
@@ -50,7 +50,12 @@ export class TenantGuard implements CanActivate {
       this.reflector.getAllAndOverride<PermissionKey[]>(REQUIRED_PERMISSIONS, [ctx.getHandler(), ctx.getClass()]) ?? [];
     if (!hasAllPermissions(resolved.permissions, required)) throw Errors.forbidden();
 
-    req.tenant = { tenantId, membershipId: resolved.membership.id, permissions: resolved.permissions };
+    req.tenant = {
+      tenantId,
+      membershipId: resolved.membership.id,
+      permissions: resolved.permissions,
+      timezone: resolved.membership.tenant.timezone,
+    };
     return true;
   }
 }

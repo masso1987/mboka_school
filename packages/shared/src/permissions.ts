@@ -33,6 +33,10 @@ export const PERMISSIONS = {
   'attendance.correct': 'Correct recorded attendance',
   'attendance.read': 'View attendance',
 
+  // Timetable
+  'timetable.read': 'View timetables',
+  'timetable.manage': 'Manage rooms and timetables',
+
   // Grades
   'grades.enter': 'Enter marks for assigned subjects',
   'grades.submit': 'Submit marks for review',

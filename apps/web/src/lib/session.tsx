@@ -86,8 +86,9 @@ export function SessionProvider({ me, children }: { me: Me; children: ReactNode 
         await api('/auth/logout', { method: 'POST' }).catch(() => undefined);
         setCsrfToken(undefined);
         setActiveTenant(undefined);
-        qc.clear();
-        await qc.invalidateQueries({ queryKey: ['me'] });
+        // Drop all school data, then mark the session signed out so the root renders the login page.
+        qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });
+        qc.setQueryData(['me'], null);
       },
     };
   }, [me, tenantId, contextQuery.data, contextQuery.error, qc]);

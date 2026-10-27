@@ -12,7 +12,7 @@ export interface RoleTemplate {
   permissions: readonly PermissionKey[];
 }
 
-const read: PermissionKey[] = ['academics.years.read', 'students.read', 'attendance.read'];
+const read: PermissionKey[] = ['academics.years.read', 'students.read', 'attendance.read', 'timetable.read'];
 
 export const DEFAULT_ROLES: readonly RoleTemplate[] = [
   {
@@ -33,6 +33,8 @@ export const DEFAULT_ROLES: readonly RoleTemplate[] = [
       'grades.reopen',
       'reportcards.publish',
       'attendance.correct',
+      'timetable.manage',
+      'hr.staff.read',
       'announcements.publish',
     ],
   },
@@ -44,7 +46,7 @@ export const DEFAULT_ROLES: readonly RoleTemplate[] = [
   {
     key: 'teacher',
     name: { fr: 'Enseignant', en: 'Teacher' },
-    permissions: ['academics.years.read', 'attendance.record', 'grades.enter', 'grades.submit'],
+    permissions: ['academics.years.read', 'timetable.read', 'attendance.record', 'grades.enter', 'grades.submit'],
   },
   {
     key: 'chief_accountant',

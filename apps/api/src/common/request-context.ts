@@ -15,6 +15,8 @@ export interface TenantContext {
   tenantId: string;
   membershipId: string;
   permissions: ReadonlySet<string>;
+  /** IANA timezone of the school, for "today" and local schedules. */
+  timezone: string;
 }
 
 export type AppRequest = Request & { auth?: AuthContext; tenant?: TenantContext };
