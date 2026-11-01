@@ -6,10 +6,11 @@
  */
 import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { PERMISSIONS } from '@mboka/shared';
+import { DEFAULT_PLANS, DEFAULT_ROLES, PERMISSIONS } from '@mboka/shared';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '../src/auth/password';
 import { provisionTenant } from '../src/tenants/provision';
+import { seedDemoAcademics, seedDemoFinance } from './demo-data';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
@@ -22,6 +23,33 @@ async function main() {
     await prisma.permission.upsert({ where: { key }, create: { key, description }, update: { description } });
   }
   console.log(`permissions: ${Object.keys(PERMISSIONS).length} synchronised`);
+
+  // Plans are inserted once; prices and limits edited by the platform admin are never overwritten.
+  const plans = await prisma.plan.createMany({ data: DEFAULT_PLANS.map((p) => ({ ...p })), skipDuplicates: true });
+  if (plans.count > 0) console.log(`plans: ${plans.count} created (placeholder prices — set them before go-live)`);
+
+  // Grant permissions newly added to a role template to that system role in every school.
+  // Only adds: permissions a school removed from a system role are not re-added unless new to the template.
+  let added = 0;
+  for (const template of DEFAULT_ROLES) {
+    // Create system roles added to the templates since a school was provisioned (e.g. parent, student).
+    for (const t of await prisma.tenant.findMany({ select: { id: true } })) {
+      await prisma.role.upsert({
+        where: { tenantId_key: { tenantId: t.id, key: template.key } },
+        create: { tenantId: t.id, key: template.key, nameFr: template.name.fr, nameEn: template.name.en, isSystem: true },
+        update: {},
+      });
+    }
+    const roles = await prisma.role.findMany({ where: { key: template.key, isSystem: true }, select: { id: true, tenantId: true } });
+    for (const role of roles) {
+      const res = await prisma.rolePermission.createMany({
+        data: template.permissions.map((permissionKey) => ({ tenantId: role.tenantId, roleId: role.id, permissionKey })),
+        skipDuplicates: true,
+      });
+      added += res.count;
+    }
+  }
+  if (added > 0) console.log(`system roles: ${added} template permissions granted`);
 
   const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? 'admin@mboka.local').toLowerCase();
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
@@ -59,6 +87,16 @@ async function main() {
       ),
     );
     console.log('demo school created: directeur@demo.mboka.local');
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    const demo = await prisma.tenant.findUnique({ where: { slug: 'demo' } });
+    if (demo && (await seedDemoAcademics(prisma, demo.id, process.env.SEED_DEMO_PASSWORD ?? 'Demo!2026'))) {
+      console.log('demo academics created: levels, subjects, classes, 24 students, teacher enseignant@demo.mboka.local');
+    }
+    if (demo && (await seedDemoFinance(prisma, demo.id))) {
+      console.log('demo finance created: XAF/EUR, tuition schedule billed to every student, expense budget');
+    }
   }
 }
 

@@ -1,15 +1,20 @@
 import { useState } from 'react';
+import { PlatformPage } from '../pages/PlatformPage';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { AccountPage } from '../pages/AccountPage';
 import { LOCALES, type Locale } from '@mboka/shared';
 import { setLocale } from '../i18n';
 import { useSession } from '../lib/session';
 import { visibleNavItems } from '../nav';
+import { NotificationBell } from './NotificationBell';
+import { OfflineIndicator } from './OfflineIndicator';
 
 export function AppLayout() {
   const { t, i18n } = useTranslation();
   const { me, tenantId, selectTenant, can, signOut, context, contextError } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
   const items = visibleNavItems(can);
 
   return (
@@ -84,6 +89,8 @@ export function AppLayout() {
           )}
 
           <div className="ml-auto flex items-center gap-3">
+            <OfflineIndicator />
+            {context && <NotificationBell />}
             <label className="text-sm">
               <span className="sr-only">{t('common.language')}</span>
               <select
@@ -98,7 +105,9 @@ export function AppLayout() {
                 ))}
               </select>
             </label>
-            <span className="hidden text-sm text-slate-600 sm:inline">{me.user.fullName}</span>
+            <Link to="/account" className="hidden text-sm text-slate-600 hover:underline sm:inline">
+              {me.user.fullName}
+            </Link>
             <button
               type="button"
               onClick={() => void signOut()}
@@ -110,7 +119,13 @@ export function AppLayout() {
         </header>
 
         <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:px-8">
-          {!tenantId ? (
+          {location.pathname === '/account' ? (
+            <Outlet />
+          ) : contextError?.code === 'MFA_SETUP_REQUIRED' ? (
+            <AccountPage mandatory />
+          ) : !tenantId && me.user.platformRole === 'SUPER_ADMIN' ? (
+            <PlatformPage />
+          ) : !tenantId ? (
             <Notice>{t('tenant.none')}</Notice>
           ) : contextError?.code === 'TENANT_SUSPENDED' ? (
             <Notice>{t('tenant.suspended')}</Notice>
@@ -119,7 +134,10 @@ export function AppLayout() {
           ) : !context ? (
             <p className="text-slate-500">{t('common.loading')}</p>
           ) : (
-            <Outlet />
+            <>
+              <SubscriptionBanner />
+              <Outlet />
+            </>
           )}
         </main>
       </div>
@@ -129,4 +147,21 @@ export function AppLayout() {
 
 function Notice({ children }: { children: React.ReactNode }) {
   return <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900">{children}</div>;
+}
+
+/** Trial countdown, renewal reminder, or the read-only notice once the subscription has lapsed. */
+function SubscriptionBanner() {
+  const { t } = useTranslation();
+  const { context } = useSession();
+  const sub = context?.tenant.subscription;
+  if (!sub || sub.state === 'OK' || (sub.state === 'TRIAL' && (sub.daysLeft ?? 99) > 14)) return null;
+  const tone = sub.state === 'EXPIRED' ? 'border-red-300 bg-red-50 text-red-900' : 'border-amber-300 bg-amber-50 text-amber-900';
+  return (
+    <div role="status" className={`mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border px-4 py-2 text-sm ${tone}`}>
+      <span>{t(`subscription.banner.${sub.state}`, { days: sub.daysLeft ?? 0 })}</span>
+      <Link to="/administration?tab=subscription" className="font-medium underline">
+        {t('subscription.banner.action')}
+      </Link>
+    </div>
+  );
 }

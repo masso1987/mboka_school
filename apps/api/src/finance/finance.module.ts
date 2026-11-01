@@ -1,0 +1,16 @@
+import { Module } from '@nestjs/common';
+import { BillingService } from './billing.service';
+import { ExpensesService } from './expenses.service';
+import { FinanceController, PaymentCallbacksController } from './finance.controller';
+import { FinanceCore } from './finance-core';
+import { MobileMoneyService } from './mobile-money.service';
+import { PaymentsService } from './payments.service';
+import { FinanceReportsService } from './reports.service';
+import { FinanceSetupService } from './setup.service';
+
+@Module({
+  controllers: [FinanceController, PaymentCallbacksController],
+  providers: [FinanceCore, FinanceSetupService, BillingService, PaymentsService, MobileMoneyService, ExpensesService, FinanceReportsService],
+  exports: [BillingService, FinanceReportsService],
+})
+export class FinanceModule {}

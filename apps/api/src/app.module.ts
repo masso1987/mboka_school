@@ -2,22 +2,48 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AcademicYearsModule } from './academic-years/academic-years.module';
+import { AcademicsModule } from './academics/academics.module';
+import { AdminModule } from './admin/admin.module';
+import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
+import { FinanceModule } from './finance/finance.module';
+import { GradesModule } from './grades/grades.module';
+import { CommunityModule, NotificationsModule } from './community/community.module';
+import { HrModule } from './hr/hr.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionGuard } from './auth/session.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
+import { env } from './config/env';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { StaffModule } from './staff/staff.module';
+import { StudentsModule } from './students/students.module';
+import { MailerModule } from './common/mailer';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TenantsModule } from './tenants/tenants.module';
+import { TimetableModule } from './timetable/timetable.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: () => env().RATE_LIMIT_PER_MINUTE }]),
     PrismaModule,
     AuditModule,
     AuthModule,
     TenantsModule,
+    MailerModule,
+    SubscriptionsModule,
     AcademicYearsModule,
+    AcademicsModule,
+    StudentsModule,
+    StaffModule,
+    TimetableModule,
+    AttendanceModule,
+    AdminModule,
+    FinanceModule,
+    GradesModule,
+    NotificationsModule,
+    CommunityModule,
+    HrModule,
   ],
   controllers: [HealthController],
   providers: [

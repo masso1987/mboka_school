@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import { isoDate } from './primitives';
 
 /** Request/response contracts shared by the API (validation) and the web app (forms). */
 
 export const LOCALES = ['fr', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'invalid_date');
 const currencyCode = z.string().regex(/^[A-Z]{3}$/, 'invalid_currency');
 
 export const loginSchema = z.object({
@@ -49,3 +49,27 @@ export interface ApiError {
     details?: unknown;
   };
 }
+
+/** A 6-digit authenticator code, or a recovery code like 7KQ2-M9XA. */
+export const mfaCodeSchema = z.object({ code: z.string().trim().min(6).max(12) });
+export type MfaCodeInput = z.infer<typeof mfaCodeSchema>;
+
+export const mfaDisableSchema = z.object({ password: z.string().min(1).max(256), code: z.string().trim().min(6).max(12) });
+export type MfaDisableInput = z.infer<typeof mfaDisableSchema>;
+
+/** Length over composition rules (NIST SP 800-63B): at least 10 characters, never the current one. */
+export const passwordChangeSchema = z
+  .object({ currentPassword: z.string().min(1).max(256), newPassword: z.string().min(10, 'password_too_short').max(256) })
+  .refine((v) => v.newPassword !== v.currentPassword, { message: 'password_unchanged', path: ['newPassword'] });
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
+
+/** "Forgot password": answered identically whether or not the address has an account. */
+export const passwordForgotSchema = z.object({ email: z.email().trim().toLowerCase().max(160), locale: z.enum(['fr', 'en']).optional() });
+export type PasswordForgotInput = z.infer<typeof passwordForgotSchema>;
+
+/** Sets a password from an e-mailed single-use link (password reset or invitation). */
+export const passwordResetSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{20,100}$/),
+  newPassword: z.string().min(10, 'password_too_short').max(256),
+});
+export type PasswordResetInput = z.infer<typeof passwordResetSchema>;

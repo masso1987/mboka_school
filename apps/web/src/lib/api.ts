@@ -24,6 +24,26 @@ export function setActiveTenant(id: string | undefined): void {
   tenantId = id;
 }
 
+/** Binary download (PDF, CSV) with the same headers as `api`; a plain link could not send X-Tenant-Id. */
+export async function apiBlob(path: string): Promise<Blob> {
+  const res = await fetch(`/api/v1${path}`, {
+    headers: tenantId ? { 'X-Tenant-Id': tenantId } : {},
+    credentials: 'same-origin',
+  });
+  if (!res.ok) {
+    const err = ((await res.json().catch(() => undefined)) as ApiError | undefined)?.error;
+    throw new ApiRequestError(res.status, err?.code ?? 'HTTP_ERROR', err?.message ?? res.statusText);
+  }
+  return res.blob();
+}
+
+/** Opens a downloaded document in a new tab (the browser's PDF viewer prints and saves it). */
+export async function openBlob(path: string): Promise<void> {
+  const url = URL.createObjectURL(await apiBlob(path));
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export async function api<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const method = init.method ?? 'GET';
   const headers: Record<string, string> = { Accept: 'application/json' };

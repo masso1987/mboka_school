@@ -43,6 +43,11 @@ independent layers of enforcement:
   platform rows (no tenant) are intentionally unreadable by the runtime role.
 - Composite foreign keys `(tenant_id, id)` on role assignments and role permissions make a
   cross-tenant relationship impossible even for a buggy query running with the right context.
+  From Phase 1, every reference between tenant tables is composite; optional references get
+  their composite FK in raw SQL (migration 0003), since Prisma cannot express them.
+- Under RLS, PostgreSQL withholds the violated key from the runtime role's unique-violation
+  errors (Prisma reports `target: null`). `common/db-errors.ts` therefore maps violations by
+  Prisma model name; a model with several business uniqueness rules pre-checks all but one.
 
 ## Not covered by RLS (by design, Phase 0)
 
