@@ -63,6 +63,12 @@ export function LoginPage() {
           />
         </label>
 
+        <p className="-mt-3 text-right text-sm">
+          <Link to="/forgot-password" className="font-medium text-accent-700 hover:underline">
+            {t('auth.forgot')}
+          </Link>
+        </p>
+
         {error && (
           <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger-600">
             {error}

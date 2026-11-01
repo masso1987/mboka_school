@@ -20,6 +20,7 @@ import { ExpensesPage } from './pages/ExpensesPage';
 import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
 import { GradesPage } from './pages/GradesPage';
 import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage, SetPasswordPage } from './pages/PasswordPages';
 import { ReportCardsPage } from './pages/ReportCardsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { CommunityPage } from './pages/CommunityPage';
@@ -45,9 +46,14 @@ function Root() {
   const location = useLocation();
   if (me.isPending) return <p className="p-8 text-slate-500">{t('common.loading')}</p>;
   if (me.isError) return <p className="p-8 text-danger-600">{t('common.errorGeneric')}</p>;
-  // Sign-up and e-mail confirmation work without a session (and the link must work even when signed in).
+  // Sign-up, e-mail confirmation and password links work without a session (and links must work even when signed in).
   if (location.pathname === '/verify-email') return <VerifyEmailPage />;
-  if (!me.data) return location.pathname === '/signup' ? <SignupPage /> : <LoginPage />;
+  if (location.pathname === '/reset-password') return <SetPasswordPage mode="reset" />;
+  if (location.pathname === '/accept-invitation') return <SetPasswordPage mode="invitation" />;
+  if (!me.data) {
+    if (location.pathname === '/signup') return <SignupPage />;
+    return location.pathname === '/forgot-password' ? <ForgotPasswordPage /> : <LoginPage />;
+  }
   if (me.data.security?.mfaPending) return <MfaVerifyPage />;
   if (me.data.security?.mfaSetupRequired) {
     return (

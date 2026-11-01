@@ -4,14 +4,15 @@ import { useTenantMutation } from '../lib/hooks';
 import { Button, ErrorMessage, Input } from './ui';
 
 /**
- * Gives a guardian or a student their own portal account, or revokes it. A new account's
- * one-time password is shown once to the staff member, who hands it over (Module 12).
+ * Gives a guardian or a student their own portal account, or revokes it. A new account is invited by
+ * e-mail to choose its password; without mail delivery, its one-time password is shown once to the
+ * staff member, who hands it over (Module 12).
  */
 export function PortalAccess({ kind, id, enabled, studentId }: { kind: 'guardians' | 'students'; id: string; enabled: boolean; studentId: string }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [open, setOpen] = useState(false);
-  const grant = useTenantMutation<object, { temporaryPassword?: string }>('POST', `/${kind}/${id}/portal-access`, [['student', studentId]]);
+  const grant = useTenantMutation<object, { temporaryPassword?: string; invitationSent: boolean }>('POST', `/${kind}/${id}/portal-access`, [['student', studentId]]);
   const revoke = useTenantMutation<object>('DELETE', `/${kind}/${id}/portal-access`, [['student', studentId]]);
 
   if (grant.data) {
@@ -22,6 +23,8 @@ export function PortalAccess({ kind, id, enabled, studentId }: { kind: 'guardian
             {t('portal.tempPassword')} <span className="select-all font-mono text-sm">{grant.data.temporaryPassword}</span>
             <span className="block">{t('admin.tempPasswordWarning')}</span>
           </>
+        ) : grant.data.invitationSent ? (
+          t('portal.invitationSent', { email })
         ) : (
           t('portal.linkedExisting')
         )}

@@ -20,7 +20,7 @@ export interface PublicPlan {
   maxUsers: number;
 }
 
-function PublicShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+export function PublicShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const { t } = useTranslation();
   return (
     <div className="flex min-h-dvh items-start justify-center bg-navy-900 px-4 py-10">

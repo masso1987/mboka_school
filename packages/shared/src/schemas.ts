@@ -62,3 +62,14 @@ export const passwordChangeSchema = z
   .object({ currentPassword: z.string().min(1).max(256), newPassword: z.string().min(10, 'password_too_short').max(256) })
   .refine((v) => v.newPassword !== v.currentPassword, { message: 'password_unchanged', path: ['newPassword'] });
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
+
+/** "Forgot password": answered identically whether or not the address has an account. */
+export const passwordForgotSchema = z.object({ email: z.email().trim().toLowerCase().max(160), locale: z.enum(['fr', 'en']).optional() });
+export type PasswordForgotInput = z.infer<typeof passwordForgotSchema>;
+
+/** Sets a password from an e-mailed single-use link (password reset or invitation). */
+export const passwordResetSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{20,100}$/),
+  newPassword: z.string().min(10, 'password_too_short').max(256),
+});
+export type PasswordResetInput = z.infer<typeof passwordResetSchema>;

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { hhmmFromMinutes, type PortalAccessInput } from '@mboka/shared';
 import { AuditService } from '../audit/audit.service';
-import { generateTemporaryPassword, hashPassword } from '../auth/password';
+import { PasswordLinksService } from '../auth/password-links.service';
 import type { Actor } from '../common/actor';
 import { Errors } from '../common/api-error';
 import { toDate, toIso, todayIn } from '../common/dates';
@@ -22,6 +22,7 @@ export class PortalService {
     private readonly audit: AuditService,
     private readonly billing: BillingService,
     private readonly cards: ReportCardsService,
+    private readonly links: PasswordLinksService,
   ) {}
 
   private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
@@ -30,9 +31,13 @@ export class PortalService {
 
   // ------------------------------------------------------------ granting access (staff side)
 
-  /** Creates (or reuses) the account, adds the parent/student role and links it. Revocable without touching the record. */
-  grant(a: Actor, kind: 'guardian' | 'student', id: string, input: PortalAccessInput) {
-    return this.run(a, async (tx) => {
+  /**
+   * Creates (or reuses) the account, adds the parent/student role and links it. Revocable without touching the record.
+   * A new account is invited by e-mail to choose its password (or gets a one-time password when no mail can be delivered).
+   */
+  async grant(a: Actor, kind: 'guardian' | 'student', id: string, input: PortalAccessInput) {
+    const credentials = await this.links.newAccount();
+    const res = await this.run(a, async (tx) => {
       const entity =
         kind === 'guardian'
           ? await tx.guardian.findFirst({ where: { id, tenantId: a.tenantId }, select: { id: true, membershipId: true, firstName: true, lastName: true } })
@@ -43,13 +48,10 @@ export class PortalService {
         if (m?.status === 'ACTIVE') throw Errors.conflict('PORTAL_ALREADY_ENABLED', 'This person already has portal access');
       }
       let user = await tx.user.findUnique({ where: { email: input.email } });
-      let temporaryPassword: string | undefined;
-      if (!user) {
-        temporaryPassword = generateTemporaryPassword();
-        user = await tx.user.create({
-          data: { email: input.email, fullName: input.fullName ?? `${entity.firstName} ${entity.lastName}`, passwordHash: await hashPassword(temporaryPassword) },
-        });
-      }
+      const newAccount = !user;
+      user ??= await tx.user.create({
+        data: { email: input.email, fullName: input.fullName ?? `${entity.firstName} ${entity.lastName}`, ...credentials.data },
+      });
       const existing = await tx.membership.findUnique({ where: { tenantId_userId: { tenantId: a.tenantId, userId: user.id } } });
       if (existing?.status === 'ACTIVE') throw Errors.conflict('ALREADY_MEMBER', 'This email already belongs to a member of the school');
       const membership = existing
@@ -61,11 +63,19 @@ export class PortalService {
       if (kind === 'guardian') await tx.guardian.update({ where: { id }, data: { membershipId: membership.id } });
       else await tx.student.update({ where: { id }, data: { membershipId: membership.id } });
       await this.audit.record(
-        { tenantId: a.tenantId, actorId: a.userId, action: `portal.${kind}_granted`, entityType: kind, entityId: id, metadata: { email: input.email, newAccount: Boolean(temporaryPassword) }, ip: a.ip },
+        { tenantId: a.tenantId, actorId: a.userId, action: `portal.${kind}_granted`, entityType: kind, entityId: id, metadata: { email: input.email, newAccount }, ip: a.ip },
         tx,
       );
-      return { membershipId: membership.id, temporaryPassword };
+      const tenant = await tx.tenant.findUniqueOrThrow({ where: { id: a.tenantId }, select: { legalName: true, defaultLocale: true } });
+      return { membershipId: membership.id, newAccount, fullName: user.fullName, tenant };
     });
+    if (!res.newAccount) await this.links.sendAddedNotice(input.email, res.tenant.legalName, res.tenant.defaultLocale);
+    else if (credentials.token) await this.links.sendInvitation(input.email, res.fullName, res.tenant.legalName, res.tenant.defaultLocale, credentials.token);
+    return {
+      membershipId: res.membershipId,
+      invitationSent: res.newAccount && Boolean(credentials.token),
+      temporaryPassword: res.newAccount ? credentials.temporaryPassword : undefined,
+    };
   }
 
   revoke(a: Actor, kind: 'guardian' | 'student', id: string) {

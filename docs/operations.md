@@ -209,3 +209,7 @@ Each school configures its own merchant account (`PUT /api/v1/finance/providers`
 - **Lapsed subscriptions**: 7 days of grace, then the school is read-only (HTTP 402 `SUBSCRIPTION_EXPIRED` on
   changes). Reading, exports and paying stay available; data is never withheld.
 - Online payment of subscription invoices (Mobile Money to the platform's own merchant account) is not built yet.
+- **Password links**: "Forgot password?" e-mails a link to `/reset-password` (1 h); people added by a school
+  (users, parent and student portal accounts) receive a link to `/accept-invitation` (7 days) to choose their
+  password. Both use `WEB_URL` and the same mail settings. An expired invitation is renewed with "Forgot password?".
+  When no mail can be delivered (production without SMTP), the school is shown a one-time password instead.

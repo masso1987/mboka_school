@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type { CampusInput, InviteUserInput, MembershipStatusInput, UserRolesInput } from '@mboka/shared';
 import { AuditService } from '../audit/audit.service';
-import { generateTemporaryPassword, hashPassword } from '../auth/password';
+import { PasswordLinksService } from '../auth/password-links.service';
 import type { Actor } from '../common/actor';
 import { ApiException, Errors } from '../common/api-error';
 import { guardDb } from '../common/db-errors';
@@ -16,6 +16,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly links: PasswordLinksService,
   ) {}
 
   private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
@@ -79,11 +80,13 @@ export class AdminService {
   }
 
   /**
-   * Adds a person to the school. A new account receives a one-time temporary password
-   * (returned once) until email invitations exist; an existing account just gains the membership.
+   * Adds a person to the school. A new account receives an e-mailed invitation to choose its password
+   * (a one-time password returned once when no mail can be delivered); an existing account gains the
+   * membership and is told by e-mail.
    */
-  invite(a: Actor, input: InviteUserInput) {
-    return this.run(a, async (tx) => {
+  async invite(a: Actor, input: InviteUserInput) {
+    const credentials = await this.links.newAccount();
+    const res = await this.run(a, async (tx) => {
       const roles = await this.rolesOrThrow(tx, a, input.roleKeys);
       const [sub, activeMembers] = await Promise.all([
         tx.subscription.findUnique({ where: { tenantId: a.tenantId } }),
@@ -92,11 +95,8 @@ export class AdminService {
       if (sub && activeMembers >= sub.maxUsers) throw planLimit('users');
 
       let user = await tx.user.findUnique({ where: { email: input.email } });
-      let temporaryPassword: string | undefined;
-      if (!user) {
-        temporaryPassword = generateTemporaryPassword();
-        user = await tx.user.create({ data: { email: input.email, fullName: input.fullName, passwordHash: await hashPassword(temporaryPassword) } });
-      }
+      const newAccount = !user;
+      user ??= await tx.user.create({ data: { email: input.email, fullName: input.fullName, ...credentials.data } });
       const existing = await tx.membership.findUnique({ where: { tenantId_userId: { tenantId: a.tenantId, userId: user.id } } });
       if (existing?.status === 'ACTIVE') throw Errors.conflict('ALREADY_MEMBER', 'This person already has access to the school');
       const membership = existing
@@ -113,13 +113,23 @@ export class AdminService {
           action: 'user.invited',
           entityType: 'membership',
           entityId: membership.id,
-          metadata: { email: input.email, roles: input.roleKeys, newAccount: Boolean(temporaryPassword) },
+          metadata: { email: input.email, roles: input.roleKeys, newAccount },
           ip: a.ip,
         },
         tx,
       );
-      return { membershipId: membership.id, userId: user.id, temporaryPassword };
+      const tenant = await tx.tenant.findUniqueOrThrow({ where: { id: a.tenantId }, select: { legalName: true, defaultLocale: true } });
+      return { membershipId: membership.id, userId: user.id, newAccount, tenant };
     });
+    // Mail leaves only once the account and its link are committed.
+    if (!res.newAccount) await this.links.sendAddedNotice(input.email, res.tenant.legalName, res.tenant.defaultLocale);
+    else if (credentials.token) await this.links.sendInvitation(input.email, input.fullName, res.tenant.legalName, res.tenant.defaultLocale, credentials.token);
+    return {
+      membershipId: res.membershipId,
+      userId: res.userId,
+      invitationSent: res.newAccount && Boolean(credentials.token),
+      temporaryPassword: res.newAccount ? credentials.temporaryPassword : undefined,
+    };
   }
 
   /** A user can never change their own roles (separation of duties, §3.3). */

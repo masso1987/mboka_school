@@ -36,7 +36,8 @@
     "signup": "Create a school account",
     "notVerified": "Confirm your e-mail address first: open the link we sent you.",
     "resend": "Send the confirmation link again",
-    "resent": "Link sent again: check your inbox."
+    "resent": "Link sent again: check your inbox.",
+    "forgot": "Forgot password?"
   },
   "tenant": {
     "none": "Your account is not linked to any active school.",
@@ -320,7 +321,9 @@
     "address": "Address",
     "securityTitle": "Security policy",
     "securityHelp": "Require two-factor authentication for accounts that manage users, finance settings, reversals and refunds, or compensation.",
-    "requireMfa": "Require two-factor authentication for sensitive roles"
+    "requireMfa": "Require two-factor authentication for sensitive roles",
+    "invitationSent": "Invitation sent to {{email}}: they choose their password from the link they received (valid for 7 days).",
+    "existingAccount": "Access granted to the existing account of {{email}}, who was told by e-mail."
   },
   "errors": {
     "ACADEMIC_YEAR_OVERLAP": "This period overlaps an existing academic year.",
@@ -432,7 +435,8 @@
     "INVALID_VERIFICATION_LINK": "This link is invalid or has expired. Ask for a new one from the sign-in page.",
     "SIGNUP_UNAVAILABLE": "Online sign-up is not available right now. Contact us.",
     "UNKNOWN_PLAN": "Choose one of the offered plans.",
-    "INVOICE_NOT_OPEN": "This invoice is no longer awaiting payment."
+    "INVOICE_NOT_OPEN": "This invoice is no longer awaiting payment.",
+    "INVALID_RESET_LINK": "This link is invalid, already used or expired. Ask for a new one."
   },
   "fees": {
     "tabs": {
@@ -793,7 +797,8 @@
     "revoke": "Remove access",
     "grant": "Create account",
     "grantAccess": "Give portal access",
-    "studentAccount": "Student account"
+    "studentAccount": "Student account",
+    "invitationSent": "Account created. An invitation to choose a password was sent to {{email}} (link valid for 7 days)."
   },
   "community": {
     "tabs": {
@@ -1059,5 +1064,17 @@
     "plans": "Plans",
     "plansHelp": "Prices in XAF. The initial prices are placeholders: set them before opening sign-ups.",
     "limits": "Limits"
+  },
+  "password": {
+    "forgotTitle": "Forgot password",
+    "forgotHelp": "Enter your account's address: we will send you a link to choose a new password.",
+    "forgotSubmit": "Send the link",
+    "forgotSent": "If an account exists for {{email}}, an e-mail has just been sent to it. The link is valid for 1 hour.",
+    "resetTitle": "Choose a new password",
+    "inviteTitle": "Activate your account",
+    "inviteHelp": "Choose the password for your Mboka School account.",
+    "save": "Save the password",
+    "saved": "Password saved. All your sessions were signed out: sign in with the new password.",
+    "newLink": "Ask for a new link"
   }
 }

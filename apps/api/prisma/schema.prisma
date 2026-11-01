@@ -95,6 +95,9 @@ model User {
   emailVerificationRequired Boolean      @default(false) @map("email_verification_required")
   emailVerifyTokenHash      String?      @map("email_verify_token_hash")
   emailVerifyExpiresAt      DateTime?    @map("email_verify_expires_at") @db.Timestamptz(6)
+  /// Single-use link that sets the password (reset or invitation); only its SHA-256 is stored.
+  passwordResetTokenHash    String?      @map("password_reset_token_hash")
+  passwordResetExpiresAt    DateTime?    @map("password_reset_expires_at") @db.Timestamptz(6)
   isActive                  Boolean      @default(true) @map("is_active")
   lastLoginAt               DateTime?    @map("last_login_at") @db.Timestamptz(6)
   createdAt                 DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)

@@ -22,6 +22,7 @@ deployment duties described in [operations.md](operations.md).
 | 2.2.2 | Uniform error for unknown e-mail and wrong password; constant-time verification | `password.ts`, `auth.controller.ts` | e2e login tests |
 | 2.4.1 | scrypt (N=2^15) with per-user salt, NFKC-normalised | `auth/password.ts` | unit tests |
 | 2.5.x | Password change requires the current password and signs out every other session | `account.service.ts` | `phase5.e2e-spec.ts` |
+| 2.5.1 / 2.5.6 | Forgotten password: single-use e-mailed link (1 h; invitations 7 days), random 256-bit token stored as SHA-256, carried in the URL fragment; same answer for unknown addresses; a new link replaces the old; setting the password signs out every session, MFA still applies; no temporary passwords when mail is delivered | `password-links.service.ts` | `password.e2e-spec.ts` |
 | 2.7 / 2.8 | TOTP (RFC 6238, 30 s, ±1 step), **replay rejected** (last accepted step stored), seeds encrypted at rest | `auth/totp.ts`, `account.service.ts` | `totp.spec.ts` (RFC vectors), `phase5.e2e-spec.ts` |
 | 2.8.x | 10 single-use recovery codes, stored as SHA-256 hashes, shown once | `account.service.ts` | `phase5.e2e-spec.ts` |
 | 2.x (policy) | Platform super-admins **must** enrol MFA (no other route works until they do); schools can require MFA for privileged permissions | `session.guard.ts`, `tenant.guard.ts` (`PRIVILEGED`) | `phase5.e2e-spec.ts` |
