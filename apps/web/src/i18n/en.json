@@ -436,7 +436,8 @@
     "SIGNUP_UNAVAILABLE": "Online sign-up is not available right now. Contact us.",
     "UNKNOWN_PLAN": "Choose one of the offered plans.",
     "INVOICE_NOT_OPEN": "This invoice is no longer awaiting payment.",
-    "INVALID_RESET_LINK": "This link is invalid, already used or expired. Ask for a new one."
+    "INVALID_RESET_LINK": "This link is invalid, already used or expired. Ask for a new one.",
+    "TENANT_SLUG_TAKEN": "A school already uses this identifier."
   },
   "fees": {
     "tabs": {
@@ -1063,7 +1064,19 @@
     "confirmPayment": "Confirm payment",
     "plans": "Plans",
     "plansHelp": "Prices in XAF. The initial prices are placeholders: set them before opening sign-ups.",
-    "limits": "Limits"
+    "limits": "Limits",
+    "newSchool": "New school",
+    "legalName": "School name",
+    "slug": "Identifier",
+    "slugHint": "Lowercase letters, digits and hyphens (3 to 48 characters); it cannot be changed later.",
+    "ownerName": "Director's or founder's name",
+    "ownerEmail": "Director's e-mail",
+    "language": "Language",
+    "currency": "Currency",
+    "createSchool": "Create the school",
+    "createdWithPassword": "\"{{name}}\" is created. Director account {{email}}, one-time password:",
+    "createdInvited": "\"{{name}}\" is created. An invitation to choose a password was sent to {{email}} (link valid for 7 days).",
+    "createdExisting": "\"{{name}}\" is created. The existing account {{email}} is its director and was told by e-mail."
   },
   "password": {
     "forgotTitle": "Forgot password",

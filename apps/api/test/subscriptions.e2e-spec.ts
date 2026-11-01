@@ -170,3 +170,46 @@ describe('platform administration', () => {
     await school.get('/platform/subscriptions').expect(403);
   });
 });
+
+describe('schools created by the platform', () => {
+  const create = (b: object) => platform.post(`${API}/platform/tenants`).set('X-CSRF-Token', platformCsrf).send(b);
+  const directorEmail = `divine-${run}@e2e.local`;
+  const divine = {
+    legalName: 'Divine Bilingual Nursery and Primary School',
+    slug: `divine-${run}`,
+    ownerName: 'Directrice Divine',
+    ownerEmail: directorEmail,
+    defaultLocale: 'en',
+    defaultCurrency: 'XAF',
+  };
+
+  it('invites a new director by e-mail, who then runs the school', async () => {
+    const res = await create(divine).expect(201);
+    expect(res.body).toMatchObject({ invitationSent: true });
+    expect(res.body.temporaryPassword).toBeUndefined();
+    const mail = lastMailTo(directorEmail);
+    expect(mail.subject).toBe('Invitation to join Divine Bilingual Nursery and Primary School — Mboka School');
+    await request(app.getHttpServer())
+      .post(`${API}/auth/password/reset`)
+      .send({ token: tokenIn(mail.text), newPassword: 'divine director passphrase' })
+      .expect(200);
+    const director = await client(app, directorEmail, res.body.tenantId, 'divine director passphrase');
+    await director.get('/students').expect(200);
+    await director.get('/users').expect(200);
+  });
+
+  it('refuses an identifier already in use', async () => {
+    const res = await create({ ...divine, ownerEmail: `other-${run}@e2e.local` }).expect(409);
+    expect(res.body.error.code).toBe('TENANT_SLUG_TAKEN');
+  });
+
+  it('makes an existing account the director and only tells it', async () => {
+    const res = await create({ ...divine, slug: `divine-annex-${run}`, legalName: 'Divine Annex' }).expect(201);
+    expect(res.body).toMatchObject({ invitationSent: false });
+    expect(lastMailTo(directorEmail).subject).toMatch(/New access: Divine Annex/);
+  });
+
+  it('is reserved to platform administrators', async () => {
+    await school.post('/platform/tenants', { ...divine, slug: `nope-${run}` }).expect(403);
+  });
+});

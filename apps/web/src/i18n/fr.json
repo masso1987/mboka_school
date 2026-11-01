@@ -436,7 +436,8 @@
     "SIGNUP_UNAVAILABLE": "L'inscription en ligne n'est pas disponible pour le moment. Contactez-nous.",
     "UNKNOWN_PLAN": "Choisissez une des formules proposées.",
     "INVOICE_NOT_OPEN": "Cette facture n'est plus en attente de paiement.",
-    "INVALID_RESET_LINK": "Ce lien est invalide, déjà utilisé ou expiré. Demandez-en un nouveau."
+    "INVALID_RESET_LINK": "Ce lien est invalide, déjà utilisé ou expiré. Demandez-en un nouveau.",
+    "TENANT_SLUG_TAKEN": "Une école utilise déjà cet identifiant."
   },
   "fees": {
     "tabs": {
@@ -1063,7 +1064,19 @@
     "confirmPayment": "Confirmer le paiement",
     "plans": "Formules",
     "plansHelp": "Prix en FCFA. Les prix initiaux sont provisoires : fixez-les avant d'ouvrir les inscriptions.",
-    "limits": "Limites"
+    "limits": "Limites",
+    "newSchool": "Nouvelle école",
+    "legalName": "Nom de l'établissement",
+    "slug": "Identifiant",
+    "slugHint": "Lettres minuscules, chiffres et tirets (3 à 48 caractères) ; il ne pourra plus être changé.",
+    "ownerName": "Nom du directeur ou fondateur",
+    "ownerEmail": "E-mail du directeur",
+    "language": "Langue",
+    "currency": "Devise",
+    "createSchool": "Créer l'école",
+    "createdWithPassword": "« {{name}} » est créée. Compte directeur {{email}}, mot de passe provisoire :",
+    "createdInvited": "« {{name}} » est créée. Une invitation à choisir son mot de passe a été envoyée à {{email}} (lien valable 7 jours).",
+    "createdExisting": "« {{name}} » est créée. Le compte existant {{email}} en est le directeur et en a été informé par e-mail."
   },
   "password": {
     "forgotTitle": "Mot de passe oublié",

@@ -3,15 +3,17 @@ import type { CreateTenantInput, TenantStatusInput } from '@mboka/shared';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { AuditService } from '../audit/audit.service';
+import { PasswordLinksService } from '../auth/password-links.service';
 import { Errors } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
-import { provisionTenant } from './provision';
+import { provisionTenant, type ProvisionResult } from './provision';
 
 @Injectable()
 export class TenantsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly links: PasswordLinksService,
   ) {}
 
   list() {
@@ -21,16 +23,23 @@ export class TenantsService {
     });
   }
 
+  /**
+   * Provisions a school from the Platform page. A new owner account is invited by e-mail to choose its
+   * password (a one-time password returned once when no mail can be delivered); an existing account
+   * becomes the director and is told by e-mail.
+   */
   async create(input: CreateTenantInput, actorId: string, ip?: string) {
     const tenantId = randomUUID();
+    const credentials = await this.links.newAccount();
+    let result: ProvisionResult;
     try {
-      return await this.prisma.scoped({ tenantId, userId: actorId }, async (tx) => {
-        const result = await provisionTenant(tx, tenantId, input);
+      result = await this.prisma.scoped({ tenantId, userId: actorId }, async (tx) => {
+        const provisioned = await provisionTenant(tx, tenantId, input, undefined, credentials);
         await this.audit.record(
-          { tenantId, actorId, action: 'tenant.created', entityType: 'tenant', entityId: tenantId, metadata: { slug: input.slug }, ip },
+          { tenantId, actorId, action: 'tenant.created', entityType: 'tenant', entityId: tenantId, metadata: { slug: input.slug, ownerCreated: provisioned.ownerCreated }, ip },
           tx,
         );
-        return result;
+        return provisioned;
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
@@ -38,6 +47,14 @@ export class TenantsService {
       }
       throw e;
     }
+    if (!result.ownerCreated) await this.links.sendAddedNotice(input.ownerEmail, input.legalName, input.defaultLocale);
+    else if (credentials.token) await this.links.sendInvitation(input.ownerEmail, input.ownerName, input.legalName, input.defaultLocale, credentials.token);
+    return {
+      tenantId,
+      ownerUserId: result.ownerUserId,
+      invitationSent: result.ownerCreated && Boolean(credentials.token),
+      temporaryPassword: result.temporaryPassword,
+    };
   }
 
   /** Suspension blocks ordinary access but keeps every record (TEN-007). */
