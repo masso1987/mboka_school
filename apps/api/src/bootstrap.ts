@@ -11,7 +11,7 @@ export const API_PREFIX = 'api/v1';
 /** Shared by main.ts and the e2e tests so both run the same middleware stack. */
 export function configureApp(app: NestExpressApplication): INestApplication {
   const config = env();
-  app.set('trust proxy', 1);
+  app.set('trust proxy', config.TRUST_PROXY_HOPS);
   app.disable('x-powered-by');
   app.use(requestContextMiddleware);
   app.use(helmet());

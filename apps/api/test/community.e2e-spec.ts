@@ -6,7 +6,7 @@
  */
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { randomUUID } from 'node:crypto';
-import { addDays, addMember, type Client, client, createApp, owner, provisionSchool, today } from './helpers';
+import { acceptInvitation, addDays, addMember, type Client, client, createApp, owner, provisionSchool, today } from './helpers';
 
 const run = randomUUID().slice(0, 8);
 const t = today();
@@ -63,10 +63,12 @@ afterAll(async () => {
 });
 
 describe('portal access', () => {
-  it('grants a parent account with a one-time password and the parent role', async () => {
+  it('grants a parent account by e-mailed invitation and the parent role', async () => {
     const res = await director.post(`/guardians/${ids.guardian}/portal-access`, { email: parentEmail }).expect(201);
-    expect(res.body.temporaryPassword).toHaveLength(16);
-    parent = await client(app, parentEmail, tenantId, res.body.temporaryPassword);
+    expect(res.body).toMatchObject({ invitationSent: true });
+    expect(res.body.temporaryPassword).toBeUndefined();
+    await acceptInvitation(app, parentEmail);
+    parent = await client(app, parentEmail, tenantId);
     expect((await director.post(`/guardians/${ids.guardian}/portal-access`, { email: `x-${parentEmail}` }).expect(409)).body.error.code).toBe('PORTAL_ALREADY_ENABLED');
   });
 
@@ -87,8 +89,9 @@ describe('portal access', () => {
   });
 
   it('shows a student only themself, not a sibling', async () => {
-    const res = await director.post(`/students/${ids.kid1}/portal-access`, { email: `kid1-${run}@e2e.local` }).expect(201);
-    pupil = await client(app, `kid1-${run}@e2e.local`, tenantId, res.body.temporaryPassword);
+    await director.post(`/students/${ids.kid1}/portal-access`, { email: `kid1-${run}@e2e.local` }).expect(201);
+    await acceptInvitation(app, `kid1-${run}@e2e.local`);
+    pupil = await client(app, `kid1-${run}@e2e.local`, tenantId);
     expect((await pupil.get('/portal/children').expect(200)).body.map((c: { id: string }) => c.id)).toEqual([ids.kid1]);
     await pupil.get(`/portal/children/${ids.kid2}`).expect(404);
     await pupil.get(`/portal/children/${ids.kid1}`).expect(200);

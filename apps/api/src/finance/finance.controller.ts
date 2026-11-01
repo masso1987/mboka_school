@@ -41,7 +41,7 @@ import {
   type RefundRequestInput,
   type ReportRange,
 } from '@mboka/shared';
-import { SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { Public, RequirePermissions } from '../auth/decorators';
@@ -50,6 +50,7 @@ import { Errors } from '../common/api-error';
 import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod';
 import { BillingService } from './billing.service';
 import { ExpensesService } from './expenses.service';
+import { MobileMoneyService } from './mobile-money.service';
 import { PaymentsService } from './payments.service';
 import { FinanceReportsService } from './reports.service';
 import { FinanceSetupService } from './setup.service';
@@ -64,6 +65,7 @@ export class FinanceController {
     private readonly setup: FinanceSetupService,
     private readonly billing: BillingService,
     private readonly payments: PaymentsService,
+    private readonly mobileMoney: MobileMoneyService,
     private readonly expenses: ExpensesService,
     private readonly reports: FinanceReportsService,
   ) {}
@@ -209,7 +211,16 @@ export class FinanceController {
   @RequirePermissions('payments.record')
   @ApiZodBody(paymentSchema)
   recordPayment(@CurrentActor() a: Actor, @ZodBody(paymentSchema) body: PaymentInput) {
-    return this.payments.record(a, body);
+    // Operator providers (MTN MoMo, Orange Money) are asked to collect once the payment is recorded.
+    return this.mobileMoney.record(a, body);
+  }
+
+  /** Asks the operator for a pending Mobile Money payment's result now. */
+  @Post('payments/:id/verify')
+  @HttpCode(200)
+  @RequirePermissions('payments.record')
+  verifyPayment(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) {
+    return this.mobileMoney.verify(a, id);
   }
 
   @Get('payments')
@@ -380,7 +391,28 @@ function assertExpenseAccess(a: Actor) {
 @ApiTags('payment-callbacks')
 @Controller('payment-callbacks')
 export class PaymentCallbacksController {
-  constructor(private readonly payments: PaymentsService) {}
+  constructor(
+    private readonly payments: PaymentsService,
+    private readonly mobileMoney: MobileMoneyService,
+  ) {}
+
+  /** MTN MoMo / Orange Money notifications: unsigned, so they only trigger a status check with the operator. */
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @Post(':tenantSlug/:provider/notify')
+  @HttpCode(200)
+  notify(@Param('tenantSlug') tenantSlug: string, @Param('provider') provider: string, @Body() body: unknown) {
+    return this.mobileMoney.notify(tenantSlug, provider, body);
+  }
+
+  /** MTN may deliver the callback with PUT. */
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @Put(':tenantSlug/:provider/notify')
+  @HttpCode(200)
+  notifyPut(@Param('tenantSlug') tenantSlug: string, @Param('provider') provider: string, @Body() body: unknown) {
+    return this.mobileMoney.notify(tenantSlug, provider, body);
+  }
 
   @Public()
   @SkipThrottle()

@@ -38,6 +38,9 @@ export interface PaymentView {
   amount: string;
   receivedOn: string;
   externalReference: string | null;
+  provider?: string | null;
+  /** Orange Money: the page where the payer confirms. */
+  paymentUrl?: string | null;
   reporting: { currency: string; amount: string; rate: string };
   allocations: { invoiceId: string; invoiceNumber: string; amount: string; invoiceAmount: string; invoiceCurrency: string; rate: string }[];
   credit: string;

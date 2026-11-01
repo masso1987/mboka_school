@@ -166,12 +166,17 @@ function RecordPayment({ studentId }: { studentId: string }) {
   const settings = useTenantQuery<FinanceSettings>(['finance-settings'], '/finance/settings');
   const providers = settings.data?.providers ?? [];
   const currencies = settings.data?.enabledCurrencies ?? ['XAF'];
-  const empty = { method: 'CASH', currency: currencies[0] ?? 'XAF', amount: '', externalReference: '', receivedOn: today, provider: '' };
+  const empty = { method: 'CASH', currency: currencies[0] ?? 'XAF', amount: '', externalReference: '', receivedOn: today, provider: '', payerMsisdn: '' };
   const [f, setF] = useState(empty);
   // One key per payment attempt: retries after a network error reuse it, so nothing is recorded twice.
   const [key, setKey] = useState(newKey);
   const record = useTenantMutation<object, PaymentView>('POST', '/payments', [['statement', studentId], ['cashier'], ['invoices']]);
   const result = record.data;
+  const verify = useTenantMutation<{ id: string }, { status: string; outcome: string }>('POST', (b) => `/payments/${b.id}/verify`, [
+    ['statement', studentId],
+    ['invoices'],
+  ]);
+  const status = verify.data?.status ?? result?.status;
 
   return (
     <Card title={t('fees.recordPayment')}>
@@ -189,6 +194,7 @@ function RecordPayment({ studentId }: { studentId: string }) {
               receivedOn: f.receivedOn,
               ...(f.externalReference && { externalReference: f.externalReference }),
               ...(f.provider && { provider: f.provider }),
+              ...(f.provider && f.payerMsisdn && { payerMsisdn: f.payerMsisdn.replace(/\D/g, '') }),
             },
             {
               onSuccess: () => {
@@ -233,6 +239,11 @@ function RecordPayment({ studentId }: { studentId: string }) {
             </Select>
           </Field>
         )}
+        {f.method === 'MOBILE_MONEY' && f.provider && (
+          <Field label={t('fees.payerMsisdn')} hint={t('fees.payerMsisdnHint')}>
+            <Input type="tel" inputMode="tel" autoComplete="off" value={f.payerMsisdn} onChange={(e) => setF({ ...f, payerMsisdn: e.target.value })} />
+          </Field>
+        )}
         <Field label={t('fees.date')}>
           <Input type="date" max={today} required value={f.receivedOn} onChange={(e) => setF({ ...f, receivedOn: e.target.value })} />
         </Field>
@@ -261,8 +272,29 @@ function RecordPayment({ studentId }: { studentId: string }) {
                 {t('fees.printReceipt')}
               </Link>
             </>
+          ) : status === 'FAILED' ? (
+            <p className="text-danger-600">{t('fees.providerFailed')}</p>
+          ) : status === 'CONFIRMED' ? (
+            <p className="font-medium text-success-600">{t('fees.providerConfirmed')}</p>
           ) : (
-            <p className="text-amber-800">{t('fees.pendingVerification')}</p>
+            <div className="space-y-2 text-amber-800">
+              <p>{t('fees.pendingVerification')}</p>
+              {result.paymentUrl && (
+                <p>
+                  {t('fees.orangePayHint')}{' '}
+                  <a href={result.paymentUrl} target="_blank" rel="noreferrer" className="font-medium text-accent-700 underline break-all">
+                    {result.paymentUrl}
+                  </a>
+                </p>
+              )}
+              {result.provider && (
+                <Button variant="ghost" disabled={verify.isPending} onClick={() => verify.mutate({ id: result.id })}>
+                  {t('fees.verifyNow')}
+                </Button>
+              )}
+              {verify.data?.outcome === 'still_pending' && <p className="text-xs">{t('fees.stillPending')}</p>}
+              <ErrorMessage error={verify.error} />
+            </div>
           )}
         </div>
       )}

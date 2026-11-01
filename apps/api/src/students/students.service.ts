@@ -133,6 +133,13 @@ export class StudentsService {
   async create(a: Actor, input: StudentInput) {
     return guardDb(
       this.run(a, async (tx) => {
+        const [sub, active] = await Promise.all([
+          tx.subscription.findUnique({ where: { tenantId: a.tenantId }, select: { maxStudents: true } }),
+          tx.student.count({ where: { tenantId: a.tenantId, status: 'ACTIVE' } }),
+        ]);
+        if (sub && active >= sub.maxStudents) {
+          throw new ApiException(HttpStatus.PAYMENT_REQUIRED, 'PLAN_LIMIT_REACHED', 'Your subscription does not allow more students');
+        }
         if (!input.confirmDuplicate) {
           const candidates = await this.findPossibleDuplicates(tx, a.tenantId, input);
           if (candidates.length > 0) {

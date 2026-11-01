@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Table, Tabs } from '../components/ui';
 import { useDateFormat, useLabel, useTenantMutation, useTenantQuery } from '../lib/hooks';
 import { useSession } from '../lib/session';
 import type { RoleRow, UserRow } from '../lib/types';
+import { SubscriptionTab } from './SubscriptionTab';
 
-type Tab = 'users' | 'campuses' | 'security';
+type Tab = 'users' | 'campuses' | 'security' | 'subscription';
 
 export function AdministrationPage() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>('users');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'subscription' ? 'subscription' : 'users');
   return (
     <div>
       <PageHeader title={t('nav.administration')} />
@@ -21,9 +24,10 @@ export function AdministrationPage() {
           { key: 'users', label: t('admin.tabs.users') },
           { key: 'campuses', label: t('admin.tabs.campuses') },
           { key: 'security', label: t('admin.tabs.security') },
+          { key: 'subscription', label: t('admin.tabs.subscription') },
         ]}
       />
-      {tab === 'users' ? <UsersTab /> : tab === 'campuses' ? <CampusesTab /> : <SecurityTab />}
+      {tab === 'users' ? <UsersTab /> : tab === 'campuses' ? <CampusesTab /> : tab === 'security' ? <SecurityTab /> : <SubscriptionTab />}
     </div>
   );
 }
@@ -54,8 +58,8 @@ function UsersTab() {
   const users = useTenantQuery<UserRow[]>(['users'], '/users');
   const roles = useTenantQuery<RoleRow[]>(['roles'], '/roles');
   const [invite, setInvite] = useState({ email: '', fullName: '', roleKeys: [] as string[] });
-  const [issued, setIssued] = useState<{ email: string; password: string } | null>(null);
-  const create = useTenantMutation<typeof invite, { temporaryPassword?: string }>('POST', '/users', [['users']]);
+  const [issued, setIssued] = useState<{ email: string; password?: string; invitationSent: boolean } | null>(null);
+  const create = useTenantMutation<typeof invite, { temporaryPassword?: string; invitationSent: boolean }>('POST', '/users', [['users']]);
   const [editing, setEditing] = useState<{ membershipId: string; roleKeys: string[] } | null>(null);
   const setRoles = useTenantMutation<{ membershipId: string; roleKeys: string[] }>('PUT', (b) => `/users/${b.membershipId}/roles`, [['users']]);
   const manage = can('users.permissions.manage');
@@ -70,7 +74,7 @@ function UsersTab() {
               e.preventDefault();
               create.mutate(invite, {
                 onSuccess: (res) => {
-                  setIssued(res.temporaryPassword ? { email: invite.email, password: res.temporaryPassword } : null);
+                  setIssued({ email: invite.email, password: res.temporaryPassword, invitationSent: res.invitationSent });
                   setInvite({ email: '', fullName: '', roleKeys: [] });
                 },
               });
@@ -92,12 +96,18 @@ function UsersTab() {
               {t('admin.inviteSubmit')}
             </Button>
           </form>
-          {issued && (
+          {issued?.password ? (
             <div role="status" className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
               <p>{t('admin.tempPasswordIntro', { email: issued.email })}</p>
               <p className="mt-1 select-all font-mono text-base">{issued.password}</p>
               <p className="mt-1 text-xs">{t('admin.tempPasswordWarning')}</p>
             </div>
+          ) : (
+            issued && (
+              <p role="status" className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-success-600">
+                {t(issued.invitationSent ? 'admin.invitationSent' : 'admin.existingAccount', { email: issued.email })}
+              </p>
+            )
           )}
         </Card>
       )}

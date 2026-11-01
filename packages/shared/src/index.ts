@@ -9,3 +9,5 @@ export * from './admin';
 export * from './finance';
 export * from './grading';
 export * from './community';
+export * from './payroll';
+export * from './subscriptions';

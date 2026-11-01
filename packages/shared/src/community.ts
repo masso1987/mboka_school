@@ -24,7 +24,8 @@ export const compensationSchema = z.object({
   effectiveFrom: isoDate,
   currency: currencyCode,
   baseSalary: money,
-  allowances: z.array(z.object({ label: z.string().trim().min(1).max(60), amount: money })).max(10).default([]),
+  /** Monthly allowances; `taxable: false` for exempt reimbursements (e.g. transport within the legal limit). */
+  allowances: z.array(z.object({ label: z.string().trim().min(1).max(60), amount: money, taxable: z.boolean().optional() })).max(10).default([]),
 });
 export type CompensationInput = z.infer<typeof compensationSchema>;
 

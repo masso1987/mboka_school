@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import './i18n';
 import './index.css';
@@ -20,9 +20,11 @@ import { ExpensesPage } from './pages/ExpensesPage';
 import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
 import { GradesPage } from './pages/GradesPage';
 import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage, SetPasswordPage } from './pages/PasswordPages';
 import { ReportCardsPage } from './pages/ReportCardsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { SignupPage, VerifyEmailPage } from './pages/SignupPage';
 import { HrPage } from './pages/HrPage';
 import { PortalChildPage, PortalPage } from './pages/PortalPage';
 import { StudentDetailPage, StudentsPage } from './pages/StudentsPage';
@@ -41,9 +43,17 @@ const queryClient = new QueryClient({
 function Root() {
   const { t } = useTranslation();
   const me = useMe();
+  const location = useLocation();
   if (me.isPending) return <p className="p-8 text-slate-500">{t('common.loading')}</p>;
   if (me.isError) return <p className="p-8 text-danger-600">{t('common.errorGeneric')}</p>;
-  if (!me.data) return <LoginPage />;
+  // Sign-up, e-mail confirmation and password links work without a session (and links must work even when signed in).
+  if (location.pathname === '/verify-email') return <VerifyEmailPage />;
+  if (location.pathname === '/reset-password') return <SetPasswordPage mode="reset" />;
+  if (location.pathname === '/accept-invitation') return <SetPasswordPage mode="invitation" />;
+  if (!me.data) {
+    if (location.pathname === '/signup') return <SignupPage />;
+    return location.pathname === '/forgot-password' ? <ForgotPasswordPage /> : <LoginPage />;
+  }
   if (me.data.security?.mfaPending) return <MfaVerifyPage />;
   if (me.data.security?.mfaSetupRequired) {
     return (

@@ -86,6 +86,9 @@ export class PaymentsService {
     if (input.provider) {
       const provider = await tx.paymentProvider.findUnique({ where: { tenantId_code: { tenantId: a.tenantId, code: input.provider } } });
       if (!provider?.isActive) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'PROVIDER_NOT_CONFIGURED', 'This payment provider is not configured');
+      if (provider.kind === 'MTN_MOMO' && !input.payerMsisdn) {
+        throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'PAYER_MSISDN_REQUIRED', 'Enter the Mobile Money number to debit');
+      }
     } else if (input.method !== 'CASH' && !input.externalReference) {
       throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'REFERENCE_REQUIRED', 'Non-cash payments need the bank, card or Mobile Money reference');
     }
@@ -116,6 +119,7 @@ export class PaymentsService {
         status,
         externalReference: input.externalReference,
         provider: input.provider,
+        payerMsisdn: input.provider ? input.payerMsisdn : undefined,
         idempotencyKey: input.idempotencyKey,
         cashierSessionId,
         recordedBy: a.userId,
@@ -439,7 +443,8 @@ export class PaymentsService {
 
   private async callbackTx(tx: Tx, tenantId: string, providerCode: string, rawBody: Buffer, signature: string | undefined) {
     const provider = await tx.paymentProvider.findUnique({ where: { tenantId_code: { tenantId, code: providerCode } } });
-    if (!provider?.isActive) throw Errors.notFound();
+    // Operator providers (MTN, Orange) never use this signed endpoint; their notifications go to /notify.
+    if (!provider?.isActive || provider.kind !== 'SIGNED_WEBHOOK') throw Errors.notFound();
     if (!signatureValid(decryptSecret(provider.secretEncrypted), rawBody, signature)) {
       this.logger.warn(`Rejected unsigned or mis-signed ${providerCode} callback for tenant ${tenantId}`);
       throw new ApiException(HttpStatus.UNAUTHORIZED, 'INVALID_SIGNATURE', 'Invalid callback signature');
@@ -460,6 +465,23 @@ export class PaymentsService {
     if (seen) return { received: true, outcome: 'duplicate' };
 
     const payment = await tx.payment.findUnique({ where: { tenantId_idempotencyKey: { tenantId, idempotencyKey: cb.reference } } });
+    const outcome = await this.applyProviderResult(tx, tenantId, providerCode, payment, cb, cb as unknown as Prisma.InputJsonValue);
+    return { received: true, outcome };
+  }
+
+  /**
+   * Applies one provider result to a pending payment, once per (transaction, status). Shared by signed
+   * webhooks and by operator status checks. A payment is confirmed only on SUCCESS with the exact amount
+   * and currency we asked for; anything unexpected stays pending for review (FIN-009/010).
+   */
+  async applyProviderResult(
+    tx: Tx,
+    tenantId: string,
+    providerCode: string,
+    payment: Payment | null,
+    cb: { transactionId: string; status: 'SUCCESS' | 'FAILED' | 'PENDING'; amount: string; currency: string; reason?: string | null },
+    payload: Prisma.InputJsonValue,
+  ): Promise<string> {
     let outcome: string;
     if (!payment || payment.provider !== providerCode) {
       outcome = 'unknown_payment';
@@ -468,7 +490,10 @@ export class PaymentsService {
     } else if (payment.status !== 'PENDING_VERIFICATION') {
       outcome = `ignored_${payment.status.toLowerCase()}`;
     } else if (cb.status === 'FAILED') {
-      await tx.payment.update({ where: { id: payment.id }, data: { status: 'FAILED', externalReference: cb.transactionId } });
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: { status: 'FAILED', externalReference: cb.transactionId, failureReason: cb.reason?.slice(0, 200) ?? null },
+      });
       outcome = 'failed';
     } else if (cb.currency !== payment.currency || !new Decimal(cb.amount).equals(payment.amount)) {
       // Never confirm an amount we did not expect; it stays pending for manual review.
@@ -489,7 +514,7 @@ export class PaymentsService {
         provider: providerCode,
         providerTxId: cb.transactionId,
         providerStatus: cb.status,
-        payload: cb as unknown as Prisma.InputJsonValue,
+        payload,
         paymentId: payment?.id,
         outcome,
       },
@@ -504,7 +529,7 @@ export class PaymentsService {
       },
       tx,
     );
-    return { received: true, outcome };
+    return outcome;
   }
 
   // ------------------------------------------------------------ cash registers

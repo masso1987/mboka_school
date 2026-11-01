@@ -7,12 +7,15 @@ import { existsSync } from 'node:fs';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { hashPassword } from '../src/auth/password';
+import { memoryOutbox } from '../src/common/mailer';
 import { configureApp } from '../src/bootstrap';
 import { provisionTenant } from '../src/tenants/provision';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 process.env.LOGIN_RATE_LIMIT = '1000';
 process.env.ACCESS_LOG ??= 'off';
+// E-mails (invitations, links) are kept in memory, where tests read them.
+process.env.EMAIL_PROVIDER = 'memory';
 
 export const PASSWORD = 'E2e-Passw0rd!';
 
@@ -76,6 +79,19 @@ export async function client(app: NestExpressApplication, email: string, tenantI
 }
 
 export type Client = Awaited<ReturnType<typeof client>>;
+
+/** The single-use link token in the last e-mail sent to `email` whose link goes to `path`. */
+export function linkTokenFor(email: string, path: '/accept-invitation' | '/reset-password'): string {
+  const mail = [...memoryOutbox].reverse().find((m) => m.to === email && m.text.includes(`${path}#token=`));
+  if (!mail) throw new Error(`no ${path} e-mail for ${email}`);
+  return mail.text.match(/token=([A-Za-z0-9_-]+)/)![1]!;
+}
+
+/** Activates an invited account by choosing its password from the e-mailed link. */
+export async function acceptInvitation(app: NestExpressApplication, email: string, password = PASSWORD) {
+  const token = linkTokenFor(email, '/accept-invitation');
+  await request(app.getHttpServer()).post('/api/v1/auth/password/reset').send({ token, newPassword: password }).expect(200);
+}
 
 /** Today in Africa/Douala (the fixtures' timezone), as the API computes it. */
 export function today(): string {

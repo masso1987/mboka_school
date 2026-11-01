@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Req, Res } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -6,14 +6,18 @@ import {
   mfaCodeSchema,
   mfaDisableSchema,
   passwordChangeSchema,
+  passwordForgotSchema,
+  passwordResetSchema,
   type LoginInput,
   type MfaCodeInput,
   type MfaDisableInput,
   type PasswordChangeInput,
+  type PasswordForgotInput,
+  type PasswordResetInput,
 } from '@mboka/shared';
 import type { Response } from 'express';
 import { AuditService } from '../audit/audit.service';
-import { Errors } from '../common/api-error';
+import { ApiException, Errors } from '../common/api-error';
 import { type AppRequest, type AuthContext, clientIp, CurrentAuth } from '../common/request-context';
 import { ApiZodBody, ZodBody } from '../common/zod';
 import { env } from '../config/env';
@@ -21,6 +25,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AccountService } from './account.service';
 import { AllowDuringMfa, Public } from './decorators';
 import { getDummyHash, verifyPassword } from './password';
+import { PasswordLinksService } from './password-links.service';
 import { mfaSetupRequired } from './session.guard';
 import { SESSION_COOKIE, SessionService } from './session.service';
 
@@ -32,6 +37,7 @@ export class AuthController {
     private readonly sessions: SessionService,
     private readonly audit: AuditService,
     private readonly account: AccountService,
+    private readonly links: PasswordLinksService,
   ) {}
 
   /**
@@ -56,6 +62,11 @@ export class AuthController {
         ip: clientIp(req),
       });
       throw Errors.invalidCredentials();
+    }
+
+    if (user.emailVerificationRequired) {
+      await this.audit.record({ action: 'auth.login.failed', actorId: user.id, metadata: { reason: 'email_not_verified' }, ip: clientIp(req) });
+      throw new ApiException(HttpStatus.FORBIDDEN, 'EMAIL_NOT_VERIFIED', 'Confirm your e-mail address first: open the link we sent you');
     }
 
     const mfaRequired = user.mfaEnabledAt !== null;
@@ -156,6 +167,26 @@ export class AuthController {
   @ApiZodBody(passwordChangeSchema)
   changePassword(@CurrentAuth() auth: AuthContext, @ZodBody(passwordChangeSchema) body: PasswordChangeInput, @Req() req: AppRequest) {
     return this.account.changePassword(auth, body, clientIp(req));
+  }
+
+  /** Sends a single-use link to choose a new password; the answer never reveals whether the address exists. */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
+  @Post('password/forgot')
+  @HttpCode(202)
+  @ApiZodBody(passwordForgotSchema)
+  forgotPassword(@ZodBody(passwordForgotSchema) body: PasswordForgotInput, @Req() req: AppRequest) {
+    return this.links.forgot(body.email, body.locale, clientIp(req));
+  }
+
+  /** Sets the password from a reset or invitation link, then signs out every session. */
+  @Public()
+  @Throttle({ default: { limit: 20, ttl: 3_600_000 } })
+  @Post('password/reset')
+  @HttpCode(200)
+  @ApiZodBody(passwordResetSchema)
+  resetPassword(@ZodBody(passwordResetSchema) body: PasswordResetInput, @Req() req: AppRequest) {
+    return this.links.reset(body.token, body.newPassword, clientIp(req));
   }
 
   @Get('sessions')

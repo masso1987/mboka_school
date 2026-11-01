@@ -12,6 +12,7 @@ import { toDate, toIso } from '../common/dates';
 import { guardDb } from '../common/db-errors';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 import { Decimal, FinanceCore } from './finance-core';
+import { assertAllowedBaseUrl } from './mobile-money';
 import { encryptSecret } from '../common/secrets';
 
 /** Currencies, exchange-rate history, financial periods and provider credentials (Module 9, EXP-010). */
@@ -201,21 +202,26 @@ export class FinanceSetupService {
 
   listProviders(a: Actor) {
     return this.run(a, (tx) =>
-      tx.paymentProvider.findMany({ where: { tenantId: a.tenantId }, select: { code: true, isActive: true, createdAt: true } }),
+      tx.paymentProvider.findMany({ where: { tenantId: a.tenantId }, select: { code: true, kind: true, isActive: true, createdAt: true } }),
     );
   }
 
-  /** Stores (or rotates) a provider's callback signing secret, encrypted. The secret is never returned. */
+  /**
+   * Stores (or rotates) a provider's signing secret or operator credentials, encrypted.
+   * Credentials are never returned; operator API hosts are checked against the allow-list.
+   */
   configureProvider(a: Actor, input: ProviderConfigInput) {
+    if (input.kind !== 'SIGNED_WEBHOOK') assertAllowedBaseUrl(input.baseUrl);
     return this.run(a, async (tx) => {
-      const secretEncrypted = encryptSecret(input.secret);
+      const { code, kind, ...credentials } = input;
+      const secretEncrypted = encryptSecret(kind === 'SIGNED_WEBHOOK' ? input.secret : JSON.stringify({ kind, ...credentials }));
       await tx.paymentProvider.upsert({
-        where: { tenantId_code: { tenantId: a.tenantId, code: input.code } },
-        create: { tenantId: a.tenantId, code: input.code, secretEncrypted },
-        update: { secretEncrypted, isActive: true },
+        where: { tenantId_code: { tenantId: a.tenantId, code } },
+        create: { tenantId: a.tenantId, code, kind, secretEncrypted },
+        update: { kind, secretEncrypted, isActive: true },
       });
-      await this.audit.record({ tenantId: a.tenantId, actorId: a.userId, action: 'payment_provider.configured', metadata: { code: input.code }, ip: a.ip }, tx);
-      return { code: input.code, isActive: true };
+      await this.audit.record({ tenantId: a.tenantId, actorId: a.userId, action: 'payment_provider.configured', metadata: { code, kind }, ip: a.ip }, tx);
+      return { code, kind, isActive: true };
     });
   }
 }

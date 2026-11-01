@@ -3,10 +3,20 @@
 Multi-tenant school management SaaS for primary, secondary, technical and vocational schools
 (Cameroon first). French and English, multi-currency, online-first with offline resilience.
 
-**Status: Phases 0 to 5 delivered** (each phase is its own stacked pull request).
+**Status: Phases 0 to 6 delivered** (each phase is its own stacked pull request).
 See [docs/architecture.md](docs/architecture.md) and [ADR 0001 — Tenant isolation](docs/adr/0001-tenant-isolation.md).
 Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/security.md) ·
 [performance baseline](docs/performance.md) · [UAT checklist](docs/uat-checklist.md).
+
+## What Phase 6 adds — expansion
+
+| Area | Delivered |
+|---|---|
+| Mobile Money | MTN MoMo (request to pay) and Orange Money (web payment) per school, credentials encrypted; payments settle only from the operator's own status answer, once, for the exact amount; unsigned notifications only trigger a check; periodic reconciliation and a "Check with the operator" button; operator hosts allow-listed |
+| Payroll | Monthly payroll for Cameroon: CNPS (pension, family benefits, work accident, ceiling), IRPP with CAC, CFC, FNE, RAV, TDL; versioned, school-editable rules (defaults to validate with the accountant); draft → submitted → approved by someone else → paid, frozen by the database once submitted; monthly variables, unpaid days, PDF payslips, CNPS/tax declaration CSV; employees see their own payslips |
+| Subscriptions | Self-service sign-up with e-mail confirmation and a 30-day trial; plans with student, campus and user limits; subscription invoices confirmed by the platform; 7-day grace then read-only (data always readable); Platform page to create schools (director invited by e-mail) and manage plans and payments ([operations §11](docs/operations.md)) |
+| Accounts | "Forgot password?" with a single-use e-mailed link (1 hour); users and parent/student portal accounts are invited by e-mail to choose their own password (7 days) instead of receiving a temporary one; setting a password signs out every session ([operations §11](docs/operations.md)) |
+| Hosting | Single-host deployment kit for school.mboketech.com (`deploy/`, [operations §10](docs/operations.md)) |
 
 ## What Phase 5 adds — resilience, security, production readiness
 
@@ -99,7 +109,7 @@ Phase 4 messaging), automatic timetable generation, and offline mode (delivered 
 ### Not yet in Phase 0 (next items)
 
 - MFA (TOTP) for platform and privileged roles (spec §11.1) — the `mfa_secret` column exists; flow not built.
-- Invitations and password reset by email (owners currently receive a one-time temporary password).
+- Invitations and password reset by email (delivered in Phase 6).
 - User and role management screens; campus-scoped role restrictions are modelled but not enforced.
 - Staging/production environments and deployment pipeline.
 

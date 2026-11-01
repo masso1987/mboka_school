@@ -265,9 +265,10 @@ describe('administration', () => {
     await dirA.put(`/users/${self.membershipId}/roles`, { roleKeys: ['teacher'] }).expect(403);
   });
 
-  it('invites a user with a one-time password and changes their roles', async () => {
+  it('invites a user by e-mail and changes their roles', async () => {
     const res = await dirA.post('/users', { email: `cashier-${run}@e2e.local`, fullName: 'Caissier', roleKeys: ['cashier'] }).expect(201);
-    expect(res.body.temporaryPassword).toHaveLength(16);
+    expect(res.body).toMatchObject({ invitationSent: true });
+    expect(res.body.temporaryPassword).toBeUndefined();
     await dirA.put(`/users/${res.body.membershipId}/roles`, { roleKeys: ['cashier', 'registrar'] }).expect(200);
     const unknown = await dirA.put(`/users/${res.body.membershipId}/roles`, { roleKeys: ['wizard'] }).expect(422);
     expect(unknown.body.error.code).toBe('UNKNOWN_ROLE');

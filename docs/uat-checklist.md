@@ -96,6 +96,8 @@ student, and a second school's director.
 | S3 | Use a recovery code twice | Second use refused | `phase5` |
 | S4 | Director turns on "Require two-factor for sensitive roles"; accountant without MFA opens the school | Asked to set up two-factor first | `phase5` |
 | S5 | Change password | Other devices signed out | `phase5` |
+| S5a | "Forgot password?" on the sign-in page, open the e-mailed link, choose a new password | Signed out everywhere; old password refused; the link does not work a second time | `password` |
+| S5b | Director adds a new user (or grants a parent portal access) | No password shown; the person receives an invitation and chooses their password; an existing account only receives a notice | `password` invitations, `community` portal |
 | S6 | Account → Sessions → sign out another device | That device is signed out at its next request | `phase5` |
 | S7 | Director exports school data | JSON file downloaded; audit entry with row counts; no password hashes | `phase5` export |
 | S8 | Operator runs `scripts/restore-test.sh` on last night's backup | "restore-test: OK" | ops ([operations.md](operations.md)) |
