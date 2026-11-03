@@ -34,6 +34,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      # Shown in the platform console (Système → Vue d'ensemble).
+      RELEASE: ${RELEASE}
       DATABASE_URL: postgresql://mboka_app:${APP_DB_PASSWORD}@postgres:5432/mboka?schema=public
       CORS_ORIGINS: https://${PUBLIC_HOST:?}
       # host nginx -> web nginx -> api

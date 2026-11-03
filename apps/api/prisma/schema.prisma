@@ -1838,6 +1838,7 @@ model PlatformSettings {
   maintenance Json     @default("{}")
   security    Json     @default("{}")
   branding    Json     @default("{}")
+  analytics   Json     @default("{}")
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("platform_settings")

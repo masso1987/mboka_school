@@ -202,6 +202,14 @@ Each school configures its own merchant account (`PUT /api/v1/finance/providers`
 - **Sessions** (Platform → Sessions & branding): the maximum session length replaces `SESSION_TTL_HOURS` once
   saved; the idle timeout is checked to within 5 minutes.
 
+- **System console** (Platform → Système & base de données) works without extra setup for health, database,
+  read-only SQL, processes and disk. Containers and firewall rules need the optional override, which gives the API
+  the Docker socket (root-equivalent on the host) — only with every platform administrator on two-factor sign-in:
+  copy `deploy/docker-compose.sysops.yml` to `/opt/mboka-school/`, set `DOCKER_GID` in `.env`
+  (`getent group docker | cut -d: -f3`), then
+  `docker compose --env-file .env -f docker-compose.yml -f docker-compose.sysops.yml up -d`.
+  SQL writes stay off unless `CONSOLE_SQL_WRITE: "1"` is uncommented there.
+
 ## 11. Subscriptions and self-service sign-up
 
 - **Plans** live in the `plans` table, seeded once with placeholder prices (`essentiel`, `standard`, `premium`).

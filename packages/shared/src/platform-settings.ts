@@ -55,6 +55,22 @@ export type BrandingSettings = z.infer<typeof brandingSchema>;
 
 export const DEFAULT_BRANDING: BrandingSettings = { name: 'Mboka School', logoUrl: null, primaryColor: null, footerText: null, supportEmail: null, supportPhone: null };
 
+/** Product analytics (PostHog): the web app loads it only when a project key is set. */
+export const analyticsSchema = z.object({
+  posthogKey: z.string().trim().regex(/^phc_[A-Za-z0-9]{20,80}$/, 'invalid_posthog_key').nullable(),
+  posthogHost: z.url({ protocol: /^https$/ }).max(200).nullable(),
+});
+export type AnalyticsSettings = z.infer<typeof analyticsSchema>;
+
+export const DEFAULT_ANALYTICS: AnalyticsSettings = { posthogKey: null, posthogHost: null };
+
+/** One statement for the platform's SQL console; `confirmation` is required for a statement that changes data. */
+export const sqlQuerySchema = z.object({
+  sql: z.string().max(20_000),
+  confirmation: z.string().max(20).optional(),
+});
+export type SqlQueryInput = z.infer<typeof sqlQuerySchema>;
+
 export const LEGAL_KINDS = ['terms', 'privacy', 'notice'] as const;
 export type LegalKind = (typeof LEGAL_KINDS)[number];
 

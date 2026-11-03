@@ -1,9 +1,11 @@
 import { CanActivate, ExecutionContext, Global, HttpStatus, Injectable, Module } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
+  DEFAULT_ANALYTICS,
   DEFAULT_BRANDING,
   DEFAULT_MAINTENANCE,
   maintenanceState,
+  type AnalyticsSettings,
   type BrandingSettings,
   type MaintenanceSettings,
   type SecuritySettings,
@@ -20,6 +22,7 @@ export interface PlatformSettings {
   maintenance: MaintenanceSettings;
   security: SecuritySettings;
   branding: BrandingSettings;
+  analytics: AnalyticsSettings;
 }
 
 /** Settings are read on every request (maintenance, session timeouts): keep them this long in memory. */
@@ -45,6 +48,7 @@ export class PlatformSettingsService {
       maintenance: { ...DEFAULT_MAINTENANCE, ...(row.maintenance as object) },
       security: { sessionHours: env().SESSION_TTL_HOURS, idleMinutes: 0, ...(row.security as object) },
       branding: { ...DEFAULT_BRANDING, ...(row.branding as object) },
+      analytics: { ...DEFAULT_ANALYTICS, ...(row.analytics as object) },
     };
     this.cache = { at: Date.now(), value };
     return value;

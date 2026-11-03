@@ -8,13 +8,36 @@ import { randomUUID } from 'node:crypto';
  * query strings or personal data (§11.3).
  */
 const BUCKETS = [0.025, 0.05, 0.1, 0.25, 0.5, 0.8, 1, 2.5, 5];
+const RECENT_MS = 5 * 60_000;
+const RECENT_CAP = 50_000;
 
 class Metrics {
   private readonly counts = new Map<string, number>();
   private readonly histograms = new Map<string, { buckets: number[]; sum: number; count: number }>();
   readonly startedAt = Date.now();
+  /** Recent requests for the platform console's live view: [time, seconds, status], kept RECENT_MS, capped. */
+  private recentRequests: [number, number, number][] = [];
+
+  /** Requests in the last `windowMs`: count, per minute, 95th percentile duration and server errors. */
+  recent(windowMs = RECENT_MS) {
+    const since = Date.now() - windowMs;
+    const rows = this.recentRequests.filter(([at]) => at >= since);
+    const sorted = rows.map(([, s]) => s).sort((a, b) => a - b);
+    const p95 = sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))]! : 0;
+    return {
+      count: rows.length,
+      perMinute: Math.round((rows.length / (windowMs / 60_000)) * 10) / 10,
+      p95Ms: Math.round(p95 * 10_000) / 10,
+      errors5xx: rows.filter(([, , status]) => status >= 500).length,
+    };
+  }
 
   observe(method: string, route: string, status: number, seconds: number) {
+    const now = Date.now();
+    this.recentRequests.push([now, seconds, status]);
+    if (this.recentRequests.length > RECENT_CAP || this.recentRequests[0]![0] < now - RECENT_MS) {
+      this.recentRequests = this.recentRequests.filter(([at]) => at >= now - RECENT_MS).slice(-RECENT_CAP);
+    }
     const key = `${method}|${route}|${status}`;
     this.counts.set(key, (this.counts.get(key) ?? 0) + 1);
     const hk = `${method}|${route}`;

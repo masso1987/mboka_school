@@ -290,6 +290,69 @@ describe('demo schools', () => {
   }, 60_000);
 });
 
+describe('system and database console', () => {
+  const sql = (statement: string, confirmation?: string) => post('/platform/system/sql', { sql: statement, confirmation });
+
+  it('shows live health of the application, host and database, to platform administrators only', async () => {
+    const o = (await get('/platform/system/overview').expect(200)).body;
+    expect(o).toMatchObject({ app: { up: true }, database: { up: true } });
+    expect(o.requests.count).toBeGreaterThan(0);
+    expect(o.server.node).toMatch(/^v\d+/);
+    const h = (await get('/platform/system/health').expect(200)).body;
+    expect(h.eventLoop.p99Ms).toBeGreaterThanOrEqual(0);
+    const db = (await get('/platform/system/database').expect(200)).body;
+    expect(db.tables.map((t: { name: string }) => t.name)).toEqual(expect.arrayContaining(['tenants', 'students', 'audit_logs']));
+    expect((await get('/platform/system/processes').expect(200)).body.length).toBeGreaterThanOrEqual(1);
+    await get('/platform/system/disks').expect(200);
+    await director.get('/platform/system/overview').expect(403);
+  });
+
+  it('reads across schools in the SQL console, caps rows and audits every statement', async () => {
+    const n = (await sql('SELECT count(*)::int AS n FROM students').expect(200)).body;
+    expect(n.columns).toEqual(['n']);
+    expect(n.rows[0].n).toBeGreaterThanOrEqual(24); // demo students live in other schools: the platform scope reads them all
+    const many = (await sql('SELECT generate_series(1, 600) AS n').expect(200)).body;
+    expect(many).toMatchObject({ truncated: true });
+    expect(many.rows).toHaveLength(500);
+    expect((await sql('EXPLAIN SELECT 1').expect(200)).body.columns).toEqual(['QUERY PLAN']);
+    expect(await owner.auditLog.count({ where: { actorId: adminId, action: 'platform.sql_executed' } })).toBeGreaterThanOrEqual(3);
+  });
+
+  it('refuses writes and server-side functions however they are written', async () => {
+    expect((await sql('DELETE FROM sessions').expect(422)).body.error.code).toBe('SQL_READ_ONLY');
+    expect((await sql("UPDATE users SET full_name = 'x'", 'CONFIRMER').expect(422)).body.error.code).toBe('SQL_READ_ONLY');
+    expect((await sql('SELECT 1; DELETE FROM sessions').expect(422)).body.error.code).toBe('SQL_MULTIPLE');
+    expect((await sql('SELECT pg_sleep(20)').expect(422)).body.error.code).toBe('SQL_FORBIDDEN');
+    // A write hidden in a CTE: Postgres refuses it inside the read-only transaction.
+    await sql('WITH gone AS (DELETE FROM platform_messages RETURNING 1) SELECT count(*) FROM gone').expect(400);
+    expect(await owner.platformMessage.count()).toBeGreaterThan(0);
+    const bad = (await sql('SELEKT 1').expect(422)).body.error.code;
+    expect(bad).toBe('SQL_READ_ONLY');
+    const syntax = (await sql('SELECT FROM WHERE').expect(400)).body.error;
+    expect(syntax).toMatchObject({ code: 'SQL_ERROR' });
+    expect(syntax.details.message).toBeTruthy();
+    expect((await get('/platform/system/sql').expect(200)).body).toEqual({ writeEnabled: false });
+  });
+
+  it('reports the optional Docker and firewall mounts as absent here', async () => {
+    expect((await get('/platform/system/services').expect(200)).body).toEqual({ mounted: false, containers: [] });
+    expect((await get('/platform/system/firewall').expect(200)).body).toEqual({ mounted: false, rules: [] });
+    expect((await post('/platform/system/services/0123456789ab/restart').expect(503)).body.error.code).toBe('DOCKER_NOT_MOUNTED');
+    await post('/platform/system/services/0123456789ab/remove').expect(404);
+  });
+
+  it('stores the analytics key and publishes it to the web app', async () => {
+    const put = (body: object) => platform.put(`${API}/platform/settings/analytics`).set('X-CSRF-Token', csrf).send(body);
+    try {
+      await put({ posthogKey: 'not-a-key', posthogHost: 'https://eu.i.posthog.com' }).expect(400);
+      await put({ posthogKey: 'phc_abcdefghijklmnopqrstuvwxyz012345', posthogHost: 'https://eu.i.posthog.com' }).expect(200);
+      expect((await request(app.getHttpServer()).get(`${API}/public/status`).expect(200)).body.analytics).toEqual({ posthogKey: 'phc_abcdefghijklmnopqrstuvwxyz012345', posthogHost: 'https://eu.i.posthog.com' });
+    } finally {
+      await put({ posthogKey: null, posthogHost: null }).expect(200);
+    }
+  });
+});
+
 describe('platform administrators', () => {
   it('invites a new platform administrator and never lets one act on themself', async () => {
     const email = `second-root-${run}@e2e.local`;

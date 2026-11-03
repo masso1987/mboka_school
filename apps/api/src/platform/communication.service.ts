@@ -24,7 +24,7 @@ export class CommunicationService {
   // ------------------------------------------------------------ public status
 
   async publicStatus() {
-    const { maintenance, branding } = await this.settings.get();
+    const { maintenance, branding, analytics } = await this.settings.get();
     const state = maintenanceState(maintenance, new Date());
     return {
       maintenance: {
@@ -34,6 +34,7 @@ export class CommunicationService {
         endsAt: maintenance.endsAt,
       },
       branding,
+      analytics,
       legal: await this.latestVersions(),
     };
   }

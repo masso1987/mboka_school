@@ -3,12 +3,14 @@ import { ApiTags } from '@nestjs/swagger';
 import {
   activeSchema,
   auditQuerySchema,
+  analyticsSchema,
   brandingSchema,
   demoCreateSchema,
   demoExtendSchema,
   legalDocumentSchema,
   maintenanceSchema,
   platformMessageSchema,
+  sqlQuerySchema,
   securitySchema,
   licenceSchema,
   MODULE_KEYS,
@@ -19,12 +21,14 @@ import {
   schoolUpdateSchema,
   type ActiveInput,
   type AuditQuery,
+  type AnalyticsSettings,
   type BrandingSettings,
   type DemoCreateInput,
   type LegalDocumentInput,
   type MaintenanceSettings,
   type PlatformMessageInput,
   type SecuritySettings,
+  type SqlQueryInput,
   type LoginHistoryQuery,
   type PlatformUsersQuery,
   type LicenceInput,
@@ -47,6 +51,7 @@ import { PlatformAdminsService } from './platform-admins.service';
 import { PricingService } from './pricing.service';
 import { type PlatformActor, SchoolsService } from './schools.service';
 import { PlatformSettingsService } from './settings.service';
+import { SystemService } from './system.service';
 
 const listQuery = z.object({ q: z.string().trim().max(100).optional(), status: z.enum(['ACTIVE', 'SUSPENDED', 'CLOSED']).optional() });
 const actor = (auth: AuthContext, req: AppRequest): PlatformActor => ({ userId: auth.userId, ip: clientIp(req) });
@@ -65,6 +70,7 @@ export class PlatformController {
     private readonly settings: PlatformSettingsService,
     private readonly communication: CommunicationService,
     private readonly demos: DemoService,
+    private readonly system: SystemService,
   ) {}
 
   @Get('dashboard')
@@ -148,6 +154,74 @@ export class PlatformController {
   @ApiZodBody(brandingSchema)
   setBranding(@ZodBody(brandingSchema) body: BrandingSettings, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
     return this.settings.set('branding', body, actor(auth, req));
+  }
+
+  @Put('settings/analytics')
+  @ApiZodBody(analyticsSchema)
+  setAnalytics(@ZodBody(analyticsSchema) body: AnalyticsSettings, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.settings.set('analytics', body, actor(auth, req));
+  }
+
+  // ------------------------------------------------------------ system and database console
+
+  @Get('system/overview')
+  systemOverview() {
+    return this.system.overview();
+  }
+
+  @Get('system/health')
+  systemHealth() {
+    return this.system.health();
+  }
+
+  @Get('system/database')
+  systemDatabase() {
+    return this.system.database();
+  }
+
+  @Get('system/sql')
+  sqlMode() {
+    return { writeEnabled: this.system.writeEnabled() };
+  }
+
+  @Post('system/sql')
+  @HttpCode(200)
+  @ApiZodBody(sqlQuerySchema)
+  runSql(@ZodBody(sqlQuerySchema) body: SqlQueryInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.system.sql(body.sql, body.confirmation, actor(auth, req));
+  }
+
+  @Get('system/processes')
+  systemProcesses() {
+    return this.system.processes();
+  }
+
+  @Get('system/disks')
+  systemDisks() {
+    return this.system.disks();
+  }
+
+  @Get('system/services')
+  systemServices() {
+    return this.system.services();
+  }
+
+  @Post('system/services/:id/:action')
+  @HttpCode(200)
+  containerAction(@Param('id') id: string, @Param('action') action: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    if (!/^[0-9a-f]{12}$/.test(id) || !['start', 'stop', 'restart'].includes(action)) throw Errors.notFound('Container');
+    return this.system.containerAction(id, action as 'start' | 'stop' | 'restart', actor(auth, req));
+  }
+
+  @Get('system/services/:id/logs')
+  containerLogs(@Param('id') id: string) {
+    if (!/^[0-9a-f]{12}$/.test(id)) throw Errors.notFound('Container');
+    return this.system.containerLogs(id);
+  }
+
+  @Get('system/firewall')
+  firewall() {
+    return this.system.firewall();
   }
 
   // ------------------------------------------------------------ legal documents and messages

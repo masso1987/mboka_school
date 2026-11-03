@@ -21,13 +21,14 @@ import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
 import { GradesPage } from './pages/GradesPage';
 import { LegalPage } from './pages/LegalPage';
 import { LoginPage } from './pages/LoginPage';
-import { MaintenanceBanner, MaintenanceScreen, useBranding, usePublicStatus } from './lib/platform-status';
+import { MaintenanceBanner, MaintenanceScreen, useAnalytics, useBranding, usePublicStatus } from './lib/platform-status';
 import { PlatformPage } from './pages/PlatformPage';
 import { PlatformAdminsPage } from './pages/platform/AdminsPage';
 import { PlatformAuditPage } from './pages/platform/AuditPage';
 import { PlatformDemosPage } from './pages/platform/DemosPage';
 import { PlatformLoginsPage } from './pages/platform/LoginsPage';
 import { PlatformUsersPage } from './pages/platform/UsersPage';
+import { PlatformSystemPage } from './pages/platform/SystemPage';
 import { PlatformLegalPage, PlatformMaintenancePage, PlatformMessagesPage, PlatformSettingsPage } from './pages/platform/SettingsPages';
 import { PlatformHomePage } from './pages/platform/HomePage';
 import { PlatformSchoolDetailPage } from './pages/platform/SchoolDetailPage';
@@ -54,6 +55,7 @@ const queryClient = new QueryClient({
 
 function Root() {
   useBranding();
+  useAnalytics();
   return (
     <>
       <MaintenanceBanner />
@@ -137,6 +139,7 @@ function Screens() {
           <Route path="platform/legal" element={<PlatformLegalPage />} />
           <Route path="platform/maintenance" element={<PlatformMaintenancePage />} />
           <Route path="platform/settings" element={<PlatformSettingsPage />} />
+          <Route path="platform/system" element={<PlatformSystemPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}

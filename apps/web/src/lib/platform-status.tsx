@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import type { BrandingSettings } from '@mboka/shared';
+import type { AnalyticsSettings, BrandingSettings } from '@mboka/shared';
 import { api } from './api';
 
 export interface PublicStatus {
   maintenance: { active: boolean; upcoming: boolean; message: string; startsAt: string | null; endsAt: string | null };
   branding: BrandingSettings;
+  analytics: AnalyticsSettings;
   legal: { kind: string; locale: string; version: number }[];
 }
 
@@ -33,6 +34,27 @@ export function useBranding() {
     }
   }, [branding]);
   return branding;
+}
+
+/**
+ * Loads PostHog when the platform set a project key (Platform → System → Analytics). Anonymous page views only:
+ * no user is identified, so no personal data leaves for the analytics service.
+ */
+export function useAnalytics() {
+  const analytics = usePublicStatus().data?.analytics;
+  useEffect(() => {
+    if (!analytics?.posthogKey || !analytics.posthogHost || document.getElementById('posthog-loader')) return;
+    const host = analytics.posthogHost.replace(/\/+$/, '');
+    const script = document.createElement('script');
+    script.id = 'posthog-loader';
+    script.async = true;
+    script.src = `${host.replace('.i.posthog.com', '-assets.i.posthog.com')}/static/array.js`;
+    script.onload = () => {
+      const ph = (window as unknown as { posthog?: { init: (key: string, options: object) => void } }).posthog;
+      ph?.init(analytics.posthogKey!, { api_host: host, person_profiles: 'never', capture_pageview: true, autocapture: false, disable_session_recording: true });
+    };
+    document.head.appendChild(script);
+  }, [analytics?.posthogKey, analytics?.posthogHost]);
 }
 
 /** "Maintenance planned on …" shown to everyone before a scheduled window. */

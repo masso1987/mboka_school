@@ -1,0 +1,24 @@
+# Optional host access for the platform console (Plateforme → Système & base de données).
+# Without this file the console still shows application and database health, the SQL console (read-only),
+# disk space and the API container's processes. With it, it can also list, start, stop and restart this stack's
+# containers, read their logs and show the host's ufw firewall rules.
+#
+# Usage, on the server in /opt/mboka-school (copy this file next to docker-compose.yml as docker-compose.sysops.yml):
+#   docker compose --env-file .env -f docker-compose.yml -f docker-compose.sysops.yml up -d
+#
+# SECURITY: access to the Docker socket is equivalent to root on the host. Only enable it while every platform
+# administrator signs in with two-factor authentication (forced for them) and you trust each of them with the host.
+# The console only acts on containers of this compose project unless SYSOPS_DOCKER_ALL=1.
+services:
+  api:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/ufw:/host/etc/ufw:ro
+    # The API runs as the non-root "node" user: give it the host's docker group so it can use the socket.
+    # Find the id with:  getent group docker | cut -d: -f3
+    group_add:
+      - "${DOCKER_GID:-999}"
+    environment:
+      COMPOSE_PROJECT_NAME: mboka-school
+      # CONSOLE_SQL_WRITE: "1"   # allow statements that change data in the SQL console (typed confirmation each time)
+      # SYSOPS_DOCKER_ALL: "1"   # manage every container on the host, not only this stack's

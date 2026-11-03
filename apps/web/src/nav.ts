@@ -42,6 +42,7 @@ export const PLATFORM_NAV_ITEMS: NavItem[] = [
   { key: 'platformLegal', path: '/platform/legal', anyOf: [] },
   { key: 'platformMaintenance', path: '/platform/maintenance', anyOf: [] },
   { key: 'platformSettings', path: '/platform/settings', anyOf: [] },
+  { key: 'platformSystem', path: '/platform/system', anyOf: [] },
   { key: 'platformAdmins', path: '/platform/admins', anyOf: [] },
 ];
 
