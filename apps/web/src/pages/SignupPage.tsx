@@ -7,6 +7,7 @@ import { ErrorMessage } from '../components/ui';
 import { api } from '../lib/api';
 import { useMoney } from '../lib/money';
 import { LegalFooter, usePublicStatus } from '../lib/platform-status';
+import { schoolInitials } from '../nav';
 
 export interface PublicPlan {
   code: string;
@@ -23,24 +24,33 @@ export interface PublicPlan {
 
 export function PublicShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
-    <div className="flex min-h-dvh flex-col items-center bg-navy-900 px-4 pt-10">
-      <div className={`w-full ${wide ? 'max-w-3xl' : 'max-w-md'} space-y-5 rounded-xl bg-white p-6 shadow-lg sm:p-8`}>
-        <PlatformName />
-        {children}
-      </div>
-      <LegalFooter dark />
+    <div className="flex min-h-dvh flex-col bg-slate-50">
+      <header className="bg-forest-900 px-6 py-4">
+        <PlatformName dark />
+      </header>
+      <main className="flex flex-1 justify-center px-4 py-10">
+        <div className={`h-fit w-full ${wide ? 'max-w-3xl' : 'max-w-md'} space-y-5 rounded-[var(--radius-card)] border border-slate-200 bg-white p-6 sm:p-8`}>{children}</div>
+      </main>
+      <LegalFooter />
     </div>
   );
 }
 
-/** The platform's logo and name (branding), above every public form. */
-export function PlatformName() {
+/** The platform's mark (logo, or its initials in the Mboka stamp) and name, above every public page. */
+export function PlatformName({ dark = false }: { dark?: boolean }) {
   const { t } = useTranslation();
   const branding = usePublicStatus().data?.branding;
+  const name = branding?.name ?? t('app.name');
   return (
-    <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-accent-600">
-      {branding?.logoUrl && <img src={branding.logoUrl} alt="" className="h-7 w-auto" />}
-      {branding?.name ?? t('app.name')}
+    <p className={`flex items-center gap-3 text-base font-bold ${dark ? 'text-white' : 'text-slate-900'}`}>
+      {branding?.logoUrl ? (
+        <img src={branding.logoUrl} alt="" className="h-9 w-auto" />
+      ) : (
+        <span aria-hidden className="grid size-9 place-items-center rounded-lg border-2 border-action-500 bg-forest-950 text-xs font-extrabold text-action-500">
+          {schoolInitials(name)}
+        </span>
+      )}
+      {name}
     </p>
   );
 }
@@ -147,7 +157,7 @@ export function SignupPage() {
           </p>
         )}
         <ErrorMessage error={signup.error} />
-        <button type="submit" disabled={signup.isPending} className="w-full rounded-md bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-60">
+        <button type="submit" disabled={signup.isPending} className="w-full rounded-md bg-action-600 px-4 py-2 font-medium text-white hover:bg-action-700 disabled:opacity-60">
           {signup.isPending ? t('common.loading') : t('signup.submit')}
         </button>
         <p className="text-center text-sm">

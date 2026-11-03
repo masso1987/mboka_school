@@ -24,7 +24,7 @@ export function ReportsPage() {
 
   const kpi = (key: keyof FinanceSummary & string, value: string, emphasis = false) => (
     <div className="rounded-lg border border-slate-200 bg-white p-4" title={t(`reports.definitionText.${key}`, { defaultValue: s?.definitions[key] ?? '' })}>
-      <p className="text-xs uppercase tracking-wide text-slate-500">{t(`reports.kpi.${key}`)}</p>
+      <p className="text-sm text-slate-600">{t(`reports.kpi.${key}`)}</p>
       <p className={`tabular mt-1 ${emphasis ? 'text-2xl font-semibold' : 'text-xl'}`}>{value}</p>
     </div>
   );

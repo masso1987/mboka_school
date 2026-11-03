@@ -85,7 +85,7 @@ export function AcademicYearsPage() {
             <button
               type="submit"
               disabled={create.isPending}
-              className="w-full rounded-md bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-60"
+              className="w-full rounded-md bg-action-600 px-4 py-2 font-medium text-white hover:bg-action-700 disabled:opacity-60"
             >
               {create.isPending ? t('common.loading') : t('common.save')}
             </button>

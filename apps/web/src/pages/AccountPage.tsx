@@ -238,7 +238,7 @@ export function MfaVerifyPage() {
   });
   const cancel = useMutation({ mutationFn: () => api('/auth/logout', { method: 'POST' }), onSettled: () => qc.setQueryData(['me'], null) });
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-navy-900 px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-forest-900 px-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();

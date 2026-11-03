@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { hhmmFromMinutes } from '@mboka/shared';
-import { Badge, Card, ErrorMessage, Loading } from '../components/ui';
+import { Card, ErrorMessage, Loading } from '../components/ui';
 import { useTenantQuery } from '../lib/hooks';
 import { useMoney } from '../lib/money';
 import { useSession } from '../lib/session';
@@ -32,15 +33,11 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('dashboard.welcome', { name: me.user.fullName })}</h1>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {context?.roles.map((r) => (
-            <span key={r.key} className="rounded-full bg-accent-50 px-3 py-1 text-xs text-accent-700">
-              {i18n.resolvedLanguage === 'en' ? r.nameEn : r.nameFr}
-            </span>
-          ))}
-        </div>
+      <div className="border-b border-slate-200 pb-4">
+        <h1 className="text-[1.65rem] font-bold leading-tight">{t('dashboard.welcome', { name: me.user.fullName })}</h1>
+        {context && context.roles.length > 0 && (
+          <p className="mt-1 text-sm text-slate-600">{context.roles.map((r) => (i18n.resolvedLanguage === 'en' ? r.nameEn : r.nameFr)).join(', ')}</p>
+        )}
       </div>
 
       {dash.isPending ? (
@@ -67,24 +64,24 @@ export function DashboardPage() {
           )}
 
           {(dash.data.school || dash.data.finance) && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Figures>
               {dash.data.school && <Kpi label={t('dashboard.enrolled', { year: dash.data.school.academicYear })} value={String(dash.data.school.enrolled)} />}
               {dash.data.school && <Kpi label={t('dashboard.attendance30')} value={dash.data.school.attendanceRate30d === null ? '—' : `${dash.data.school.attendanceRate30d} %`} />}
               {dash.data.finance && <Kpi label={t('reports.kpi.collected')} value={money(dash.data.finance.collected, dash.data.finance.currency)} />}
               {dash.data.finance && <Kpi label={t('reports.kpi.collectionRate')} value={dash.data.finance.collectionRate === null ? '—' : `${dash.data.finance.collectionRate} %`} />}
               {dash.data.finance && <Kpi label={t('reports.kpi.outstanding')} value={money(dash.data.finance.outstanding, dash.data.finance.currency)} />}
               {dash.data.finance && <Kpi label={t('reports.kpi.expenses')} value={money(dash.data.finance.expenses, dash.data.finance.currency)} />}
-            </div>
+            </Figures>
           )}
 
           {dash.data.approvals && (
             <Card title={t('dashboard.approvals')}>
-              <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <ul className="-mx-2 grid sm:grid-cols-2">
                 {Object.entries(dash.data.approvals).map(([k, n]) => (
                   <li key={k}>
-                    <Link to={approvalLinks[k] ?? '/'} className="flex items-center justify-between rounded-md border border-slate-200 px-4 py-3 hover:bg-slate-50">
-                      <span className="text-sm">{t(`dashboard.pending.${k}`)}</span>
-                      <Badge tone={n ? 'amber' : 'slate'}>{n}</Badge>
+                    <Link to={approvalLinks[k] ?? '/'} className="flex items-center justify-between rounded-md px-2 py-2.5 hover:bg-slate-50">
+                      <span className={`text-sm ${n ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>{t(`dashboard.pending.${k}`)}</span>
+                      <span className={`tabular min-w-7 rounded px-1.5 text-center text-sm font-bold ${n ? 'bg-action-600 text-white' : 'text-slate-400'}`}>{n}</span>
                     </Link>
                   </li>
                 ))}
@@ -136,14 +133,20 @@ export function DashboardPage() {
           )}
 
           {dash.data.cashDesk && (
-            <Card title={t('dashboard.cashDesk')} actions={<Link to="/fees" className="text-sm text-accent-700 hover:underline">{t('nav.fees')} →</Link>}>
-              <div className="grid gap-3 sm:grid-cols-4">
+            <section>
+              <div className="mb-2 flex items-baseline justify-between">
+                <h2 className="text-base font-bold">{t('dashboard.cashDesk')}</h2>
+                <Link to="/fees" className="text-sm font-semibold text-accent-700 hover:underline">
+                  {t('nav.fees')}
+                </Link>
+              </div>
+              <Figures>
                 <Kpi label={t('dashboard.collectedToday')} value={money(dash.data.cashDesk.collectedToday, context?.tenant.defaultCurrency ?? 'XAF')} />
                 <Kpi label={t('dashboard.paymentsToday')} value={String(dash.data.cashDesk.paymentsToday)} />
                 <Kpi label={t('dashboard.pendingVerification')} value={String(dash.data.cashDesk.pendingVerification)} />
                 <Kpi label={t('dashboard.openRegisters')} value={String(dash.data.cashDesk.openRegisters)} />
-              </div>
-            </Card>
+              </Figures>
+            </section>
           )}
         </>
       )}
@@ -151,11 +154,23 @@ export function DashboardPage() {
   );
 }
 
+/**
+ * Figures side by side in one panel, separated by hairlines. Each cell draws its right and bottom rule; the grid is
+ * pulled one pixel under the panel's edge so the outer rules never double, and a half-filled last row stays white.
+ */
+function Figures({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-[var(--radius-card)] border border-slate-200 bg-white">
+      <dl className="-mb-px -mr-px grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] [&>*]:border-b [&>*]:border-r [&>*]:border-slate-200">{children}</dl>
+    </div>
+  );
+}
+
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="tabular mt-1 text-xl font-semibold">{value}</p>
+    <div className="px-3 py-3 sm:px-4 sm:py-3.5">
+      <dt className="text-sm text-slate-600">{label}</dt>
+      <dd className="tabular mt-1 whitespace-nowrap text-base font-bold text-slate-900 sm:text-xl">{value}</dd>
     </div>
   );
 }

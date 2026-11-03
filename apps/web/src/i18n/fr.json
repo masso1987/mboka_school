@@ -37,7 +37,9 @@
     "notVerified": "Confirmez d'abord votre adresse e-mail : ouvrez le lien que nous vous avons envoyé.",
     "resend": "Renvoyer le lien de confirmation",
     "resent": "Lien renvoyé : vérifiez votre boîte de réception.",
-    "forgot": "Mot de passe oublié ?"
+    "forgot": "Mot de passe oublié ?",
+    "panelTitle": "La vie de l’école, tenue au propre.",
+    "panelBody": "Inscriptions, présences, notes et bulletins, scolarité et paie : chaque établissement tient ses dossiers au même endroit, en français et en anglais."
   },
   "tenant": {
     "none": "Votre compte n'est rattaché à aucun établissement actif.",
@@ -73,7 +75,20 @@
     "platformSettings": "Sessions & image",
     "platformDemos": "Écoles de démo",
     "platformSystem": "Système & base de données",
-    "platformBackups": "Sauvegardes"
+    "platformBackups": "Sauvegardes",
+    "soon": "bientôt",
+    "schoolYear": "Année {{year}}",
+    "groups": {
+      "schoolLife": "Vie scolaire",
+      "teaching": "Enseignement",
+      "money": "Finances",
+      "staff": "Personnel",
+      "admin": "Administration",
+      "platformSchools": "Écoles et abonnements",
+      "platformPeople": "Comptes et traces",
+      "platformCommunication": "Communication",
+      "platformOperations": "Exploitation"
+    }
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",

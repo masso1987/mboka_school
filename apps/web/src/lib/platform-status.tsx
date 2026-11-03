@@ -78,9 +78,9 @@ export function MaintenanceScreen({ onAdminSignIn }: { onAdminSignIn?: () => voi
   const m = status.data?.maintenance;
   const name = status.data?.branding.name ?? t('app.name');
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-navy-900 px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-forest-900 px-4">
       <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-8 text-center shadow-lg">
-        <p className="text-sm font-semibold uppercase tracking-wide text-accent-600">{name}</p>
+        <p className="text-sm font-bold text-accent-700">{name}</p>
         <h1 className="text-2xl font-semibold">{t('maintenance.title')}</h1>
         <p className="text-slate-600">{m?.message || t('maintenance.default')}</p>
         {m?.endsAt && <p className="text-sm text-slate-500">{t('maintenance.until', { end: new Date(m.endsAt).toLocaleString() })}</p>}

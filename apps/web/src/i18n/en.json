@@ -37,7 +37,9 @@
     "notVerified": "Confirm your e-mail address first: open the link we sent you.",
     "resend": "Send the confirmation link again",
     "resent": "Link sent again: check your inbox.",
-    "forgot": "Forgot password?"
+    "forgot": "Forgot password?",
+    "panelTitle": "School life, kept in good order.",
+    "panelBody": "Enrolment, attendance, marks and report cards, fees and payroll: each school keeps its records in one place, in French and English."
   },
   "tenant": {
     "none": "Your account is not linked to any active school.",
@@ -73,7 +75,20 @@
     "platformSettings": "Sessions & branding",
     "platformDemos": "Demo schools",
     "platformSystem": "System & database",
-    "platformBackups": "Backups"
+    "platformBackups": "Backups",
+    "soon": "soon",
+    "schoolYear": "Year {{year}}",
+    "groups": {
+      "schoolLife": "School life",
+      "teaching": "Teaching",
+      "money": "Finance",
+      "staff": "Staff",
+      "admin": "Administration",
+      "platformSchools": "Schools and subscriptions",
+      "platformPeople": "Accounts and traces",
+      "platformCommunication": "Communication",
+      "platformOperations": "Operations"
+    }
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",

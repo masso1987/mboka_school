@@ -36,7 +36,7 @@ export function ForgotPasswordPage() {
             <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} className={field} />
           </label>
           <ErrorMessage error={send.error} />
-          <button type="submit" disabled={send.isPending || !email} className="w-full rounded-md bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-60">
+          <button type="submit" disabled={send.isPending || !email} className="w-full rounded-md bg-action-600 px-4 py-2 font-medium text-white hover:bg-action-700 disabled:opacity-60">
             {send.isPending ? t('common.loading') : t('password.forgotSubmit')}
           </button>
         </form>
@@ -98,7 +98,7 @@ export function SetPasswordPage({ mode }: { mode: 'reset' | 'invitation' }) {
           <button
             type="submit"
             disabled={save.isPending || mismatch || f.newPassword.length < 10}
-            className="w-full rounded-md bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-60"
+            className="w-full rounded-md bg-action-600 px-4 py-2 font-medium text-white hover:bg-action-700 disabled:opacity-60"
           >
             {save.isPending ? t('common.loading') : t('password.save')}
           </button>
