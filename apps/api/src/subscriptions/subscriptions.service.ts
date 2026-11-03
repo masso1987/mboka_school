@@ -66,7 +66,7 @@ export class SubscriptionsService {
 
   // ------------------------------------------------------------ school side
 
-  private async summary(tx: Tx, tenantId: string) {
+  async summary(tx: Tx, tenantId: string) {
     const sub = await tx.subscription.findUniqueOrThrow({ where: { tenantId } });
     const access = subscriptionAccess(sub, new Date());
     const [students, campuses, users] = await Promise.all([

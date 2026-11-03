@@ -29,6 +29,14 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'administration', path: '/administration', anyOf: ['tenant.settings.read', 'users.read'] },
 ];
 
+/** Platform console menu (Phase 7), shown to super administrators when no school is selected. */
+export const PLATFORM_NAV_ITEMS: NavItem[] = [
+  { key: 'platformHome', path: '/platform', anyOf: [] },
+  { key: 'platformSchools', path: '/platform/schools', anyOf: [] },
+  { key: 'platformBilling', path: '/platform/billing', anyOf: [] },
+  { key: 'platformAdmins', path: '/platform/admins', anyOf: [] },
+];
+
 export function visibleNavItems(can: (p: string) => boolean, items: NavItem[] = NAV_ITEMS): NavItem[] {
   return items.filter((i) => i.anyOf.length === 0 || i.anyOf.some(can));
 }

@@ -43,6 +43,14 @@ docs/         Architecture, ADRs
 - [ ] FR and EN strings added (the locale parity test fails otherwise).
 - [ ] UI has loading, empty, error and success states; nav item permission set in `apps/web/src/nav.ts`.
 
+## Platform console reads (Phase 7)
+
+- `prisma.platform(tx => …)` opens a transaction with `app.platform = 'on'`. Migration 0013 gave every table under RLS a
+  `platform_read` policy (SELECT only), so the console can count and list across schools. It never grants writes:
+  a change to a school still runs in `prisma.scoped({ tenantId })`, and so does that school's audit entry.
+- Only services behind `@PlatformAdmin()` may call it. A table added later under RLS needs its own
+  `CREATE POLICY platform_read … FOR SELECT USING (app_platform_read())` if the console must see it.
+
 ## Writing a migration — pitfalls found so far
 
 - Generate with `prisma migrate diff --from-url $DIRECT_DATABASE_URL --to-schema-datamodel prisma/schema.prisma --script`,

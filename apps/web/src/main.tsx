@@ -20,6 +20,11 @@ import { ExpensesPage } from './pages/ExpensesPage';
 import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
 import { GradesPage } from './pages/GradesPage';
 import { LoginPage } from './pages/LoginPage';
+import { PlatformPage } from './pages/PlatformPage';
+import { PlatformAdminsPage } from './pages/platform/AdminsPage';
+import { PlatformHomePage } from './pages/platform/HomePage';
+import { PlatformSchoolDetailPage } from './pages/platform/SchoolDetailPage';
+import { PlatformSchoolsPage } from './pages/platform/SchoolsPage';
 import { ForgotPasswordPage, SetPasswordPage } from './pages/PasswordPages';
 import { ReportCardsPage } from './pages/ReportCardsPage';
 import { ReportsPage } from './pages/ReportsPage';
@@ -88,6 +93,11 @@ function Root() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="grades" element={<GradesPage />} />
           <Route path="report-cards" element={<ReportCardsPage />} />
+          <Route path="platform" element={<PlatformHomePage />} />
+          <Route path="platform/schools" element={<PlatformSchoolsPage />} />
+          <Route path="platform/schools/:id" element={<PlatformSchoolDetailPage />} />
+          <Route path="platform/billing" element={<PlatformPage />} />
+          <Route path="platform/admins" element={<PlatformAdminsPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}

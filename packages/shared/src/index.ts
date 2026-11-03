@@ -11,3 +11,4 @@ export * from './grading';
 export * from './community';
 export * from './payroll';
 export * from './subscriptions';
+export * from './platform';

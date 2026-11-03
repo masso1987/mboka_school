@@ -19,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { StaffModule } from './staff/staff.module';
 import { StudentsModule } from './students/students.module';
 import { MailerModule } from './common/mailer';
+import { PlatformModule } from './platform/platform.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { TimetableModule } from './timetable/timetable.module';
@@ -32,6 +33,7 @@ import { TimetableModule } from './timetable/timetable.module';
     TenantsModule,
     MailerModule,
     SubscriptionsModule,
+    PlatformModule,
     AcademicYearsModule,
     AcademicsModule,
     StudentsModule,

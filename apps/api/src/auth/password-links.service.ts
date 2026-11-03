@@ -8,6 +8,8 @@ import { generateTemporaryPassword, hashPassword } from './password';
 import { SessionService } from './session.service';
 
 const RESET_HOURS = 1;
+/** A reset decided by a platform administrator gives the person a day to act on it. */
+const ADMIN_RESET_HOURS = 24;
 const INVITE_DAYS = 7;
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 type Locale = 'fr' | 'en';
@@ -16,8 +18,8 @@ const localeOf = (value: string | null | undefined): Locale => (value === 'en' ?
 const text = {
   fr: {
     resetSubject: 'Réinitialisation de votre mot de passe — Mboka School',
-    reset: (name: string, link: string) =>
-      `Bonjour ${name},\n\nPour choisir un nouveau mot de passe, ouvrez ce lien (valable ${RESET_HOURS} heure, utilisable une seule fois) :\n\n${link}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe actuel reste valable.`,
+    reset: (name: string, link: string, hours = RESET_HOURS) =>
+      `Bonjour ${name},\n\nPour choisir un nouveau mot de passe, ouvrez ce lien (valable ${hours} heure${hours > 1 ? 's' : ''}, utilisable une seule fois) :\n\n${link}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe actuel reste valable.`,
     inviteSubject: (school: string) => `Invitation à rejoindre ${school} — Mboka School`,
     invite: (name: string, school: string, link: string) =>
       `Bonjour ${name},\n\nUn compte Mboka School a été créé pour vous par « ${school} ».\nChoisissez votre mot de passe pour l'activer (lien valable ${INVITE_DAYS} jours, utilisable une seule fois) :\n\n${link}\n\nSi le lien a expiré, utilisez « Mot de passe oublié » sur la page de connexion.`,
@@ -27,8 +29,8 @@ const text = {
   },
   en: {
     resetSubject: 'Reset your password — Mboka School',
-    reset: (name: string, link: string) =>
-      `Hello ${name},\n\nTo choose a new password, open this link (valid for ${RESET_HOURS} hour, single use):\n\n${link}\n\nIf you did not ask for this, ignore this message: your current password still works.`,
+    reset: (name: string, link: string, hours = RESET_HOURS) =>
+      `Hello ${name},\n\nTo choose a new password, open this link (valid for ${hours} hour${hours > 1 ? 's' : ''}, single use):\n\n${link}\n\nIf you did not ask for this, ignore this message: your current password still works.`,
     inviteSubject: (school: string) => `Invitation to join ${school} — Mboka School`,
     invite: (name: string, school: string, link: string) =>
       `Hello ${name},\n\n"${school}" created a Mboka School account for you.\nChoose your password to activate it (link valid for ${INVITE_DAYS} days, single use):\n\n${link}\n\nIf the link has expired, use "Forgot password" on the sign-in page.`,
@@ -86,6 +88,27 @@ export class PasswordLinksService {
   sendAddedNotice(to: string, school: string, locale: string | null | undefined) {
     const t = text[localeOf(locale)];
     return this.mailer.send({ to, subject: t.addedSubject(school), text: t.added(school, this.webUrl()) });
+  }
+
+  /**
+   * A reset decided by a platform administrator: every session is signed out, then the person receives a
+   * link to choose a new password (7 days), or — without mail delivery — a one-time password returned once.
+   */
+  async resetByAdmin(userId: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const credentials = await this.newAccount();
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: credentials.token
+        ? { ...credentials.data, passwordResetExpiresAt: new Date(Date.now() + ADMIN_RESET_HOURS * 3_600_000) }
+        : { ...credentials.data, passwordChangedAt: new Date(), passwordResetTokenHash: null, passwordResetExpiresAt: null },
+    });
+    await this.sessions.revokeAllForUser(userId);
+    if (credentials.token) {
+      const t = text[localeOf(user.locale)];
+      await this.mailer.send({ to: user.email, subject: t.resetSubject, text: t.reset(user.fullName, `${this.webUrl()}/reset-password#token=${credentials.token}`, ADMIN_RESET_HOURS) });
+    }
+    return { emailSent: Boolean(credentials.token), temporaryPassword: credentials.temporaryPassword };
   }
 
   /** Answers the same for any address, so accounts cannot be probed; inactive accounts get nothing. */

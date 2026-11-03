@@ -6,6 +6,8 @@ import { api, ApiRequestError, setActiveTenant, setCsrfToken } from './api';
 import type { Me, TenantContextResponse } from './types';
 
 const TENANT_KEY = 'mboka.tenant';
+/** Stored instead of a school id when a super administrator works on the platform console. */
+export const PLATFORM_CHOICE = 'platform';
 
 interface Session {
   me: Me;
@@ -48,6 +50,7 @@ export function SessionProvider({ me, children }: { me: Me; children: ReactNode 
   const qc = useQueryClient();
   const [tenantId, setTenantId] = useState<string | undefined>(() => {
     const stored = readStoredTenant();
+    if (me.user.platformRole === 'SUPER_ADMIN' && stored === PLATFORM_CHOICE) return undefined;
     return me.tenants.some((t) => t.id === stored) ? stored : me.tenants[0]?.id;
   });
 
@@ -81,7 +84,7 @@ export function SessionProvider({ me, children }: { me: Me; children: ReactNode 
         }
         // Drop every cached tenant-scoped response before switching (§10.3). Offline data is namespaced per school, so it stays.
         qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });
-        setTenantId(id);
+        setTenantId(id === PLATFORM_CHOICE ? undefined : id);
       },
       signOut: async () => {
         // Unsent registers or mark drafts would be lost: ask first (§10.3 "warn before removing pending work").

@@ -3,10 +3,20 @@
 Multi-tenant school management SaaS for primary, secondary, technical and vocational schools
 (Cameroon first). French and English, multi-currency, online-first with offline resilience.
 
-**Status: Phases 0 to 6 delivered** (each phase is its own stacked pull request).
+**Status: Phases 0 to 6 delivered; Phase 7 in progress** (each phase is its own stacked pull request).
 See [docs/architecture.md](docs/architecture.md) and [ADR 0001 — Tenant isolation](docs/adr/0001-tenant-isolation.md).
 Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/security.md) ·
 [performance baseline](docs/performance.md) · [UAT checklist](docs/uat-checklist.md).
+
+## What Phase 7 adds (in progress) — platform console
+
+| Area | Delivered |
+|---|---|
+| Console | Platform menu for super administrators (no school selected; "Plateforme" in the school selector for those who also belong to schools); home with schools, trials, students, accounts, people signed in, sign-ins and failures in 24 h, revenue this month and alerts |
+| Schools | List with search and status; school page to edit name, language, currency and time zone, suspend or reactivate with a reason, see the subscription, usage and recent activity |
+| School admins | The platform adds each school's administrators (director role, invited by e-mail or given a one-time password), resets their password (24-hour link, every session signed out) and pauses or resumes their access; they create the school's other accounts themselves |
+| Platform admins | Add super administrators (two-factor sign-in forced), reset, deactivate or reactivate; never one's own account, never the last active one |
+| Security | Read-only platform scope for row-level security (`app.platform`), used only behind `@PlatformAdmin()`; it can read every school and write none |
 
 ## What Phase 6 adds — expansion
 

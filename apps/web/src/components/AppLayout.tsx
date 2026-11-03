@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { PlatformPage } from '../pages/PlatformPage';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router';
 import { AccountPage } from '../pages/AccountPage';
 import { LOCALES, type Locale } from '@mboka/shared';
 import { setLocale } from '../i18n';
-import { useSession } from '../lib/session';
-import { visibleNavItems } from '../nav';
+import { PLATFORM_CHOICE, useSession } from '../lib/session';
+import { PLATFORM_NAV_ITEMS, visibleNavItems } from '../nav';
 import { NotificationBell } from './NotificationBell';
 import { OfflineIndicator } from './OfflineIndicator';
 
@@ -15,7 +14,11 @@ export function AppLayout() {
   const { me, tenantId, selectTenant, can, signOut, context, contextError } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const items = visibleNavItems(can);
+  const superAdmin = me.user.platformRole === 'SUPER_ADMIN';
+  // A super administrator with no school selected works on the platform console.
+  const platformMode = superAdmin && !tenantId;
+  const onPlatformPath = location.pathname === '/platform' || location.pathname.startsWith('/platform/');
+  const items = platformMode ? PLATFORM_NAV_ITEMS : visibleNavItems(can);
 
   return (
     <div className="flex min-h-dvh">
@@ -38,7 +41,7 @@ export function AppLayout() {
               <li key={item.key}>
                 <NavLink
                   to={item.path}
-                  end={item.path === '/'}
+                  end={item.path === '/' || item.path === '/platform'}
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center justify-between rounded-md px-3 py-2 text-sm ${
@@ -67,14 +70,15 @@ export function AppLayout() {
             {t('common.menu')}
           </button>
 
-          {me.tenants.length > 1 ? (
+          {me.tenants.length > 1 || (superAdmin && me.tenants.length > 0) ? (
             <label className="flex items-center gap-2 text-sm">
               <span className="sr-only">{t('common.school')}</span>
               <select
-                value={tenantId}
+                value={tenantId ?? PLATFORM_CHOICE}
                 onChange={(e) => selectTenant(e.target.value)}
                 className="max-w-56 rounded-md border border-slate-300 bg-white px-2 py-1"
               >
+                {superAdmin && <option value={PLATFORM_CHOICE}>{t('platform.console')}</option>}
                 {me.tenants.map((ten) => (
                   <option key={ten.id} value={ten.id}>
                     {ten.tradingName ?? ten.legalName}
@@ -84,7 +88,7 @@ export function AppLayout() {
             </label>
           ) : (
             <span className="truncate text-sm font-medium">
-              {context?.tenant.tradingName ?? context?.tenant.legalName}
+              {platformMode ? t('platform.console') : (context?.tenant.tradingName ?? context?.tenant.legalName)}
             </span>
           )}
 
@@ -123,8 +127,10 @@ export function AppLayout() {
             <Outlet />
           ) : contextError?.code === 'MFA_SETUP_REQUIRED' ? (
             <AccountPage mandatory />
-          ) : !tenantId && me.user.platformRole === 'SUPER_ADMIN' ? (
-            <PlatformPage />
+          ) : platformMode ? (
+            onPlatformPath ? <Outlet /> : <Navigate to="/platform" replace />
+          ) : onPlatformPath ? (
+            <Navigate to="/" replace />
           ) : !tenantId ? (
             <Notice>{t('tenant.none')}</Notice>
           ) : contextError?.code === 'TENANT_SUSPENDED' ? (

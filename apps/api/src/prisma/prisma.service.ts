@@ -45,6 +45,17 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
     return r ? { status: r.status, version: r.version, content: r.content, publishedAt: r.published_at } : null;
   }
 
+  /**
+   * Read-only access to every tenant's rows for the platform console (migration 0013). Only for routes behind
+   * @PlatformAdmin(); writes to a school still go through `scoped({ tenantId })`.
+   */
+  platform<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+    return this.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT set_config('app.platform', 'on', true)`;
+      return fn(tx);
+    });
+  }
+
   scoped<T>(scope: DbScope, fn: (tx: Tx) => Promise<T>): Promise<T> {
     return this.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT set_config('app.tenant_id', ${scope.tenantId ?? ''}, true), set_config('app.user_id', ${scope.userId ?? ''}, true)`;

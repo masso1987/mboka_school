@@ -19,7 +19,7 @@ export class AdminService {
     private readonly links: PasswordLinksService,
   ) {}
 
-  private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
+  private run<T>(a: Pick<Actor, 'tenantId' | 'userId'>, fn: (tx: Tx) => Promise<T>) {
     return this.prisma.scoped({ tenantId: a.tenantId, userId: a.userId }, fn);
   }
 
@@ -84,7 +84,7 @@ export class AdminService {
    * (a one-time password returned once when no mail can be delivered); an existing account gains the
    * membership and is told by e-mail.
    */
-  async invite(a: Actor, input: InviteUserInput) {
+  async invite(a: Pick<Actor, 'tenantId' | 'userId' | 'ip'>, input: InviteUserInput) {
     const credentials = await this.links.newAccount();
     const res = await this.run(a, async (tx) => {
       const roles = await this.rolesOrThrow(tx, a, input.roleKeys);
@@ -188,7 +188,7 @@ export class AdminService {
     return m;
   }
 
-  private async rolesOrThrow(tx: Tx, a: Actor, keys: string[]) {
+  private async rolesOrThrow(tx: Tx, a: Pick<Actor, 'tenantId'>, keys: string[]) {
     const unique = [...new Set(keys)];
     const roles = await tx.role.findMany({ where: { tenantId: a.tenantId, key: { in: unique } } });
     if (roles.length !== unique.length) {
