@@ -108,6 +108,12 @@ BACKUP_PASSPHRASE=<from the secret store> scripts/backup.sh /var/backups/mboka
 - Set `PG_DUMP="pg_dump -h <host>"` for a managed database instead of the compose container.
 - Schedule: nightly full dump, kept 14 days; monthly kept 12 months; copy off-site (another region or provider).
 - Managed PostgreSQL: also enable point-in-time recovery (WAL archiving) — it is what brings RPO under one hour.
+- **From the platform console** (Plateforme → Sauvegardes, Phase 7): "Back up now" and "Test the restore" drop a
+  request in `backups/requests/`; the `backup-agent` container runs `backup.sh` / `restore-test.sh` with the owner
+  password and leaves the output there. Check it runs with `docker compose ps backup-agent`. The API reads the
+  encrypted files only. A school's own backup (`ecole-<slug>-<stamp>.json.gz.enc`) is encrypted with the password
+  typed at download; open it with
+  `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in <file> | gunzip > ecole.json`.
 
 | Objective | Target | How |
 |---|---|---|

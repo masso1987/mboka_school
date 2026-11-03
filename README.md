@@ -3,12 +3,12 @@
 Multi-tenant school management SaaS for primary, secondary, technical and vocational schools
 (Cameroon first). French and English, multi-currency, online-first with offline resilience.
 
-**Status: Phases 0 to 6 delivered; Phase 7 in progress** (each phase is its own stacked pull request).
+**Status: Phases 0 to 7 delivered** (each phase is its own stacked pull request).
 See [docs/architecture.md](docs/architecture.md) and [ADR 0001 — Tenant isolation](docs/adr/0001-tenant-isolation.md).
 Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/security.md) ·
 [performance baseline](docs/performance.md) · [UAT checklist](docs/uat-checklist.md).
 
-## What Phase 7 adds (in progress) — platform console
+## What Phase 7 adds — platform console
 
 | Area | Delivered |
 |---|---|
@@ -21,6 +21,7 @@ Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/s
 | Prices | Optional monthly/annual price per module on top of the plan, giving an indicative licence price (invoices still bill the plan price) |
 | Demo schools | One click builds a school with sample classes, 24 students, timetable, fees, invoices and a budget, plus director, teacher, accountant and parent logins (one password, shown once), for a chosen number of days (1–90); suspended at the end date and closed 7 days later (accounts disabled), extend, close or recreate any time; never counted in the dashboard |
 | System console | Overview refreshed every 10 s (application uptime, database latency, disk, server memory, app CPU, requests in the last 5 minutes with p95 and 5xx, alerts, server facts and release), app health (event loop, memory, e-mail outbox, Mobile Money pending), database (size, connections, tables, migrations, long queries), processes and disks; containers (list, logs, start/stop/restart) and host firewall rules when `deploy/docker-compose.sysops.yml` mounts them; PostHog analytics key (anonymous page views) |
+| Backups | One school's complete data, gzipped and encrypted (openssl-compatible AES-256) with a password chosen at download and never stored; whole-database backups run on request by the `backup-agent` container (the only one besides PostgreSQL with the owner password), listed, downloaded as encrypted and restore-tested from the console; restoring the live database stays a server command |
 | SQL console | One statement at a time across every school (platform scope), in a READ ONLY transaction with a 10 s timeout and 500 rows shown; server-side functions refused; every statement audited; writes only with `CONSOLE_SQL_WRITE=1` on the server and a typed confirmation, row-level security still applying |
 | Maintenance | Switch on now, or a scheduled window with a banner during the 72 hours before; everyone but super administrators gets the maintenance notice (`503 MAINTENANCE`), sign-in stays open for administrators |
 | Sessions & branding | Maximum session length and idle sign-out for the whole platform; platform name, logo, main colour, footer and support contact on every page |

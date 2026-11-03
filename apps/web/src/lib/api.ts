@@ -37,6 +37,25 @@ export async function apiBlob(path: string): Promise<Blob> {
   return res.blob();
 }
 
+/** POSTs a JSON body and saves the file the server answers with (e.g. an encrypted backup). */
+export async function postAndSave(path: string, body: unknown, fallbackName: string): Promise<void> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (tenantId) headers['X-Tenant-Id'] = tenantId;
+  if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+  const res = await fetch(`/api/v1${path}`, { method: 'POST', headers, credentials: 'same-origin', body: JSON.stringify(body) });
+  if (!res.ok) {
+    const err = ((await res.json().catch(() => undefined)) as ApiError | undefined)?.error;
+    throw new ApiRequestError(res.status, err?.code ?? 'HTTP_ERROR', err?.message ?? res.statusText, err?.details);
+  }
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 /** Opens a downloaded document in a new tab (the browser's PDF viewer prints and saves it). */
 export async function openBlob(path: string): Promise<void> {
   const url = URL.createObjectURL(await apiBlob(path));

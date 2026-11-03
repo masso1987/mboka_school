@@ -7,5 +7,6 @@ import { TenantsService } from './tenants.service';
 @Module({
   controllers: [PlatformTenantsController, TenantContextController],
   providers: [TenantsService, ExportService],
+  exports: [ExportService],
 })
 export class TenantsModule {}

@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AdminModule } from '../admin/admin.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { TenantsModule } from '../tenants/tenants.module';
+import { BackupsService } from './backups.service';
 import { ActivityService } from './activity.service';
 import { CommunicationService } from './communication.service';
 import { DashboardService } from './dashboard.service';
@@ -14,9 +16,9 @@ import { SystemService } from './system.service';
 
 /** Platform console (Phase 7). */
 @Module({
-  imports: [AdminModule, SubscriptionsModule],
+  imports: [AdminModule, SubscriptionsModule, TenantsModule],
   controllers: [PlatformController, PublicPlatformController],
-  providers: [DashboardService, SchoolsService, PlatformAdminsService, ActivityService, PricingService, CommunicationService, DemoService, SystemService],
+  providers: [DashboardService, SchoolsService, PlatformAdminsService, ActivityService, PricingService, CommunicationService, DemoService, SystemService, BackupsService],
   exports: [CommunicationService],
 })
 export class PlatformModule {}

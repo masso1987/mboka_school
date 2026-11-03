@@ -5,7 +5,12 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import request from 'supertest';
+import { opensslDecrypt } from '../src/common/openssl-enc';
 import { base32Decode, currentStep, hotp } from '../src/auth/totp';
 import { hashPassword } from '../src/auth/password';
 import { acceptInvitation, addMember, type Client, client, createApp, linkTokenFor, owner, PASSWORD, provisionSchool } from './helpers';
@@ -350,6 +355,68 @@ describe('system and database console', () => {
     } finally {
       await put({ posthogKey: null, posthogHost: null }).expect(200);
     }
+  });
+});
+
+describe('backups', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'mboka-backups-'));
+  const backupName = 'mboka-20261103T101500Z.dump.enc';
+  const binary = (res: request.Response, cb: (err: Error | null, body: Buffer) => void) => {
+    const chunks: Buffer[] = [];
+    res.on('data', (c: Buffer) => chunks.push(c));
+    res.on('end', () => cb(null, Buffer.concat(chunks)));
+  };
+
+  beforeAll(() => {
+    process.env.BACKUP_DIR = dir;
+    writeFileSync(join(dir, backupName), 'Salted__encrypted-dump');
+    writeFileSync(join(dir, `${backupName}.sha256`), 'checksum');
+  });
+  afterAll(() => {
+    delete process.env.BACKUP_DIR;
+  });
+
+  it("downloads one school's complete data, encrypted with the password given", async () => {
+    await post(`/platform/schools/${tenantId}/backup`, { password: 'short' }).expect(400);
+    const res = await platform.post(`${API}/platform/schools/${tenantId}/backup`).set('X-CSRF-Token', csrf).send({ password: 'a long backup password' }).buffer(true).parse(binary).expect(200);
+    expect(res.headers['content-disposition']).toMatch(/ecole-console-.*\.json\.gz\.enc/);
+    const json = JSON.parse(gunzipSync(opensslDecrypt(res.body as Buffer, 'a long backup password')).toString('utf8'));
+    expect(json.meta.tenantId ?? json.tenant.id).toBe(tenantId);
+    expect(Object.keys(json.tables)).toEqual(expect.arrayContaining(['students', 'campuses']));
+    expect(JSON.stringify(json)).not.toMatch(/password_hash|scrypt\$/);
+    expect(() => opensslDecrypt(res.body as Buffer, 'not the password')).toThrow();
+    expect(await owner.auditLog.count({ where: { tenantId, action: 'platform.school_backup' } })).toBe(1);
+  });
+
+  it('lists the whole-database backups and downloads them as they are', async () => {
+    const state = (await get('/platform/backups').expect(200)).body;
+    expect(state).toMatchObject({ configured: true, agent: { running: false } });
+    expect(state.backups).toEqual([expect.objectContaining({ name: backupName, checksum: true })]);
+    const file = await platform.get(`${API}/platform/backups/${backupName}/download`).buffer(true).parse(binary).expect(200);
+    expect((file.body as Buffer).toString()).toBe('Salted__encrypted-dump');
+    await get(`/platform/backups/..%2F..%2Fetc%2Fpasswd/download`).expect(404);
+    await get('/platform/backups/mboka-20990101T000000Z.dump.enc/download').expect(404);
+    await director.get('/platform/backups').expect((r) => expect(r.status).toBeGreaterThanOrEqual(401));
+  });
+
+  it('files backup and restore-test requests for the agent and reports their outcome', async () => {
+    const run = (await post('/platform/backups').expect(201)).body;
+    expect(run).toMatchObject({ status: 'WAITING', agent: { running: false } });
+    expect(readFileSync(join(dir, 'requests', `${run.id}.json`), 'utf8')).toContain('"kind":"backup"');
+    expect(existsSync(join(dir, 'requests', `${run.id}.backup`))).toBe(true);
+    // The agent's part: it picks the request up, runs backup.sh, and leaves the outcome.
+    unlinkSync(join(dir, 'requests', `${run.id}.backup`));
+    writeFileSync(join(dir, 'requests', `${run.id}.log`), 'backup: /backups/mboka-20261103T120000Z.dump.enc (1234 bytes)');
+    writeFileSync(join(dir, 'requests', `${run.id}.exit`), '0\n');
+    writeFileSync(join(dir, 'agent.heartbeat'), new Date().toISOString());
+    expect((await get(`/platform/backups/requests/${run.id}`).expect(200)).body).toMatchObject({ kind: 'backup', status: 'DONE', output: expect.stringContaining('backup:') });
+    expect((await get('/platform/backups').expect(200)).body.agent.running).toBe(true);
+
+    const restore = (await post(`/platform/backups/${backupName}/restore-test`).expect(201)).body;
+    expect(readFileSync(join(dir, 'requests', `${restore.id}.restore`), 'utf8')).toBe(backupName);
+    await post('/platform/backups/mboka-20990101T000000Z.dump.enc/restore-test').expect(404);
+    await post('/platform/backups/evil;rm -rf/restore-test').expect(404);
+    expect(await owner.auditLog.count({ where: { actorId: adminId, action: { in: ['platform.backup_requested', 'platform.restore_test_requested'] } } })).toBe(2);
   });
 });
 

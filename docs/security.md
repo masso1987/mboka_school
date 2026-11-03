@@ -70,6 +70,9 @@ deployment duties described in [operations.md](operations.md).
 | 8.2.x | Offline copies (registers, mark drafts) are per school and erased at sign-out, with a warning if unsynchronised | `apps/web/src/lib/offline.ts` | manual (UAT F) |
 | 8.3.x | School data export for portability, privileged + audited, without credentials or password hashes | `GET /tenant/export` | `phase5.e2e-spec.ts` |
 | 8.3.x | Backups encrypted (AES-256, PBKDF2) before touching disk; restore tested | `scripts/backup.sh`, `restore-test.sh` | [operations.md](operations.md) |
+| 4.1.x / 4.3.x | Platform console (Phase 7) only for `SUPER_ADMIN` (two-factor forced); cross-school reads through a read-only RLS scope (`app.platform`), every change in the school's own scope and audited | `platform/*`, migration 0013 | `platform-console.e2e-spec.ts` (write refused in platform scope) |
+| 5.3.x / 7.x | SQL console: one statement, READ ONLY transaction, 10 s timeout, server-side functions refused, every statement audited; writes only with `CONSOLE_SQL_WRITE=1` and a typed confirmation | `sql-guard.ts`, `system.service.ts` | `sql-guard.spec.ts`, e2e |
+| 8.3.x | School backups encrypted with a password chosen at download (never stored); whole-database backups by an agent holding the owner password, which the API never sees; Docker socket only through an opt-in override | `backups.service.ts`, `deploy/backup-agent.sh`, `docker-compose.sysops.yml` | `openssl-enc.spec.ts` (decrypts with openssl), e2e |
 
 ## V9 Communications, V14 Configuration
 

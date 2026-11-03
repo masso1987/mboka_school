@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 import { useDateFormat } from '../../lib/hooks';
 import { useMoney } from '../../lib/money';
 import { stateTone } from '../SubscriptionTab';
+import { SchoolBackupCard } from './BackupsPage';
 import { statusTone } from './SchoolsPage';
 
 interface Admin {
@@ -103,6 +104,7 @@ export function PlatformSchoolDetailPage() {
 
       <LicenceCard tenantId={s.tenant.id} onSaved={refresh} />
       <AdminsCard school={s} onChanged={refresh} />
+      <SchoolBackupCard tenantId={s.tenant.id} />
       <StatusCard school={s} onChanged={refresh} />
 
       <Card title={t('platform.recentActivity')}>

@@ -63,6 +63,9 @@ export const auditQuerySchema = z.object({
 });
 export type AuditQuery = z.infer<typeof auditQuerySchema>;
 
+/** A school's backup is encrypted with this password, chosen at download and never stored. */
+export const schoolBackupSchema = z.object({ password: z.string().min(12, 'password_too_short').max(200) });
+
 /** Days a suspended demo school is kept before it is closed. */
 export const DEMO_GRACE_DAYS = 7;
 

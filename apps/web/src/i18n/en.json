@@ -72,7 +72,8 @@
     "platformMaintenance": "Maintenance",
     "platformSettings": "Sessions & branding",
     "platformDemos": "Demo schools",
-    "platformSystem": "System & database"
+    "platformSystem": "System & database",
+    "platformBackups": "Backups"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -464,7 +465,8 @@
     "SQL_CONFIRMATION_REQUIRED": "Type CONFIRMER to run a statement that changes data.",
     "SQL_ERROR": "The database refused the statement.",
     "DOCKER_NOT_MOUNTED": "Docker is not mounted for the API.",
-    "DOCKER_ERROR": "Docker refused the action."
+    "DOCKER_ERROR": "Docker refused the action.",
+    "BACKUPS_NOT_CONFIGURED": "The backups folder is not mounted for the API."
   },
   "fees": {
     "tabs": {
@@ -1455,5 +1457,38 @@
     "posthogKey": "Project key",
     "posthogKeyHint": "Starts with phc_",
     "posthogHost": "Service address"
+  },
+  "backups": {
+    "school": "Back up a school",
+    "schoolHelp": "Downloads all of the school's data (students, marks, finance, staff… without passwords or secrets), compressed and encrypted with the password chosen here. It is kept nowhere: without it, the file cannot be read.",
+    "password": "File password",
+    "passwordHint": "At least 12 characters; send it separately from the file.",
+    "downloadSchool": "Download the backup",
+    "schoolDone": "Backup downloaded.",
+    "howToOpen": "To open the file:",
+    "database": "Whole-database backups",
+    "notConfigured": "The backups folder is not mounted for the API (deployment being updated?).",
+    "agentOn": "Backup agent running",
+    "agentOff": "Backup agent stopped",
+    "lastSeen": "seen {{time}}",
+    "agentHelp": "Requests wait until the backup-agent container runs (docker compose ps on the server).",
+    "runNow": "Back up now",
+    "none": "No backup in the folder.",
+    "file": "File",
+    "download": "Download (encrypted)",
+    "restoreTest": "Test the restore",
+    "requests": "Recent requests",
+    "output": "Output",
+    "kind": {
+      "backup": "Backup",
+      "restore": "Restore test"
+    },
+    "status": {
+      "WAITING": "Waiting",
+      "RUNNING": "Running",
+      "DONE": "Done",
+      "FAILED": "Failed"
+    },
+    "restoreHelp": "Whole-database backups are encrypted with BACKUP_PASSPHRASE (in the server .env). The restore test loads the backup into a scratch database and compares row counts. Restoring the live database stays a command on the server (operations guide §6)."
   }
 }

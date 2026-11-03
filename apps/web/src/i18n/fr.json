@@ -72,7 +72,8 @@
     "platformMaintenance": "Maintenance",
     "platformSettings": "Sessions & image",
     "platformDemos": "Écoles de démo",
-    "platformSystem": "Système & base de données"
+    "platformSystem": "Système & base de données",
+    "platformBackups": "Sauvegardes"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -464,7 +465,8 @@
     "SQL_CONFIRMATION_REQUIRED": "Tapez CONFIRMER pour exécuter une instruction qui modifie des données.",
     "SQL_ERROR": "La base de données a refusé l’instruction.",
     "DOCKER_NOT_MOUNTED": "Docker n'est pas monté pour l'API.",
-    "DOCKER_ERROR": "Docker a refusé l’action."
+    "DOCKER_ERROR": "Docker a refusé l’action.",
+    "BACKUPS_NOT_CONFIGURED": "Le dossier des sauvegardes n'est pas monté pour l'API."
   },
   "fees": {
     "tabs": {
@@ -1455,5 +1457,38 @@
     "posthogKey": "Clé du projet",
     "posthogKeyHint": "Commence par phc_",
     "posthogHost": "Adresse du service"
+  },
+  "backups": {
+    "school": "Sauvegarder une école",
+    "schoolHelp": "Télécharge toutes les données de l'école (élèves, notes, finances, personnel… sans mots de passe ni secrets), compressées et chiffrées avec le mot de passe choisi ici. Il n'est conservé nulle part : sans lui, le fichier est illisible.",
+    "password": "Mot de passe du fichier",
+    "passwordHint": "12 caractères au moins ; transmettez-le séparément du fichier.",
+    "downloadSchool": "Télécharger la sauvegarde",
+    "schoolDone": "Sauvegarde téléchargée.",
+    "howToOpen": "Pour ouvrir le fichier :",
+    "database": "Sauvegardes de la base complète",
+    "notConfigured": "Le dossier des sauvegardes n'est pas monté pour l'API (déploiement en cours de mise à jour ?).",
+    "agentOn": "Agent de sauvegarde actif",
+    "agentOff": "Agent de sauvegarde arrêté",
+    "lastSeen": "vu le {{time}}",
+    "agentHelp": "Les demandes restent en attente tant que le conteneur backup-agent ne tourne pas (docker compose ps sur le serveur).",
+    "runNow": "Sauvegarder maintenant",
+    "none": "Aucune sauvegarde dans le dossier.",
+    "file": "Fichier",
+    "download": "Télécharger (chiffré)",
+    "restoreTest": "Tester la restauration",
+    "requests": "Demandes récentes",
+    "output": "Résultat",
+    "kind": {
+      "backup": "Sauvegarde",
+      "restore": "Test de restauration"
+    },
+    "status": {
+      "WAITING": "En attente",
+      "RUNNING": "En cours",
+      "DONE": "Terminé",
+      "FAILED": "Échec"
+    },
+    "restoreHelp": "Les sauvegardes complètes sont chiffrées avec BACKUP_PASSPHRASE (dans le .env du serveur). Le test de restauration recharge la sauvegarde dans une base temporaire et compare le nombre de lignes. Restaurer la base réelle reste une commande sur le serveur (guide d'exploitation §6)."
   }
 }

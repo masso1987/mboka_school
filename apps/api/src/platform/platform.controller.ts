@@ -10,6 +10,7 @@ import {
   legalDocumentSchema,
   maintenanceSchema,
   platformMessageSchema,
+  schoolBackupSchema,
   sqlQuerySchema,
   securitySchema,
   licenceSchema,
@@ -44,6 +45,7 @@ import { Errors } from '../common/api-error';
 import { type AppRequest, type AuthContext, clientIp, CurrentAuth } from '../common/request-context';
 import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod';
 import { ActivityService } from './activity.service';
+import { BackupsService } from './backups.service';
 import { CommunicationService } from './communication.service';
 import { DashboardService } from './dashboard.service';
 import { DemoService } from './demo.service';
@@ -71,6 +73,7 @@ export class PlatformController {
     private readonly communication: CommunicationService,
     private readonly demos: DemoService,
     private readonly system: SystemService,
+    private readonly backups: BackupsService,
   ) {}
 
   @Get('dashboard')
@@ -222,6 +225,50 @@ export class PlatformController {
   @Get('system/firewall')
   firewall() {
     return this.system.firewall();
+  }
+
+  // ------------------------------------------------------------ backups
+
+  /** Downloads one school's complete data, gzipped and encrypted with the password sent (never stored). */
+  @Post('schools/:id/backup')
+  @HttpCode(200)
+  @ApiZodBody(schoolBackupSchema)
+  async schoolBackup(
+    @Param('id', ParseUUIDPipe) id: string,
+    @ZodBody(schoolBackupSchema) body: { password: string },
+    @CurrentAuth() auth: AuthContext,
+    @Req() req: AppRequest,
+    @Res() res: Response,
+  ) {
+    const { filename, file } = await this.backups.schoolBackup(id, body.password, actor(auth, req));
+    res.set({ 'Content-Type': 'application/octet-stream', 'Content-Disposition': `attachment; filename="${filename}"`, 'Cache-Control': 'no-store' }).send(file);
+  }
+
+  @Get('backups')
+  listBackups() {
+    return this.backups.list();
+  }
+
+  @Post('backups')
+  runBackup(@CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.backups.runBackup(actor(auth, req));
+  }
+
+  @Get('backups/requests/:id')
+  backupRequest(@Param('id') id: string) {
+    return this.backups.request(id);
+  }
+
+  @Post('backups/:name/restore-test')
+  restoreTest(@Param('name') name: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.backups.runRestoreTest(name, actor(auth, req));
+  }
+
+  @Get('backups/:name/download')
+  async downloadBackup(@Param('name') name: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res() res: Response) {
+    const { stream, size } = await this.backups.download(name, actor(auth, req));
+    res.set({ 'Content-Type': 'application/octet-stream', 'Content-Length': String(size), 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store' });
+    stream.pipe(res);
   }
 
   // ------------------------------------------------------------ legal documents and messages

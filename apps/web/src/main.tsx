@@ -25,6 +25,7 @@ import { MaintenanceBanner, MaintenanceScreen, useAnalytics, useBranding, usePub
 import { PlatformPage } from './pages/PlatformPage';
 import { PlatformAdminsPage } from './pages/platform/AdminsPage';
 import { PlatformAuditPage } from './pages/platform/AuditPage';
+import { PlatformBackupsPage } from './pages/platform/BackupsPage';
 import { PlatformDemosPage } from './pages/platform/DemosPage';
 import { PlatformLoginsPage } from './pages/platform/LoginsPage';
 import { PlatformUsersPage } from './pages/platform/UsersPage';
@@ -140,6 +141,7 @@ function Screens() {
           <Route path="platform/maintenance" element={<PlatformMaintenancePage />} />
           <Route path="platform/settings" element={<PlatformSettingsPage />} />
           <Route path="platform/system" element={<PlatformSystemPage />} />
+          <Route path="platform/backups" element={<PlatformBackupsPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}

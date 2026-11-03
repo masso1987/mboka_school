@@ -28,7 +28,7 @@ echo "deploy: images built"
 
 ssh "$SSH_HOST" "mkdir -p '$DIR'"
 scp -q deploy/docker-compose.prod.yml "$SSH_HOST:$DIR/docker-compose.yml"
-scp -q -r deploy/postgres-init deploy/server-init.sh scripts/backup.sh scripts/restore-test.sh "$SSH_HOST:$DIR/"
+scp -q -r deploy/postgres-init deploy/server-init.sh deploy/backup-agent.sh scripts/backup.sh scripts/restore-test.sh "$SSH_HOST:$DIR/"
 HOST_NAME="$(basename deploy/nginx/*.conf .conf)"
 ssh "$SSH_HOST" "chmod +x '$DIR'/postgres-init/*.sh '$DIR'/*.sh && bash '$DIR/server-init.sh' '$DIR' '$HOST_NAME'"
 
