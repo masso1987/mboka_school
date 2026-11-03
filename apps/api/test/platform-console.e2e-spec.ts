@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { base32Decode, currentStep, hotp } from '../src/auth/totp';
 import { hashPassword } from '../src/auth/password';
-import { acceptInvitation, type Client, client, createApp, linkTokenFor, owner, PASSWORD, provisionSchool } from './helpers';
+import { acceptInvitation, addMember, type Client, client, createApp, linkTokenFor, owner, PASSWORD, provisionSchool } from './helpers';
 
 const run = randomUUID().slice(0, 8);
 const API = '/api/v1';
@@ -119,6 +119,75 @@ describe('platform administrators', () => {
     expect(res.body).toMatchObject({ invitationSent: false });
     await director.get('/users').expect(401);
     await patch(`/platform/admins/${res.body.userId}/status`, { active: false }).expect(200);
+  });
+});
+
+describe('users, sessions, sign-ins and audit log', () => {
+  const email = `teacher-console-${run}@e2e.local`;
+  let userId: string;
+  const login = (password = PASSWORD) => request(app.getHttpServer()).post(`${API}/auth/login`).send({ email, password });
+
+  beforeAll(async () => {
+    userId = (await addMember(tenantId, email, ['teacher'])).userId;
+  });
+
+  it('lists every account with its schools and open sessions, for platform administrators only', async () => {
+    const teacher = await client(app, email, tenantId);
+    await teacher.get('/platform/users').expect(403);
+    const page = (await get(`/platform/users?q=${encodeURIComponent(email)}`).expect(200)).body;
+    expect(page.total).toBe(1);
+    expect(page.items[0]).toMatchObject({ id: userId, isActive: true, schools: [{ id: tenantId, roles: ['teacher'] }] });
+    expect(page.items[0].activeSessions).toBeGreaterThanOrEqual(1);
+    expect((await get(`/platform/users?tenantId=${tenantId}&status=paused`).expect(200)).body.items.map((u: { id: string }) => u.id)).not.toContain(userId);
+  });
+
+  it('ends one session, then every session', async () => {
+    const teacher = await client(app, email, tenantId);
+    const sessions = (await get(`/platform/users/${userId}/sessions`).expect(200)).body;
+    expect(sessions.length).toBeGreaterThanOrEqual(1);
+    for (const s of sessions) await platform.delete(`${API}/platform/sessions/${s.id}`).set('X-CSRF-Token', csrf).expect(204);
+    await teacher.get('/students').expect(401);
+
+    const again = await client(app, email, tenantId);
+    expect((await post(`/platform/users/${userId}/disconnect`).expect(200)).body.sessionsRevoked).toBeGreaterThanOrEqual(1);
+    await again.get('/students').expect(401);
+    await post(`/platform/users/${adminId}/disconnect`).expect(403);
+  });
+
+  it('pauses an account (sign-in refused) and resumes it', async () => {
+    await patch(`/platform/users/${userId}/status`, { active: false, reason: 'investigation' }).expect(200);
+    await login().expect(401);
+    await patch(`/platform/users/${userId}/status`, { active: true }).expect(200);
+    await login().expect(200);
+    await patch(`/platform/users/${adminId}/status`, { active: false }).expect(403);
+  });
+
+  it('shows the sign-in history with failures and reasons, and exports it', async () => {
+    await login('wrong password').expect(401);
+    const all = (await get(`/platform/logins?q=${encodeURIComponent(email)}`).expect(200)).body;
+    const actions = all.items.map((i: { action: string }) => i.action);
+    expect(actions).toEqual(expect.arrayContaining(['auth.login.succeeded', 'auth.login.failed']));
+    const failures = (await get(`/platform/logins?q=${encodeURIComponent(email)}&failuresOnly=true`).expect(200)).body.items;
+    expect(failures.every((i: { success: boolean }) => !i.success)).toBe(true);
+    expect(failures.map((i: { reason: string }) => i.reason)).toEqual(expect.arrayContaining(['inactive', 'bad_password']));
+    expect((await get(`/platform/logins?tenantId=${tenantId}`).expect(200)).body.items.some((i: { user: { email: string } | null }) => i.user?.email === email)).toBe(true);
+
+    const csv = await get(`/platform/logins?q=${encodeURIComponent(email)}&format=csv`).expect(200);
+    expect(csv.headers['content-type']).toMatch(/text\/csv/);
+    expect(csv.text.split('\r\n')[0]).toBe('﻿date;action;result;reason;email;name;ip');
+    expect(csv.text).toContain(email);
+  });
+
+  it('shows the audit log of a school and of the platform, and records exports', async () => {
+    const school = (await get(`/platform/audit?tenantId=${tenantId}&action=platform.`).expect(200)).body;
+    expect(school.items.map((i: { action: string }) => i.action)).toEqual(expect.arrayContaining(['platform.school_updated', 'platform.school_admin_paused']));
+    expect(school.items.every((i: { school: { id: string } }) => i.school.id === tenantId)).toBe(true);
+    const platformOnly = (await get(`/platform/audit?action=platform.user_paused`).expect(200)).body.items;
+    expect(platformOnly[0]).toMatchObject({ school: null, entityId: userId, metadata: { reason: 'investigation' } });
+
+    const csv = await get(`/platform/audit?tenantId=${tenantId}&format=csv`).expect(200);
+    expect(csv.text).toContain('platform.school_updated');
+    expect(await owner.auditLog.count({ where: { actorId: adminId, action: 'platform.audit_exported' } })).toBeGreaterThanOrEqual(1);
   });
 });
 

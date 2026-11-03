@@ -22,6 +22,9 @@ import { GradesPage } from './pages/GradesPage';
 import { LoginPage } from './pages/LoginPage';
 import { PlatformPage } from './pages/PlatformPage';
 import { PlatformAdminsPage } from './pages/platform/AdminsPage';
+import { PlatformAuditPage } from './pages/platform/AuditPage';
+import { PlatformLoginsPage } from './pages/platform/LoginsPage';
+import { PlatformUsersPage } from './pages/platform/UsersPage';
 import { PlatformHomePage } from './pages/platform/HomePage';
 import { PlatformSchoolDetailPage } from './pages/platform/SchoolDetailPage';
 import { PlatformSchoolsPage } from './pages/platform/SchoolsPage';
@@ -98,6 +101,9 @@ function Root() {
           <Route path="platform/schools/:id" element={<PlatformSchoolDetailPage />} />
           <Route path="platform/billing" element={<PlatformPage />} />
           <Route path="platform/admins" element={<PlatformAdminsPage />} />
+          <Route path="platform/users" element={<PlatformUsersPage />} />
+          <Route path="platform/logins" element={<PlatformLoginsPage />} />
+          <Route path="platform/audit" element={<PlatformAuditPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}

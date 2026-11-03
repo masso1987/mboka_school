@@ -63,7 +63,10 @@
     "platformHome": "Platform console",
     "platformSchools": "Schools",
     "platformBilling": "Subscriptions & prices",
-    "platformAdmins": "Platform admins"
+    "platformAdmins": "Platform admins",
+    "platformUsers": "Users & sessions",
+    "platformLogins": "Sign-ins",
+    "platformAudit": "Audit log"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -1159,7 +1162,50 @@
     "noMfaYet": "2FA to set up",
     "deactivateConfirm": "Deactivate {{email}}? Their sessions will be signed out.",
     "deactivate": "Deactivate",
-    "addPlatformAdmin": "Add a platform administrator"
+    "addPlatformAdmin": "Add a platform administrator",
+    "searchPeople": "Name or e-mail",
+    "allSchools": "All schools",
+    "paused": "Paused",
+    "noUsers": "No accounts.",
+    "schoolsCol": "Schools and roles",
+    "sessions": "Sessions",
+    "platformBadge": "platform",
+    "disconnect": "Disconnect",
+    "disconnectConfirm": "Sign {{email}} out of every device?",
+    "pauseConfirm": "Pause {{email}}? Sign-in will be refused and their sessions closed until resumed.",
+    "openSessions": "Open sessions",
+    "noSessions": "No open sessions.",
+    "device": "Device",
+    "started": "Started",
+    "lastSeen": "Last active",
+    "endSession": "End",
+    "close": "Close",
+    "pageOf": "Page {{page}} of {{pages}} · {{total}} in all",
+    "exportCsv": "Export (CSV)",
+    "person": "Person",
+    "from": "From",
+    "to": "To",
+    "failuresOnly": "Failures only",
+    "noLogins": "No sign-ins for these filters.",
+    "result": "Result",
+    "unknownAccount": "Unknown address",
+    "signIn": {
+      "auth_login_succeeded": "Signed in",
+      "auth_login_failed": "Sign-in failed",
+      "auth_login_password_ok": "Password correct, 2FA asked",
+      "auth_mfa_failed": "Wrong 2FA code",
+      "auth_mfa_replay_rejected": "2FA code reused",
+      "auth_mfa_recovery_code_used": "Recovery code used"
+    },
+    "failReason": {
+      "unknown_email": "Unknown address",
+      "inactive": "Account paused",
+      "bad_password": "Wrong password",
+      "email_not_verified": "Address not confirmed"
+    },
+    "actionHint": "Start of the code, e.g. \"platform.\", \"payment.\", \"auth.\"",
+    "details": "Details",
+    "hideDetails": "Hide"
   },
   "password": {
     "forgotTitle": "Forgot password",

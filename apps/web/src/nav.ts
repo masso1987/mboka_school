@@ -34,6 +34,9 @@ export const PLATFORM_NAV_ITEMS: NavItem[] = [
   { key: 'platformHome', path: '/platform', anyOf: [] },
   { key: 'platformSchools', path: '/platform/schools', anyOf: [] },
   { key: 'platformBilling', path: '/platform/billing', anyOf: [] },
+  { key: 'platformUsers', path: '/platform/users', anyOf: [] },
+  { key: 'platformLogins', path: '/platform/logins', anyOf: [] },
+  { key: 'platformAudit', path: '/platform/audit', anyOf: [] },
   { key: 'platformAdmins', path: '/platform/admins', anyOf: [] },
 ];
 

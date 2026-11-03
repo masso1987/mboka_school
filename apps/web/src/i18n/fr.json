@@ -63,7 +63,10 @@
     "platformHome": "Console plateforme",
     "platformSchools": "Écoles",
     "platformBilling": "Abonnements & tarifs",
-    "platformAdmins": "Admins plateforme"
+    "platformAdmins": "Admins plateforme",
+    "platformUsers": "Utilisateurs & sessions",
+    "platformLogins": "Connexions",
+    "platformAudit": "Journal d'audit"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -1159,7 +1162,50 @@
     "noMfaYet": "2FA à configurer",
     "deactivateConfirm": "Désactiver {{email}} ? Ses sessions seront déconnectées.",
     "deactivate": "Désactiver",
-    "addPlatformAdmin": "Ajouter un administrateur de la plateforme"
+    "addPlatformAdmin": "Ajouter un administrateur de la plateforme",
+    "searchPeople": "Nom ou e-mail",
+    "allSchools": "Toutes les écoles",
+    "paused": "Suspendu",
+    "noUsers": "Aucun compte.",
+    "schoolsCol": "Écoles et rôles",
+    "sessions": "Sessions",
+    "platformBadge": "plateforme",
+    "disconnect": "Déconnecter",
+    "disconnectConfirm": "Déconnecter {{email}} de tous ses appareils ?",
+    "pauseConfirm": "Suspendre {{email}} ? La connexion lui sera refusée et ses sessions fermées jusqu'à rétablissement.",
+    "openSessions": "Sessions ouvertes",
+    "noSessions": "Aucune session ouverte.",
+    "device": "Appareil",
+    "started": "Ouverte le",
+    "lastSeen": "Dernière activité",
+    "endSession": "Fermer",
+    "close": "Fermer",
+    "pageOf": "Page {{page}} sur {{pages}} · {{total}} au total",
+    "exportCsv": "Exporter (CSV)",
+    "person": "Personne",
+    "from": "Du",
+    "to": "Au",
+    "failuresOnly": "Échecs seulement",
+    "noLogins": "Aucune connexion pour ces critères.",
+    "result": "Résultat",
+    "unknownAccount": "Adresse inconnue",
+    "signIn": {
+      "auth_login_succeeded": "Connexion réussie",
+      "auth_login_failed": "Échec de connexion",
+      "auth_login_password_ok": "Mot de passe correct, 2FA demandée",
+      "auth_mfa_failed": "Code 2FA incorrect",
+      "auth_mfa_replay_rejected": "Code 2FA réutilisé",
+      "auth_mfa_recovery_code_used": "Code de secours utilisé"
+    },
+    "failReason": {
+      "unknown_email": "Adresse inconnue",
+      "inactive": "Compte suspendu",
+      "bad_password": "Mauvais mot de passe",
+      "email_not_verified": "Adresse non confirmée"
+    },
+    "actionHint": "Début du code, ex. « platform. », « payment. », « auth. »",
+    "details": "Détails",
+    "hideDetails": "Masquer"
   },
   "password": {
     "forgotTitle": "Mot de passe oublié",

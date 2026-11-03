@@ -1,17 +1,22 @@
-import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query, Req } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   activeSchema,
+  auditQuerySchema,
+  loginHistoryQuerySchema,
+  platformUsersQuerySchema,
   personInviteSchema,
   schoolUpdateSchema,
   type ActiveInput,
   type PersonInviteInput,
   type SchoolUpdateInput,
 } from '@mboka/shared';
+import type { Response } from 'express';
 import { z } from 'zod';
 import { PlatformAdmin } from '../auth/decorators';
 import { type AppRequest, type AuthContext, clientIp, CurrentAuth } from '../common/request-context';
 import { ApiZodBody, ZodBody } from '../common/zod';
+import { ActivityService } from './activity.service';
 import { DashboardService } from './dashboard.service';
 import { PlatformAdminsService } from './platform-admins.service';
 import { type PlatformActor, SchoolsService } from './schools.service';
@@ -28,6 +33,7 @@ export class PlatformController {
     private readonly dashboard: DashboardService,
     private readonly schools: SchoolsService,
     private readonly admins: PlatformAdminsService,
+    private readonly activity: ActivityService,
   ) {}
 
   @Get('dashboard')
@@ -102,4 +108,55 @@ export class PlatformController {
   setAdminStatus(@Param('userId', ParseUUIDPipe) userId: string, @ZodBody(activeSchema) body: ActiveInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
     return this.admins.setActive(userId, body, actor(auth, req));
   }
+
+  // ------------------------------------------------------------ users and sessions
+
+  @Get('users')
+  users(@Query() query: Record<string, string>) {
+    return this.activity.users(platformUsersQuerySchema.parse(query));
+  }
+
+  @Get('users/:userId/sessions')
+  userSessions(@Param('userId', ParseUUIDPipe) userId: string) {
+    return this.activity.userSessions(userId);
+  }
+
+  @Patch('users/:userId/status')
+  @ApiZodBody(activeSchema)
+  setUserStatus(@Param('userId', ParseUUIDPipe) userId: string, @ZodBody(activeSchema) body: ActiveInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.activity.setActive(userId, body, actor(auth, req));
+  }
+
+  @Post('users/:userId/disconnect')
+  @HttpCode(200)
+  disconnect(@Param('userId', ParseUUIDPipe) userId: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.activity.disconnect(userId, actor(auth, req));
+  }
+
+  @Delete('sessions/:sessionId')
+  @HttpCode(204)
+  async revokeSession(@Param('sessionId', ParseUUIDPipe) sessionId: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest): Promise<void> {
+    await this.activity.revokeSession(sessionId, actor(auth, req));
+  }
+
+  // ------------------------------------------------------------ sign-in history and audit log
+
+  @Get('logins')
+  async logins(@Query() query: Record<string, string>, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    const q = loginHistoryQuerySchema.parse(query);
+    const result = await this.activity.logins(q, actor(auth, req));
+    return typeof result === 'string' ? csv(res, 'connexions.csv', result) : result;
+  }
+
+  @Get('audit')
+  async auditLog(@Query() query: Record<string, string>, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    const q = auditQuerySchema.parse(query);
+    const result = await this.activity.auditLog(q, actor(auth, req));
+    return typeof result === 'string' ? csv(res, 'journal-audit.csv', result) : result;
+  }
+}
+
+function csv(res: Response, filename: string, body: string) {
+  res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${filename}"`, 'Cache-Control': 'no-store' });
+  return body;
 }

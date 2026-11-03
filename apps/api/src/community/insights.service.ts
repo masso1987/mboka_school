@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service';
 import type { Actor } from '../common/actor';
+import { toCsv } from '../common/csv';
 import { toDate, toIso, todayIn } from '../common/dates';
 import { FinanceReportsService } from '../finance/reports.service';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
@@ -217,10 +218,6 @@ export class InsightsService {
     await this.run(a, (tx) =>
       this.audit.record({ tenantId: a.tenantId, actorId: a.userId, action: `export.${name}`, metadata: { rows: rows.length, ...(range ?? {}) }, ip: a.ip }, tx),
     );
-    const cell = (v: string) => {
-      const safe = /^[=+\-@]/.test(v) ? `'${v}` : v;
-      return /[";\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
-    };
-    return '﻿' + [header, ...rows].map((r) => r.map((v) => cell(String(v))).join(';')).join('\r\n') + '\r\n';
+    return toCsv(header, rows);
   }
 }

@@ -16,6 +16,9 @@ Running it: [operations runbook](docs/operations.md) · [security (ASVS)](docs/s
 | Schools | List with search and status; school page to edit name, language, currency and time zone, suspend or reactivate with a reason, see the subscription, usage and recent activity |
 | School admins | The platform adds each school's administrators (director role, invited by e-mail or given a one-time password), resets their password (24-hour link, every session signed out) and pauses or resumes their access; they create the school's other accounts themselves |
 | Platform admins | Add super administrators (two-factor sign-in forced), reset, deactivate or reactivate; never one's own account, never the last active one |
+| Users & sessions | Every account with its schools, roles, last sign-in and open sessions; search by name, e-mail, school or status; end one session, disconnect from every device, pause (sign-in refused) or resume; never one's own account, never the last super administrator |
+| Sign-ins | History of sign-ins, two-factor steps and failures with their reason and IP, filtered by person, school, period or failures only; CSV export (audited) |
+| Audit log | Every recorded action of every school and of the platform, filtered by school, person, action and period, with details; CSV export (audited) |
 | Security | Read-only platform scope for row-level security (`app.platform`), used only behind `@PlatformAdmin()`; it can read every school and write none |
 
 ## What Phase 6 adds — expansion
