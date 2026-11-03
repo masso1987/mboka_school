@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { loginSchema } from '@mboka/shared';
 import { Link } from 'react-router';
 import { api, ApiRequestError, setCsrfToken } from '../lib/api';
+import { LegalFooter } from '../lib/platform-status';
+import { PlatformName } from './SignupPage';
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -32,10 +34,10 @@ export function LoginPage() {
     : login.error ? t('common.errorGeneric') : null;
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-navy-900 px-4">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-navy-900 px-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-5 rounded-xl bg-white p-8 shadow-lg" noValidate>
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-accent-600">{t('app.name')}</p>
+          <PlatformName />
           <h1 className="mt-1 text-2xl font-semibold">{t('auth.title')}</h1>
           <p className="mt-1 text-sm text-slate-600">{t('auth.subtitle')}</p>
         </div>
@@ -94,6 +96,7 @@ export function LoginPage() {
           </Link>
         </p>
       </form>
+      <LegalFooter dark />
     </div>
   );
 }

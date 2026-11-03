@@ -13,3 +13,4 @@ export * from './payroll';
 export * from './subscriptions';
 export * from './platform';
 export * from './modules';
+export * from './platform-settings';

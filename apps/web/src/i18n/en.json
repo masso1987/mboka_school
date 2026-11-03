@@ -66,7 +66,11 @@
     "platformAdmins": "Platform admins",
     "platformUsers": "Users & sessions",
     "platformLogins": "Sign-ins",
-    "platformAudit": "Audit log"
+    "platformAudit": "Audit log",
+    "platformMessages": "Messages",
+    "platformLegal": "Legal documents",
+    "platformMaintenance": "Maintenance",
+    "platformSettings": "Sessions & branding"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -448,7 +452,8 @@
     "ALREADY_PLATFORM_ADMIN": "This person is already a platform administrator.",
     "LAST_SUPER_ADMIN": "Not possible: this is the last active platform administrator.",
     "MODULE_DISABLED": "This module is not part of the school's licence.",
-    "TRIAL_END_REQUIRED": "Enter the end date of the trial."
+    "TRIAL_END_REQUIRED": "Enter the end date of the trial.",
+    "MAINTENANCE": "The application is under maintenance. Try again later."
   },
   "fees": {
     "tabs": {
@@ -1022,7 +1027,8 @@
     "backToLogin": "Back to sign-in",
     "verifyTitle": "Confirming your address",
     "verified": "Address confirmed. You can sign in now.",
-    "toLogin": "Go to sign-in"
+    "toLogin": "Go to sign-in",
+    "readTerms": "(read)"
   },
   "subscription": {
     "current": "Current subscription",
@@ -1239,7 +1245,57 @@
     "indicativePrice": "Indicative price: {{amount}} / month (plan + paid modules). Invoices still bill the plan price alone.",
     "saveLicence": "Save the licence",
     "modulePrices": "Module prices",
-    "modulePricesHelp": "Optional: price of a module on top of the plan (XAF). Used to quote a licence; 0 = included."
+    "modulePricesHelp": "Optional: price of a module on top of the plan (XAF). Used to quote a licence; 0 = included.",
+    "maintenanceHelp": "Super administrators only; they keep working during maintenance. \"Now\" cuts access for every other user at once; a scheduled window starts and stops by itself at the chosen times.",
+    "maintenanceOn": "Maintenance in progress",
+    "maintenanceScheduled": "Maintenance scheduled (banner shown)",
+    "maintenanceOff": "No maintenance",
+    "maintenanceNow": "Turn maintenance on now (immediate cut)",
+    "maintenanceMessage": "Message shown to users",
+    "windowStart": "Start (scheduled)",
+    "windowEnd": "End (scheduled)",
+    "maintenanceNotify": "Show a banner to every user during the 72 hours before",
+    "clearWindow": "Clear the schedule",
+    "sessionsTitle": "Sessions",
+    "sessionHours": "Maximum session length (hours)",
+    "sessionHoursHint": "Applies to new sign-ins.",
+    "idleMinutes": "Sign out after inactivity (minutes)",
+    "idleMinutesHint": "0 = off; otherwise at least 15 minutes.",
+    "brandingTitle": "Platform branding",
+    "brandName": "Platform name",
+    "logoUrl": "Logo (https address)",
+    "logoUrlHint": "Hosted image, shown on the sign-in pages.",
+    "primaryColor": "Main colour",
+    "defaultColor": "Default colour",
+    "footerText": "Footer text",
+    "supportEmail": "Support e-mail",
+    "supportPhone": "Support phone",
+    "publishLegal": "Publish a new version",
+    "publishConfirm": "Publish this version? It replaces the one shown; earlier versions stay in the history.",
+    "legalKind": "Document",
+    "legalTitle": "Title",
+    "legalBody": "Text",
+    "legalBodyHint": "Plain text: line breaks are kept.",
+    "legalPublished": "Version {{version}} published.",
+    "publish": "Publish",
+    "legalHistory": "Version history",
+    "noLegal": "No document published.",
+    "newMessage": "New message",
+    "audience": "Recipients",
+    "audiences": {
+      "ALL_SCHOOLS": "Every user of every school",
+      "ALL_ADMINS": "The administrators of every school",
+      "SCHOOL": "Every user of one school",
+      "SCHOOL_ADMINS": "The administrators of one school"
+    },
+    "subject": "Subject",
+    "messageBody": "Message",
+    "messageHint": "Received as an in-app notification, and by e-mail when e-mail delivery is configured.",
+    "messageSent": "Message sent to {{count}} person(s).",
+    "send": "Send",
+    "sentMessages": "Sent messages",
+    "noMessages": "No message sent.",
+    "recipients": "Recipients"
   },
   "password": {
     "forgotTitle": "Forgot password",
@@ -1252,5 +1308,20 @@
     "save": "Save the password",
     "saved": "Password saved. All your sessions were signed out: sign in with the new password.",
     "newLink": "Ask for a new link"
+  },
+  "maintenance": {
+    "title": "Maintenance in progress",
+    "default": "The application is under maintenance. It will be back very soon.",
+    "until": "Expected back: {{end}}",
+    "upcoming": "Maintenance planned from {{start}} to {{end}}",
+    "adminSignIn": "Administrator sign-in"
+  },
+  "legal": {
+    "kinds": {
+      "terms": "Terms of use",
+      "privacy": "Privacy",
+      "notice": "Legal notice"
+    },
+    "version": "Version {{version}} of {{date}}"
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
-import { env } from '../config/env';
+import { PlatformSettingsService } from '../platform/settings.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthContext } from '../common/request-context';
 
@@ -15,13 +15,17 @@ export function hashToken(token: string): string {
 
 @Injectable()
 export class SessionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly settings: PlatformSettingsService,
+  ) {}
 
   /** `mfaVerified: false` opens a half session that only allows the second login step. */
   async create(userId: string, meta: { ip?: string; userAgent?: string; mfaVerified?: boolean }) {
     const token = randomBytes(32).toString('base64url');
     const csrfToken = randomBytes(24).toString('base64url');
-    const expiresAt = new Date(Date.now() + env().SESSION_TTL_HOURS * 3600_000);
+    const { security } = await this.settings.get();
+    const expiresAt = new Date(Date.now() + security.sessionHours * 3600_000);
     const session = await this.prisma.session.create({
       data: {
         userId,
@@ -44,6 +48,12 @@ export class SessionService {
       include: { user: { select: { id: true, email: true, platformRole: true, isActive: true, mfaEnabledAt: true } } },
     });
     if (!session || session.revokedAt || session.expiresAt <= new Date() || !session.user.isActive) return null;
+    // Idle timeout (platform setting): lastSeenAt lags real activity by at most SEEN_RESOLUTION_MS.
+    const { security } = await this.settings.get();
+    if (security.idleMinutes > 0 && session.lastSeenAt && Date.now() - session.lastSeenAt.getTime() > security.idleMinutes * 60_000) {
+      await this.revoke(session.id);
+      return null;
+    }
     if (!session.lastSeenAt || Date.now() - session.lastSeenAt.getTime() > SEEN_RESOLUTION_MS) {
       await this.prisma.session.update({ where: { id: session.id }, data: { lastSeenAt: new Date() } });
     }

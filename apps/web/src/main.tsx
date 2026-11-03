@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router';
@@ -19,12 +19,15 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { FeesPage, InvoiceDetailPage, ReceiptPage } from './pages/FeesPage';
 import { GradesPage } from './pages/GradesPage';
+import { LegalPage } from './pages/LegalPage';
 import { LoginPage } from './pages/LoginPage';
+import { MaintenanceBanner, MaintenanceScreen, useBranding, usePublicStatus } from './lib/platform-status';
 import { PlatformPage } from './pages/PlatformPage';
 import { PlatformAdminsPage } from './pages/platform/AdminsPage';
 import { PlatformAuditPage } from './pages/platform/AuditPage';
 import { PlatformLoginsPage } from './pages/platform/LoginsPage';
 import { PlatformUsersPage } from './pages/platform/UsersPage';
+import { PlatformLegalPage, PlatformMaintenancePage, PlatformMessagesPage, PlatformSettingsPage } from './pages/platform/SettingsPages';
 import { PlatformHomePage } from './pages/platform/HomePage';
 import { PlatformSchoolDetailPage } from './pages/platform/SchoolDetailPage';
 import { PlatformSchoolsPage } from './pages/platform/SchoolsPage';
@@ -49,10 +52,34 @@ const queryClient = new QueryClient({
 });
 
 function Root() {
+  useBranding();
+  return (
+    <>
+      <MaintenanceBanner />
+      <Screens />
+    </>
+  );
+}
+
+function Screens() {
   const { t } = useTranslation();
   const me = useMe();
   const location = useLocation();
+  const status = usePublicStatus();
+  const [adminSignIn, setAdminSignIn] = useState(false);
+  // Legal documents are public and readable from anywhere, signed in or not.
+  if (location.pathname.startsWith('/legal/')) {
+    return (
+      <Routes>
+        <Route path="/legal/:kind" element={<LegalPage />} />
+      </Routes>
+    );
+  }
   if (me.isPending) return <p className="p-8 text-slate-500">{t('common.loading')}</p>;
+  // During maintenance only super administrators get in; they reach the sign-in form from the notice.
+  if (status.data?.maintenance.active && me.data?.user.platformRole !== 'SUPER_ADMIN' && !(adminSignIn && !me.data)) {
+    return <MaintenanceScreen onAdminSignIn={me.data ? undefined : () => setAdminSignIn(true)} />;
+  }
   if (me.isError) return <p className="p-8 text-danger-600">{t('common.errorGeneric')}</p>;
   // Sign-up, e-mail confirmation and password links work without a session (and links must work even when signed in).
   if (location.pathname === '/verify-email') return <VerifyEmailPage />;
@@ -104,6 +131,10 @@ function Root() {
           <Route path="platform/users" element={<PlatformUsersPage />} />
           <Route path="platform/logins" element={<PlatformLoginsPage />} />
           <Route path="platform/audit" element={<PlatformAuditPage />} />
+          <Route path="platform/messages" element={<PlatformMessagesPage />} />
+          <Route path="platform/legal" element={<PlatformLegalPage />} />
+          <Route path="platform/maintenance" element={<PlatformMaintenancePage />} />
+          <Route path="platform/settings" element={<PlatformSettingsPage />} />
           {NAV_ITEMS.filter((i) => i.phase !== undefined).map((i) => (
             <Route key={i.key} path={i.path.slice(1)} element={<ComingSoonPage titleKey={i.key} phase={i.phase!} />} />
           ))}

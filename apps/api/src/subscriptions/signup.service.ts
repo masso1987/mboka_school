@@ -92,6 +92,8 @@ export class SignupService {
 
     const token = randomBytes(32).toString('base64url');
     const tenantId = randomUUID();
+    // The terms version on screen when the owner ticked "I accept" (none before the platform publishes them).
+    const terms = await this.prisma.legalDocument.findFirst({ where: { kind: 'terms', locale: input.locale }, orderBy: { version: 'desc' }, select: { version: true } });
     const slug = await this.uniqueSlug(slugify(input.schoolName));
     try {
       await this.prisma.scoped({ tenantId }, async (tx) => {
@@ -130,7 +132,7 @@ export class SignupService {
             locale: input.locale,
           },
         });
-        await this.audit.record({ tenantId, actorId: ownerUserId, action: 'tenant.signup', entityType: 'tenant', entityId: tenantId, metadata: { slug, plan: plan.code }, ip }, tx);
+        await this.audit.record({ tenantId, actorId: ownerUserId, action: 'tenant.signup', entityType: 'tenant', entityId: tenantId, metadata: { slug, plan: plan.code, termsVersion: terms?.version ?? null }, ip }, tx);
       });
     } catch (e) {
       // Two sign-ups raced for the same e-mail or slug: answer like any other request.

@@ -141,6 +141,99 @@ describe('licences and modules', () => {
   });
 });
 
+describe('maintenance, sessions, branding, legal documents and messages', () => {
+  const put = (path: string, body: object) => platform.put(API + path).set('X-CSRF-Token', csrf).send(body);
+  const off = { enabled: false, message: '', startsAt: null, endsAt: null, notify: false };
+  const pub = () => request(app.getHttpServer()).get(`${API}/public/status`);
+  const hours = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString();
+  let staffEmail: string;
+  let staff: Client;
+
+  beforeAll(async () => {
+    staffEmail = (await addMember(tenantId, `secretary-maint-${run}@e2e.local`, ['registrar'])).email;
+    staff = await client(app, staffEmail, tenantId);
+  });
+
+  it('maintenance answers 503 to everyone but super administrators, and shows on the public status', async () => {
+    try {
+      await put('/platform/settings/maintenance', { ...off, enabled: true, message: 'Mise à jour en cours' }).expect(200);
+      const refused = await staff.get('/students').expect(503);
+      expect(refused.body.error).toMatchObject({ code: 'MAINTENANCE', details: { message: 'Mise à jour en cours' } });
+      await staff.get('/tenant/context').expect(503);
+      await request(app.getHttpServer()).post(`${API}/auth/login`).send({ email: staffEmail, password: PASSWORD }).expect(200);
+      await get('/platform/dashboard').expect(200);
+      expect((await pub().expect(200)).body.maintenance).toMatchObject({ active: true, upcoming: false, message: 'Mise à jour en cours' });
+
+      // A scheduled window works the same while it runs…
+      await put('/platform/settings/maintenance', { ...off, startsAt: hours(-1), endsAt: hours(1) }).expect(200);
+      await staff.get('/students').expect(503);
+      // …and is only announced before it starts.
+      await put('/platform/settings/maintenance', { ...off, message: 'Coupure samedi', startsAt: hours(2), endsAt: hours(4), notify: true }).expect(200);
+      await staff.get('/students').expect(200);
+      expect((await pub().expect(200)).body.maintenance).toMatchObject({ active: false, upcoming: true, message: 'Coupure samedi' });
+      await put('/platform/settings/maintenance', { ...off, startsAt: hours(4), endsAt: hours(2) }).expect(400);
+      await staff.put('/platform/settings/maintenance', off).expect(403);
+    } finally {
+      await put('/platform/settings/maintenance', off).expect(200);
+    }
+    await staff.get('/students').expect(200);
+  });
+
+  it('applies the session lifetime and signs out idle sessions', async () => {
+    const before = (await get('/platform/settings').expect(200)).body.security;
+    try {
+      await put('/platform/settings/security', { sessionHours: 2, idleMinutes: 15 }).expect(200);
+      const fresh = await client(app, staffEmail, tenantId);
+      const s = await owner.session.findFirstOrThrow({ where: { user: { email: staffEmail }, revokedAt: null }, orderBy: { createdAt: 'desc' } });
+      expect(s.expiresAt.getTime() - s.createdAt.getTime()).toBeLessThanOrEqual(2 * 3_600_000 + 5_000);
+      await owner.session.update({ where: { id: s.id }, data: { lastSeenAt: new Date(Date.now() - 20 * 60_000) } });
+      await fresh.get('/students').expect(401);
+      expect((await owner.session.findUniqueOrThrow({ where: { id: s.id } })).revokedAt).not.toBeNull();
+      await put('/platform/settings/security', { sessionHours: 2, idleMinutes: 5 }).expect(400);
+    } finally {
+      await put('/platform/settings/security', before).expect(200);
+    }
+  });
+
+  it('publishes branding for the public pages', async () => {
+    const before = (await get('/platform/settings').expect(200)).body.branding;
+    try {
+      const branding = { name: 'Mboka Test', logoUrl: 'https://example.com/logo.png', primaryColor: '#00aa55', footerText: '© Test', supportEmail: 'help@example.com', supportPhone: '+237 600 000 000' };
+      await put('/platform/settings/branding', branding).expect(200);
+      expect((await pub().expect(200)).body.branding).toEqual(branding);
+      await put('/platform/settings/branding', { ...branding, primaryColor: 'green' }).expect(400);
+      await put('/platform/settings/branding', { ...branding, logoUrl: 'http://example.com/logo.png' }).expect(400);
+      expect(await owner.auditLog.count({ where: { actorId: adminId, action: 'platform.settings_branding_changed' } })).toBeGreaterThanOrEqual(1);
+    } finally {
+      await put('/platform/settings/branding', before).expect(200);
+    }
+  });
+
+  it('versions legal documents and serves the latest one publicly', async () => {
+    const terms = { kind: 'terms', locale: 'fr', title: `Conditions ${run}`, body: 'Article 1 — Objet. Le présent document définit les conditions.' };
+    const first = (await post('/platform/legal', terms).expect(201)).body;
+    const second = (await post('/platform/legal', { ...terms, title: `Conditions v2 ${run}` }).expect(201)).body;
+    expect(second.version).toBe(first.version + 1);
+    const shown = (await request(app.getHttpServer()).get(`${API}/public/legal/terms?locale=fr`).expect(200)).body;
+    expect(shown).toMatchObject({ version: second.version, title: `Conditions v2 ${run}` });
+    expect((await pub().expect(200)).body.legal).toContainEqual({ kind: 'terms', locale: 'fr', version: second.version });
+    await request(app.getHttpServer()).get(`${API}/public/legal/cookies`).expect(404);
+    await post('/platform/legal', { ...terms, kind: 'cookies' }).expect(400);
+    await staff.post('/platform/legal', terms).expect(403);
+  });
+
+  it('sends a message to a school and keeps it in the history', async () => {
+    const res = await post('/platform/messages', { audience: 'SCHOOL', tenantId, subject: `Bienvenue ${run}`, body: 'Votre école est prête.' }).expect(201);
+    expect(res.body.recipients).toBeGreaterThanOrEqual(2);
+    expect(await owner.notification.count({ where: { tenantId, kind: 'platform.message', title: `Bienvenue ${run}` } })).toBe(res.body.recipients);
+    const adminsOnly = await post('/platform/messages', { audience: 'SCHOOL_ADMINS', tenantId, subject: `Admins ${run}`, body: 'Réservé aux directeurs.' }).expect(201);
+    expect(adminsOnly.body.recipients).toBeLessThan(res.body.recipients);
+    await post('/platform/messages', { audience: 'SCHOOL', tenantId: null, subject: 'Sans école', body: 'Refusé.' }).expect(400);
+    const history = (await get('/platform/messages').expect(200)).body;
+    expect(history[0]).toMatchObject({ subject: `Admins ${run}`, audience: 'SCHOOL_ADMINS', recipients: adminsOnly.body.recipients });
+  });
+});
+
 describe('platform administrators', () => {
   it('invites a new platform administrator and never lets one act on themself', async () => {
     const email = `second-root-${run}@e2e.local`;

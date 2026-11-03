@@ -193,6 +193,15 @@ Each school configures its own merchant account (`PUT /api/v1/finance/providers`
    `15 2 * * * cd /opt/mboka-school && set -a && . ./.env && PG_DUMP='docker compose --env-file .env exec -T postgres pg_dump' bash backup.sh backups && find backups -mtime +14 -delete`
 5. The first super-admin password is in `/opt/mboka-school/.env` (`SEED_ADMIN_PASSWORD`); MFA enrolment is forced at first sign-in.
 
+## 10a. Platform console settings (Phase 7)
+
+- **Maintenance** (Platform → Maintenance): "now" cuts access at once for everyone but super administrators;
+  a scheduled window starts and ends by itself. Settings are cached 10 s per API instance. If the console itself
+  is unreachable, switch maintenance off in the database:
+  `UPDATE platform_settings SET maintenance = '{}' WHERE id = 1;`
+- **Sessions** (Platform → Sessions & branding): the maximum session length replaces `SESSION_TTL_HOURS` once
+  saved; the idle timeout is checked to within 5 minutes.
+
 ## 11. Subscriptions and self-service sign-up
 
 - **Plans** live in the `plans` table, seeded once with placeholder prices (`essentiel`, `standard`, `premium`).

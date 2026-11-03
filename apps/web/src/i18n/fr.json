@@ -66,7 +66,11 @@
     "platformAdmins": "Admins plateforme",
     "platformUsers": "Utilisateurs & sessions",
     "platformLogins": "Connexions",
-    "platformAudit": "Journal d'audit"
+    "platformAudit": "Journal d'audit",
+    "platformMessages": "Messages",
+    "platformLegal": "Mentions légales",
+    "platformMaintenance": "Maintenance",
+    "platformSettings": "Sessions & image"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -448,7 +452,8 @@
     "ALREADY_PLATFORM_ADMIN": "Cette personne est déjà administrateur de la plateforme.",
     "LAST_SUPER_ADMIN": "Impossible : ce serait le dernier administrateur actif de la plateforme.",
     "MODULE_DISABLED": "Ce module ne fait pas partie de la licence de l'école.",
-    "TRIAL_END_REQUIRED": "Indiquez la date de fin de l'essai."
+    "TRIAL_END_REQUIRED": "Indiquez la date de fin de l'essai.",
+    "MAINTENANCE": "L'application est en maintenance. Réessayez plus tard."
   },
   "fees": {
     "tabs": {
@@ -1022,7 +1027,8 @@
     "backToLogin": "Retour à la connexion",
     "verifyTitle": "Confirmation de votre adresse",
     "verified": "Adresse confirmée. Vous pouvez maintenant vous connecter.",
-    "toLogin": "Aller à la connexion"
+    "toLogin": "Aller à la connexion",
+    "readTerms": "(lire)"
   },
   "subscription": {
     "current": "Abonnement actuel",
@@ -1239,7 +1245,57 @@
     "indicativePrice": "Prix indicatif : {{amount}} / mois (formule + modules payants). Les factures appliquent encore le prix de la formule seule.",
     "saveLicence": "Enregistrer la licence",
     "modulePrices": "Prix des modules",
-    "modulePricesHelp": "Facultatif : prix d'un module en plus de la formule (FCFA). Sert au devis d'une licence ; 0 = inclus."
+    "modulePricesHelp": "Facultatif : prix d'un module en plus de la formule (FCFA). Sert au devis d'une licence ; 0 = inclus.",
+    "maintenanceHelp": "Réservé aux super-administrateurs, qui continuent de travailler pendant la maintenance. Le mode immédiat coupe l'accès à tous les autres utilisateurs ; la fenêtre planifiée démarre et s'arrête seule aux heures choisies.",
+    "maintenanceOn": "Maintenance en cours",
+    "maintenanceScheduled": "Maintenance planifiée (bannière affichée)",
+    "maintenanceOff": "Aucune maintenance",
+    "maintenanceNow": "Activer la maintenance maintenant (coupure immédiate)",
+    "maintenanceMessage": "Message affiché aux utilisateurs",
+    "windowStart": "Début (planifié)",
+    "windowEnd": "Fin (planifiée)",
+    "maintenanceNotify": "Afficher une bannière à tous les utilisateurs dans les 72 heures qui précèdent",
+    "clearWindow": "Effacer la planification",
+    "sessionsTitle": "Sessions",
+    "sessionHours": "Durée maximale de session (heures)",
+    "sessionHoursHint": "S'applique aux nouvelles connexions.",
+    "idleMinutes": "Déconnexion après inactivité (minutes)",
+    "idleMinutesHint": "0 = désactivée ; sinon 15 minutes au moins.",
+    "brandingTitle": "Image de la plateforme",
+    "brandName": "Nom de la plateforme",
+    "logoUrl": "Logo (adresse https)",
+    "logoUrlHint": "Image hébergée, affichée sur les pages de connexion.",
+    "primaryColor": "Couleur principale",
+    "defaultColor": "Couleur par défaut",
+    "footerText": "Texte du pied de page",
+    "supportEmail": "E-mail du support",
+    "supportPhone": "Téléphone du support",
+    "publishLegal": "Publier une nouvelle version",
+    "publishConfirm": "Publier cette version ? Elle remplace la version affichée ; les précédentes restent dans l’historique.",
+    "legalKind": "Document",
+    "legalTitle": "Titre",
+    "legalBody": "Texte",
+    "legalBodyHint": "Texte brut : les sauts de ligne sont conservés.",
+    "legalPublished": "Version {{version}} publiée.",
+    "publish": "Publier",
+    "legalHistory": "Historique des versions",
+    "noLegal": "Aucun document publié.",
+    "newMessage": "Nouveau message",
+    "audience": "Destinataires",
+    "audiences": {
+      "ALL_SCHOOLS": "Tous les utilisateurs de toutes les écoles",
+      "ALL_ADMINS": "Les administrateurs de toutes les écoles",
+      "SCHOOL": "Tous les utilisateurs d'une école",
+      "SCHOOL_ADMINS": "Les administrateurs d'une école"
+    },
+    "subject": "Objet",
+    "messageBody": "Message",
+    "messageHint": "Reçu comme notification dans l'application, et par e-mail quand l'envoi d'e-mails est configuré.",
+    "messageSent": "Message envoyé à {{count}} personne(s).",
+    "send": "Envoyer",
+    "sentMessages": "Messages envoyés",
+    "noMessages": "Aucun message envoyé.",
+    "recipients": "Destinataires"
   },
   "password": {
     "forgotTitle": "Mot de passe oublié",
@@ -1252,5 +1308,20 @@
     "save": "Enregistrer le mot de passe",
     "saved": "Mot de passe enregistré. Toutes vos sessions ont été déconnectées : connectez-vous avec le nouveau mot de passe.",
     "newLink": "Demander un nouveau lien"
+  },
+  "maintenance": {
+    "title": "Maintenance en cours",
+    "default": "L'application est en maintenance. Elle sera de nouveau disponible très bientôt.",
+    "until": "Retour prévu : {{end}}",
+    "upcoming": "Maintenance prévue du {{start}} au {{end}}",
+    "adminSignIn": "Connexion administrateur"
+  },
+  "legal": {
+    "kinds": {
+      "terms": "Conditions d'utilisation",
+      "privacy": "Confidentialité",
+      "notice": "Mentions légales"
+    },
+    "version": "Version {{version}} du {{date}}"
   }
 }

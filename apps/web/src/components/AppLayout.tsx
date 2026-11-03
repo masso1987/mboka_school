@@ -4,6 +4,7 @@ import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router';
 import { AccountPage } from '../pages/AccountPage';
 import { LOCALES, type Locale } from '@mboka/shared';
 import { setLocale } from '../i18n';
+import { LegalFooter, usePublicStatus } from '../lib/platform-status';
 import { PLATFORM_CHOICE, useSession } from '../lib/session';
 import { PLATFORM_NAV_ITEMS, visibleNavItems } from '../nav';
 import { NotificationBell } from './NotificationBell';
@@ -14,6 +15,7 @@ export function AppLayout() {
   const { me, tenantId, selectTenant, can, signOut, context, contextError } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const platformName = usePublicStatus().data?.branding.name;
   const superAdmin = me.user.platformRole === 'SUPER_ADMIN';
   // A super administrator with no school selected works on the platform console.
   const platformMode = superAdmin && !tenantId;
@@ -30,7 +32,7 @@ export function AppLayout() {
         className={`${menuOpen ? 'fixed inset-0 z-40 flex' : 'hidden'} w-full flex-col bg-navy-900 text-slate-200 md:static md:flex md:w-64 md:shrink-0`}
       >
         <div className="flex h-14 items-center justify-between px-5">
-          <span className="text-lg font-semibold tracking-tight text-white">{t('app.name')}</span>
+          <span className="text-lg font-semibold tracking-tight text-white">{platformName ?? t('app.name')}</span>
           <button type="button" className="md:hidden" onClick={() => setMenuOpen(false)} aria-label={t('common.cancel')}>
             ✕
           </button>
@@ -146,6 +148,7 @@ export function AppLayout() {
             </>
           )}
         </main>
+        <LegalFooter />
       </div>
     </div>
   );

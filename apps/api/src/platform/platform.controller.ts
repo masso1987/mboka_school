@@ -3,6 +3,11 @@ import { ApiTags } from '@nestjs/swagger';
 import {
   activeSchema,
   auditQuerySchema,
+  brandingSchema,
+  legalDocumentSchema,
+  maintenanceSchema,
+  platformMessageSchema,
+  securitySchema,
   licenceSchema,
   MODULE_KEYS,
   modulePriceSchema,
@@ -12,6 +17,11 @@ import {
   schoolUpdateSchema,
   type ActiveInput,
   type AuditQuery,
+  type BrandingSettings,
+  type LegalDocumentInput,
+  type MaintenanceSettings,
+  type PlatformMessageInput,
+  type SecuritySettings,
   type LoginHistoryQuery,
   type PlatformUsersQuery,
   type LicenceInput,
@@ -27,10 +37,12 @@ import { Errors } from '../common/api-error';
 import { type AppRequest, type AuthContext, clientIp, CurrentAuth } from '../common/request-context';
 import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod';
 import { ActivityService } from './activity.service';
+import { CommunicationService } from './communication.service';
 import { DashboardService } from './dashboard.service';
 import { PlatformAdminsService } from './platform-admins.service';
 import { PricingService } from './pricing.service';
 import { type PlatformActor, SchoolsService } from './schools.service';
+import { PlatformSettingsService } from './settings.service';
 
 const listQuery = z.object({ q: z.string().trim().max(100).optional(), status: z.enum(['ACTIVE', 'SUSPENDED', 'CLOSED']).optional() });
 const actor = (auth: AuthContext, req: AppRequest): PlatformActor => ({ userId: auth.userId, ip: clientIp(req) });
@@ -46,6 +58,8 @@ export class PlatformController {
     private readonly admins: PlatformAdminsService,
     private readonly activity: ActivityService,
     private readonly pricing: PricingService,
+    private readonly settings: PlatformSettingsService,
+    private readonly communication: CommunicationService,
   ) {}
 
   @Get('dashboard')
@@ -104,6 +118,55 @@ export class PlatformController {
   @ApiZodBody(licenceSchema)
   setLicence(@Param('id', ParseUUIDPipe) id: string, @ZodBody(licenceSchema) body: LicenceInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
     return this.schools.setLicence(id, body, actor(auth, req));
+  }
+
+  // ------------------------------------------------------------ settings: maintenance, sessions, branding
+
+  @Get('settings')
+  getSettings() {
+    return this.settings.get();
+  }
+
+  @Put('settings/maintenance')
+  @ApiZodBody(maintenanceSchema)
+  setMaintenance(@ZodBody(maintenanceSchema) body: MaintenanceSettings, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.settings.set('maintenance', body, actor(auth, req));
+  }
+
+  @Put('settings/security')
+  @ApiZodBody(securitySchema)
+  setSecurity(@ZodBody(securitySchema) body: SecuritySettings, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.settings.set('security', body, actor(auth, req));
+  }
+
+  @Put('settings/branding')
+  @ApiZodBody(brandingSchema)
+  setBranding(@ZodBody(brandingSchema) body: BrandingSettings, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.settings.set('branding', body, actor(auth, req));
+  }
+
+  // ------------------------------------------------------------ legal documents and messages
+
+  @Get('legal')
+  legal() {
+    return this.communication.legalHistory();
+  }
+
+  @Post('legal')
+  @ApiZodBody(legalDocumentSchema)
+  publishLegal(@ZodBody(legalDocumentSchema) body: LegalDocumentInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.communication.publishLegal(body, actor(auth, req));
+  }
+
+  @Get('messages')
+  messages() {
+    return this.communication.messages();
+  }
+
+  @Post('messages')
+  @ApiZodBody(platformMessageSchema)
+  sendMessage(@ZodBody(platformMessageSchema) body: PlatformMessageInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.communication.sendMessage(body, actor(auth, req));
   }
 
   // ------------------------------------------------------------ module prices

@@ -1826,3 +1826,46 @@ model SubscriptionInvoice {
   @@index([tenantId, createdAt])
   @@map("subscription_invoices")
 }
+
+// ================================================================ Phase 7 — platform console
+
+/// Platform-wide settings, one row (id = 1): maintenance, session security, branding.
+model PlatformSettings {
+  id          Int      @id @default(1)
+  maintenance Json     @default("{}")
+  security    Json     @default("{}")
+  branding    Json     @default("{}")
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("platform_settings")
+}
+
+/// Terms, privacy policy and legal notice, per language. Publishing adds a version; versions are never edited.
+model LegalDocument {
+  id          String   @id @default(uuid()) @db.Uuid
+  kind        String
+  locale      String
+  version     Int
+  title       String
+  body        String
+  publishedBy String?  @map("published_by") @db.Uuid
+  publishedAt DateTime @default(now()) @map("published_at") @db.Timestamptz(6)
+
+  @@unique([kind, locale, version])
+  @@map("legal_documents")
+}
+
+/// A message sent by the platform to schools, kept as a history; delivered as notifications.
+model PlatformMessage {
+  id         String   @id @default(uuid()) @db.Uuid
+  audience   String
+  tenantId   String?  @map("tenant_id") @db.Uuid
+  subject    String
+  body       String
+  sentBy     String   @map("sent_by") @db.Uuid
+  recipients Int
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([createdAt])
+  @@map("platform_messages")
+}

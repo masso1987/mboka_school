@@ -6,6 +6,7 @@ import { signupSchema } from '@mboka/shared';
 import { ErrorMessage } from '../components/ui';
 import { api } from '../lib/api';
 import { useMoney } from '../lib/money';
+import { LegalFooter, usePublicStatus } from '../lib/platform-status';
 
 export interface PublicPlan {
   code: string;
@@ -21,14 +22,26 @@ export interface PublicPlan {
 }
 
 export function PublicShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
-  const { t } = useTranslation();
   return (
-    <div className="flex min-h-dvh items-start justify-center bg-navy-900 px-4 py-10">
+    <div className="flex min-h-dvh flex-col items-center bg-navy-900 px-4 pt-10">
       <div className={`w-full ${wide ? 'max-w-3xl' : 'max-w-md'} space-y-5 rounded-xl bg-white p-6 shadow-lg sm:p-8`}>
-        <p className="text-sm font-semibold uppercase tracking-wide text-accent-600">{t('app.name')}</p>
+        <PlatformName />
         {children}
       </div>
+      <LegalFooter dark />
     </div>
+  );
+}
+
+/** The platform's logo and name (branding), above every public form. */
+export function PlatformName() {
+  const { t } = useTranslation();
+  const branding = usePublicStatus().data?.branding;
+  return (
+    <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-accent-600">
+      {branding?.logoUrl && <img src={branding.logoUrl} alt="" className="h-7 w-auto" />}
+      {branding?.name ?? t('app.name')}
+    </p>
   );
 }
 
@@ -120,7 +133,12 @@ export function SignupPage() {
 
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-1" checked={f.acceptTerms} onChange={(e) => setF({ ...f, acceptTerms: e.target.checked })} />
-          <span>{t('signup.terms')}</span>
+          <span>
+            {t('signup.terms')}{' '}
+            <Link to={`/legal/terms?locale=${i18n.resolvedLanguage ?? 'fr'}`} target="_blank" className="text-accent-700 underline">
+              {t('signup.readTerms')}
+            </Link>
+          </span>
         </label>
 
         {invalid && (

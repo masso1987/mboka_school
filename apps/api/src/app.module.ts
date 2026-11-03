@@ -20,6 +20,7 @@ import { StaffModule } from './staff/staff.module';
 import { StudentsModule } from './students/students.module';
 import { MailerModule } from './common/mailer';
 import { PlatformModule } from './platform/platform.module';
+import { MaintenanceGuard, PlatformSettingsModule } from './platform/settings.service';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { TimetableModule } from './timetable/timetable.module';
@@ -33,6 +34,7 @@ import { TimetableModule } from './timetable/timetable.module';
     TenantsModule,
     MailerModule,
     SubscriptionsModule,
+    PlatformSettingsModule,
     PlatformModule,
     AcademicYearsModule,
     AcademicsModule,
@@ -52,6 +54,8 @@ import { TimetableModule } from './timetable/timetable.module';
     // Order matters: rate limiting runs before session resolution.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: SessionGuard },
+    // After the session guard, so super administrators are recognised during maintenance.
+    { provide: APP_GUARD, useExisting: MaintenanceGuard },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],
 })
