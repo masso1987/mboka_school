@@ -63,5 +63,18 @@ export const auditQuerySchema = z.object({
 });
 export type AuditQuery = z.infer<typeof auditQuerySchema>;
 
-export const activeSchema =z.object({ active: z.boolean(), reason: z.string().trim().max(500).optional() });
+/** Days a suspended demo school is kept before it is closed. */
+export const DEMO_GRACE_DAYS = 7;
+
+/** Platform → demo schools: a school filled with sample data and ready-made logins, for a chosen number of days. */
+export const demoCreateSchema = z.object({
+  name: z.string().trim().min(3).max(120),
+  days: z.number().int().min(1).max(90),
+  locale: z.enum(LOCALES),
+});
+export type DemoCreateInput = z.infer<typeof demoCreateSchema>;
+
+export const demoExtendSchema = z.object({ days: z.number().int().min(1).max(90) });
+
+export const activeSchema = z.object({ active: z.boolean(), reason: z.string().trim().max(500).optional() });
 export type ActiveInput = z.infer<typeof activeSchema>;

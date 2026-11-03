@@ -70,7 +70,8 @@
     "platformMessages": "Messages",
     "platformLegal": "Legal documents",
     "platformMaintenance": "Maintenance",
-    "platformSettings": "Sessions & branding"
+    "platformSettings": "Sessions & branding",
+    "platformDemos": "Demo schools"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -453,7 +454,8 @@
     "LAST_SUPER_ADMIN": "Not possible: this is the last active platform administrator.",
     "MODULE_DISABLED": "This module is not part of the school's licence.",
     "TRIAL_END_REQUIRED": "Enter the end date of the trial.",
-    "MAINTENANCE": "The application is under maintenance. Try again later."
+    "MAINTENANCE": "The application is under maintenance. Try again later.",
+    "DEMO_CLOSED": "This demo is closed; create a new one."
   },
   "fees": {
     "tabs": {
@@ -1295,7 +1297,33 @@
     "send": "Send",
     "sentMessages": "Sent messages",
     "noMessages": "No message sent.",
-    "recipients": "Recipients"
+    "recipients": "Recipients",
+    "newDemo": "New demo school",
+    "demoHelp": "Builds in one go a school filled with samples (classes, 24 students, timetable, fees and invoices, budget) with four ready-made accounts. On its end date the school is suspended, then closed 7 days later (accounts disabled).",
+    "demoNamePlaceholder": "E.g. Demo St Paul College",
+    "demoDays": "Duration (days)",
+    "createDemo": "Create the demo",
+    "demoBuilding": "Building…",
+    "demoList": "Demo schools",
+    "noDemos": "No demo schools.",
+    "demoEnds": "Ends",
+    "demoAccounts": "Accounts",
+    "daysLeft": "{{count}} day(s) left",
+    "extend7": "+7 days",
+    "closeDemo": "Close",
+    "recreate": "Recreate",
+    "closeDemoConfirm": "Close \"{{name}}\" now? Its accounts will be disabled.",
+    "recreateConfirm": "Recreate \"{{name}}\"? The current demo will be closed and a new one, with fresh data and new accounts, will replace it.",
+    "demoRole": {
+      "director": "Director",
+      "teacher": "Teacher",
+      "chief_accountant": "Accountant",
+      "parent": "Parent"
+    },
+    "demoReady": "\"{{name}}\" is ready until {{date}}. Accounts:",
+    "demoPassword": "Password (the same for all):",
+    "demoPasswordOnce": "Write it down: it will not be shown again. Recreate the demo to get a new one.",
+    "demoBadge": "demo"
   },
   "password": {
     "forgotTitle": "Forgot password",

@@ -70,7 +70,8 @@
     "platformMessages": "Messages",
     "platformLegal": "Mentions légales",
     "platformMaintenance": "Maintenance",
-    "platformSettings": "Sessions & image"
+    "platformSettings": "Sessions & image",
+    "platformDemos": "Écoles de démo"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -453,7 +454,8 @@
     "LAST_SUPER_ADMIN": "Impossible : ce serait le dernier administrateur actif de la plateforme.",
     "MODULE_DISABLED": "Ce module ne fait pas partie de la licence de l'école.",
     "TRIAL_END_REQUIRED": "Indiquez la date de fin de l'essai.",
-    "MAINTENANCE": "L'application est en maintenance. Réessayez plus tard."
+    "MAINTENANCE": "L'application est en maintenance. Réessayez plus tard.",
+    "DEMO_CLOSED": "Cette démo est fermée ; créez-en une nouvelle."
   },
   "fees": {
     "tabs": {
@@ -1295,7 +1297,33 @@
     "send": "Envoyer",
     "sentMessages": "Messages envoyés",
     "noMessages": "Aucun message envoyé.",
-    "recipients": "Destinataires"
+    "recipients": "Destinataires",
+    "newDemo": "Nouvelle école de démo",
+    "demoHelp": "Crée en une fois une école remplie d'exemples (classes, 24 élèves, emploi du temps, frais et factures, budget) avec quatre comptes prêts à l'emploi. À la date de fin, l'école est suspendue, puis fermée 7 jours plus tard (comptes désactivés).",
+    "demoNamePlaceholder": "Ex. Démo Collège Saint-Paul",
+    "demoDays": "Durée (jours)",
+    "createDemo": "Créer la démo",
+    "demoBuilding": "Création en cours…",
+    "demoList": "Écoles de démo",
+    "noDemos": "Aucune école de démo.",
+    "demoEnds": "Fin",
+    "demoAccounts": "Comptes",
+    "daysLeft": "{{count}} jour(s) restant(s)",
+    "extend7": "+7 jours",
+    "closeDemo": "Fermer",
+    "recreate": "Recréer",
+    "closeDemoConfirm": "Fermer « {{name}} » maintenant ? Ses comptes seront désactivés.",
+    "recreateConfirm": "Recréer « {{name}} » ? La démo actuelle sera fermée et une nouvelle, avec de nouvelles données et de nouveaux comptes, prendra sa place.",
+    "demoRole": {
+      "director": "Directeur",
+      "teacher": "Enseignant",
+      "chief_accountant": "Comptable",
+      "parent": "Parent"
+    },
+    "demoReady": "« {{name}} » est prête jusqu’au {{date}}. Comptes :",
+    "demoPassword": "Mot de passe (le même pour tous) :",
+    "demoPasswordOnce": "Notez-le : il ne sera plus affiché. Recréez la démo pour en obtenir un nouveau.",
+    "demoBadge": "démo"
   },
   "password": {
     "forgotTitle": "Mot de passe oublié",

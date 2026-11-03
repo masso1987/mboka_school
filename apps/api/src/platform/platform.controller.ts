@@ -4,6 +4,8 @@ import {
   activeSchema,
   auditQuerySchema,
   brandingSchema,
+  demoCreateSchema,
+  demoExtendSchema,
   legalDocumentSchema,
   maintenanceSchema,
   platformMessageSchema,
@@ -18,6 +20,7 @@ import {
   type ActiveInput,
   type AuditQuery,
   type BrandingSettings,
+  type DemoCreateInput,
   type LegalDocumentInput,
   type MaintenanceSettings,
   type PlatformMessageInput,
@@ -39,6 +42,7 @@ import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod';
 import { ActivityService } from './activity.service';
 import { CommunicationService } from './communication.service';
 import { DashboardService } from './dashboard.service';
+import { DemoService } from './demo.service';
 import { PlatformAdminsService } from './platform-admins.service';
 import { PricingService } from './pricing.service';
 import { type PlatformActor, SchoolsService } from './schools.service';
@@ -60,6 +64,7 @@ export class PlatformController {
     private readonly pricing: PricingService,
     private readonly settings: PlatformSettingsService,
     private readonly communication: CommunicationService,
+    private readonly demos: DemoService,
   ) {}
 
   @Get('dashboard')
@@ -167,6 +172,37 @@ export class PlatformController {
   @ApiZodBody(platformMessageSchema)
   sendMessage(@ZodBody(platformMessageSchema) body: PlatformMessageInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
     return this.communication.sendMessage(body, actor(auth, req));
+  }
+
+  // ------------------------------------------------------------ demo schools
+
+  @Get('demos')
+  listDemos() {
+    return this.demos.list();
+  }
+
+  @Post('demos')
+  @ApiZodBody(demoCreateSchema)
+  createDemo(@ZodBody(demoCreateSchema) body: DemoCreateInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.demos.create(body, actor(auth, req));
+  }
+
+  @Post('demos/:id/extend')
+  @HttpCode(200)
+  @ApiZodBody(demoExtendSchema)
+  extendDemo(@Param('id', ParseUUIDPipe) id: string, @ZodBody(demoExtendSchema) body: { days: number }, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.demos.extend(id, body.days, actor(auth, req));
+  }
+
+  @Post('demos/:id/recreate')
+  recreateDemo(@Param('id', ParseUUIDPipe) id: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.demos.recreate(id, actor(auth, req));
+  }
+
+  @Post('demos/:id/close')
+  @HttpCode(200)
+  closeDemo(@Param('id', ParseUUIDPipe) id: string, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.demos.close(id, actor(auth, req));
   }
 
   // ------------------------------------------------------------ module prices

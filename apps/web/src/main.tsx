@@ -25,6 +25,7 @@ import { MaintenanceBanner, MaintenanceScreen, useBranding, usePublicStatus } fr
 import { PlatformPage } from './pages/PlatformPage';
 import { PlatformAdminsPage } from './pages/platform/AdminsPage';
 import { PlatformAuditPage } from './pages/platform/AuditPage';
+import { PlatformDemosPage } from './pages/platform/DemosPage';
 import { PlatformLoginsPage } from './pages/platform/LoginsPage';
 import { PlatformUsersPage } from './pages/platform/UsersPage';
 import { PlatformLegalPage, PlatformMaintenancePage, PlatformMessagesPage, PlatformSettingsPage } from './pages/platform/SettingsPages';
@@ -126,6 +127,7 @@ function Screens() {
           <Route path="platform" element={<PlatformHomePage />} />
           <Route path="platform/schools" element={<PlatformSchoolsPage />} />
           <Route path="platform/schools/:id" element={<PlatformSchoolDetailPage />} />
+          <Route path="platform/demos" element={<PlatformDemosPage />} />
           <Route path="platform/billing" element={<PlatformPage />} />
           <Route path="platform/admins" element={<PlatformAdminsPage />} />
           <Route path="platform/users" element={<PlatformUsersPage />} />

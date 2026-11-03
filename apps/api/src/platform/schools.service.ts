@@ -26,7 +26,7 @@ const presentLicence = (s: Prisma.SubscriptionGetPayload<object>) => ({
   notes: s.licenceNotes,
 });
 
-const tenantFields ={ id: true, slug: true, legalName: true, tradingName: true, status: true, defaultLocale: true, defaultCurrency: true, timezone: true, settings: true, createdAt: true } as const;
+const tenantFields = { id: true, slug: true, legalName: true, tradingName: true, status: true, isDemo: true, defaultLocale: true, defaultCurrency: true, timezone: true, settings: true, createdAt: true } as const;
 
 /**
  * Schools seen from the platform console (Phase 7). Reads go through the read-only platform scope; every change
@@ -62,7 +62,7 @@ export class SchoolsService {
       for (const t of tenants) {
         const sub = await this.subscriptions.summary(tx, t.id);
         rows.push({
-          tenant: { id: t.id, slug: t.slug, legalName: t.legalName, tradingName: t.tradingName, status: t.status, createdAt: t.createdAt.toISOString() },
+          tenant: { id: t.id, slug: t.slug, legalName: t.legalName, tradingName: t.tradingName, status: t.status, isDemo: t.isDemo, createdAt: t.createdAt.toISOString() },
           subscription: { plan: sub.plan, state: sub.state, endsAt: sub.endsAt },
           students: s.get(t.id) ?? 0,
           users: m.get(t.id) ?? 0,

@@ -4,6 +4,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { ActivityService } from './activity.service';
 import { CommunicationService } from './communication.service';
 import { DashboardService } from './dashboard.service';
+import { DemoService } from './demo.service';
 import { PlatformAdminsService } from './platform-admins.service';
 import { PlatformController } from './platform.controller';
 import { PublicPlatformController } from './public.controller';
@@ -14,7 +15,7 @@ import { SchoolsService } from './schools.service';
 @Module({
   imports: [AdminModule, SubscriptionsModule],
   controllers: [PlatformController, PublicPlatformController],
-  providers: [DashboardService, SchoolsService, PlatformAdminsService, ActivityService, PricingService, CommunicationService],
+  providers: [DashboardService, SchoolsService, PlatformAdminsService, ActivityService, PricingService, CommunicationService, DemoService],
   exports: [CommunicationService],
 })
 export class PlatformModule {}

@@ -56,10 +56,14 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
     });
   }
 
-  scoped<T>(scope: DbScope, fn: (tx: Tx) => Promise<T>): Promise<T> {
-    return this.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT set_config('app.tenant_id', ${scope.tenantId ?? ''}, true), set_config('app.user_id', ${scope.userId ?? ''}, true)`;
-      return fn(tx);
-    });
+  /** `timeoutMs` raises Prisma's 5-second limit for the rare long transaction (building a demo school). */
+  scoped<T>(scope: DbScope, fn: (tx: Tx) => Promise<T>, timeoutMs?: number): Promise<T> {
+    return this.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT set_config('app.tenant_id', ${scope.tenantId ?? ''}, true), set_config('app.user_id', ${scope.userId ?? ''}, true)`;
+        return fn(tx);
+      },
+      timeoutMs ? { timeout: timeoutMs, maxWait: 10_000 } : undefined,
+    );
   }
 }

@@ -9,7 +9,7 @@ import { useDateFormat } from '../../lib/hooks';
 import { stateTone } from '../SubscriptionTab';
 
 interface SchoolRow {
-  tenant: { id: string; slug: string; legalName: string; tradingName: string | null; status: string; createdAt: string };
+  tenant: { id: string; slug: string; legalName: string; tradingName: string | null; status: string; isDemo: boolean; createdAt: string };
   subscription: { plan: string; state: string; endsAt: string | null };
   students: number;
   users: number;
@@ -159,7 +159,8 @@ export function PlatformSchoolsPage() {
                 <td>
                   <Link to={`/platform/schools/${r.tenant.id}`} className="font-medium text-accent-700 hover:underline">
                     {r.tenant.legalName}
-                  </Link>
+                  </Link>{' '}
+                  {r.tenant.isDemo && <Badge tone="blue">{t('platform.demoBadge')}</Badge>}
                   <p className="text-xs text-slate-500">
                     {r.tenant.slug} · {fmt(r.tenant.createdAt.slice(0, 10))}
                   </p>

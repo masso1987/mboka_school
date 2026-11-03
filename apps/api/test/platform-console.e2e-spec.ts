@@ -234,6 +234,62 @@ describe('maintenance, sessions, branding, legal documents and messages', () => 
   });
 });
 
+describe('demo schools', () => {
+  let demo: { tenantId: string; slug: string; password: string; logins: { role: string; email: string }[] };
+  const loginOf = (role: string) => demo.logins.find((l) => l.role === role)!.email;
+
+  it('builds a demo school with sample data and four ready-made logins', async () => {
+    const res = await post('/platform/demos', { name: `Démo Collège ${run}`, days: 3, locale: 'fr' }).expect(201);
+    demo = res.body;
+    expect(demo.logins.map((l) => l.role)).toEqual(['director', 'teacher', 'chief_accountant', 'parent']);
+    expect(demo.password).toHaveLength(12);
+
+    const dir = await client(app, loginOf('director'), demo.tenantId, demo.password);
+    expect((await dir.get('/students?pageSize=100').expect(200)).body.total).toBe(24);
+    await client(app, loginOf('teacher'), demo.tenantId, demo.password);
+    const parent = await client(app, loginOf('parent'), demo.tenantId, demo.password);
+    expect((await parent.get('/portal/children').expect(200)).body).toHaveLength(2);
+    const accountant = await client(app, loginOf('chief_accountant'), demo.tenantId, demo.password);
+    await accountant.get('/finance/reports/summary?from=2026-01-01&to=2027-12-31').expect(200);
+
+    const list = (await get('/platform/demos').expect(200)).body;
+    expect(list.find((d: { id: string }) => d.id === demo.tenantId)).toMatchObject({ status: 'ACTIVE', daysLeft: 3 });
+    expect((await get('/platform/dashboard').expect(200)).body.recentSchools.map((s: { id: string }) => s.id)).not.toContain(demo.tenantId);
+  }, 60_000);
+
+  it('suspends a demo when it expires and brings it back when extended', async () => {
+    await owner.tenant.update({ where: { id: demo.tenantId }, data: { demoExpiresAt: new Date(Date.now() - 60_000) } });
+    const list = (await get('/platform/demos').expect(200)).body;
+    expect(list.find((d: { id: string }) => d.id === demo.tenantId).status).toBe('SUSPENDED');
+    const dir = await client(app, loginOf('director'), demo.tenantId, demo.password);
+    await dir.get('/students').expect(403);
+
+    const extended = (await post(`/platform/demos/${demo.tenantId}/extend`, { days: 5 }).expect(200)).body;
+    expect(new Date(extended.expiresAt).getTime()).toBeGreaterThan(Date.now() + 4.9 * 86_400_000);
+    await dir.get('/students').expect(200);
+  });
+
+  it('closes a demo: its accounts are disabled; an old suspended demo closes by itself', async () => {
+    await post(`/platform/demos/${demo.tenantId}/close`).expect(200);
+    await request(app.getHttpServer()).post(`${API}/auth/login`).send({ email: loginOf('director'), password: demo.password }).expect(401);
+    expect((await post(`/platform/demos/${demo.tenantId}/extend`, { days: 1 }).expect(409)).body.error.code).toBe('DEMO_CLOSED');
+
+    const old = (await post('/platform/demos', { name: `Démo ancienne ${run}`, days: 1, locale: 'en' }).expect(201)).body;
+    await owner.tenant.update({ where: { id: old.tenantId }, data: { status: 'SUSPENDED', demoExpiresAt: new Date(Date.now() - 8 * 86_400_000) } });
+    const list = (await get('/platform/demos').expect(200)).body;
+    expect(list.find((d: { id: string }) => d.id === old.tenantId).status).toBe('CLOSED');
+  }, 60_000);
+
+  it('recreates a demo with fresh data and logins', async () => {
+    const res = (await post(`/platform/demos/${demo.tenantId}/recreate`).expect(201)).body;
+    expect(res.tenantId).not.toBe(demo.tenantId);
+    expect(res.name).toBe(`Démo Collège ${run}`);
+    await client(app, res.logins[0].email, res.tenantId, res.password);
+    await post(`/platform/demos/${res.tenantId}/close`).expect(200);
+    await post(`/platform/demos/${tenantId}/close`).expect(404); // a real school is never a demo
+  }, 60_000);
+});
+
 describe('platform administrators', () => {
   it('invites a new platform administrator and never lets one act on themself', async () => {
     const email = `second-root-${run}@e2e.local`;

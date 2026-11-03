@@ -16,19 +16,22 @@ export class DashboardService {
   async dashboard() {
     const now = new Date();
     const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    const tenants = await this.prisma.tenant.findMany({ select: { id: true, slug: true, legalName: true, status: true, createdAt: true }, orderBy: { createdAt: 'desc' } });
+    // Demo schools are samples: they never count in schools, people, activity or revenue.
+    const tenants = await this.prisma.tenant.findMany({ where: { isDemo: false }, select: { id: true, slug: true, legalName: true, status: true, createdAt: true }, orderBy: { createdAt: 'desc' } });
+    const ids = tenants.map((t) => t.id);
+    const real = { tenantId: { in: ids } };
     const name = new Map(tenants.map((t) => [t.id, t.legalName]));
 
     return this.prisma.platform(async (tx) => {
-      const subscriptions = await tx.subscription.findMany();
-      const students = await tx.student.count({ where: { status: 'ACTIVE' } });
-      const members = await tx.membership.count({ where: { status: 'ACTIVE' } });
-      const users = await tx.user.count({ where: { isActive: true } });
+      const subscriptions = await tx.subscription.findMany({ where: real });
+      const students = await tx.student.count({ where: { ...real, status: 'ACTIVE' } });
+      const members = await tx.membership.count({ where: { ...real, status: 'ACTIVE' } });
+      const users = await tx.user.count({ where: { isActive: true, NOT: { email: { endsWith: '@demo.mboka.local' } } } });
       const sessionsNow = await tx.session.count({ where: { revokedAt: null, expiresAt: { gt: now }, lastSeenAt: { gt: new Date(now.getTime() - 15 * 60_000) } } });
       const logins24h = await tx.auditLog.count({ where: { action: 'auth.login.succeeded', createdAt: { gt: new Date(now.getTime() - DAY) } } });
       const failedLogins24h = await tx.auditLog.count({ where: { action: 'auth.login.failed', createdAt: { gt: new Date(now.getTime() - DAY) } } });
-      const paid = await tx.subscriptionInvoice.groupBy({ by: ['currency'], where: { status: 'PAID', paidAt: { gte: monthStart } }, _sum: { amount: true } });
-      const openInvoices = await tx.subscriptionInvoice.findMany({ where: { status: 'OPEN' }, select: { tenantId: true, number: true } });
+      const paid = await tx.subscriptionInvoice.groupBy({ by: ['currency'], where: { ...real, status: 'PAID', paidAt: { gte: monthStart } }, _sum: { amount: true } });
+      const openInvoices = await tx.subscriptionInvoice.findMany({ where: { ...real, status: 'OPEN' }, select: { tenantId: true, number: true } });
 
       const states = { TRIAL: 0, OK: 0, GRACE: 0, EXPIRED: 0 } as Record<string, number>;
       const alerts: { kind: string; tenantId?: string; school?: string; date?: string | null; count?: number }[] = [];

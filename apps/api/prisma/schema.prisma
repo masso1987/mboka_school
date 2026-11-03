@@ -33,6 +33,9 @@ model Tenant {
   defaultCurrency String       @default("XAF") @map("default_currency") @db.Char(3)
   /// Free-form school settings (branding, formats…) until each gets a typed home.
   settings        Json         @default("{}")
+  /// Demo school (Phase 7): sample data, generated logins, suspended at demoExpiresAt then closed 7 days later.
+  isDemo          Boolean      @default(false) @map("is_demo")
+  demoExpiresAt   DateTime?    @map("demo_expires_at") @db.Timestamptz(6)
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
 
