@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AcademicYearsModule } from './academic-years/academic-years.module';
 import { AcademicsModule } from './academics/academics.module';
 import { AdminModule } from './admin/admin.module';
+import { SchoolProfileModule } from './admin/school-profile.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
 import { FinanceModule } from './finance/finance.module';
@@ -43,6 +44,7 @@ import { TimetableModule } from './timetable/timetable.module';
     TimetableModule,
     AttendanceModule,
     AdminModule,
+    SchoolProfileModule,
     FinanceModule,
     GradesModule,
     NotificationsModule,

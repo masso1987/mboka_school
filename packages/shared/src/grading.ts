@@ -276,7 +276,8 @@ export function computeResults(input: EngineInput): EngineResult {
 }
 
 /** Ranks descending; students without an average are unranked (null). */
-function rank(values: Map<string, Decimal | null | undefined>, mode: GradingRules['ranking']): Map<string, number | null> {
+/** Positions from values (highest first); students without a value get none. Shared with the competence engine. */
+export function rank(values: Map<string, Decimal | null | undefined>, mode: GradingRules['ranking']): Map<string, number | null> {
   const ranked = [...values]
     .filter((e): e is [string, Decimal] => e[1] !== null && e[1] !== undefined)
     .sort((a, b) => b[1].comparedTo(a[1]));

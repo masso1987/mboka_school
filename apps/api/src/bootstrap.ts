@@ -16,6 +16,8 @@ export function configureApp(app: NestExpressApplication): INestApplication {
   app.use(requestContextMiddleware);
   app.use(helmet());
   app.use(cookieParser());
+  // School images (logo, coat of arms, stamp, signature) are uploaded as raw PNG/JPEG bodies, capped by the database too.
+  app.useBodyParser('raw', { type: ['image/png', 'image/jpeg'], limit: '410kb' });
   app.enableCors({ origin: config.CORS_ORIGINS, credentials: true });
   app.setGlobalPrefix(API_PREFIX);
 
