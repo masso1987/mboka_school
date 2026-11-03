@@ -1,24 +1,35 @@
-import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query, Req, Res } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   activeSchema,
   auditQuerySchema,
+  licenceSchema,
+  MODULE_KEYS,
+  modulePriceSchema,
   loginHistoryQuerySchema,
   platformUsersQuerySchema,
   personInviteSchema,
   schoolUpdateSchema,
   type ActiveInput,
+  type AuditQuery,
+  type LoginHistoryQuery,
+  type PlatformUsersQuery,
+  type LicenceInput,
+  type ModuleKey,
+  type ModulePriceInput,
   type PersonInviteInput,
   type SchoolUpdateInput,
 } from '@mboka/shared';
 import type { Response } from 'express';
 import { z } from 'zod';
 import { PlatformAdmin } from '../auth/decorators';
+import { Errors } from '../common/api-error';
 import { type AppRequest, type AuthContext, clientIp, CurrentAuth } from '../common/request-context';
-import { ApiZodBody, ZodBody } from '../common/zod';
+import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod';
 import { ActivityService } from './activity.service';
 import { DashboardService } from './dashboard.service';
 import { PlatformAdminsService } from './platform-admins.service';
+import { PricingService } from './pricing.service';
 import { type PlatformActor, SchoolsService } from './schools.service';
 
 const listQuery = z.object({ q: z.string().trim().max(100).optional(), status: z.enum(['ACTIVE', 'SUSPENDED', 'CLOSED']).optional() });
@@ -34,6 +45,7 @@ export class PlatformController {
     private readonly schools: SchoolsService,
     private readonly admins: PlatformAdminsService,
     private readonly activity: ActivityService,
+    private readonly pricing: PricingService,
   ) {}
 
   @Get('dashboard')
@@ -44,8 +56,7 @@ export class PlatformController {
   // ------------------------------------------------------------ schools
 
   @Get('schools')
-  listSchools(@Query() query: Record<string, string>) {
-    const q = listQuery.parse(query);
+  listSchools(@Query(new ZodPipe(listQuery)) q: z.infer<typeof listQuery>) {
     return this.schools.list(q.q || undefined, q.status);
   }
 
@@ -84,6 +95,31 @@ export class PlatformController {
     return this.schools.setAdminActive(id, userId, body, actor(auth, req));
   }
 
+  @Get('schools/:id/licence')
+  licence(@Param('id', ParseUUIDPipe) id: string) {
+    return this.schools.licence(id);
+  }
+
+  @Put('schools/:id/licence')
+  @ApiZodBody(licenceSchema)
+  setLicence(@Param('id', ParseUUIDPipe) id: string, @ZodBody(licenceSchema) body: LicenceInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    return this.schools.setLicence(id, body, actor(auth, req));
+  }
+
+  // ------------------------------------------------------------ module prices
+
+  @Get('modules')
+  modules() {
+    return this.pricing.modules();
+  }
+
+  @Put('modules/:module/price')
+  @ApiZodBody(modulePriceSchema)
+  setModulePrice(@Param('module') module: string, @ZodBody(modulePriceSchema) body: ModulePriceInput, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest) {
+    if (!(MODULE_KEYS as string[]).includes(module)) throw Errors.notFound('Module');
+    return this.pricing.setPrice(module as ModuleKey, body, actor(auth, req));
+  }
+
   // ------------------------------------------------------------ platform administrators
 
   @Get('admins')
@@ -112,8 +148,8 @@ export class PlatformController {
   // ------------------------------------------------------------ users and sessions
 
   @Get('users')
-  users(@Query() query: Record<string, string>) {
-    return this.activity.users(platformUsersQuerySchema.parse(query));
+  users(@Query(new ZodPipe(platformUsersQuerySchema)) q: PlatformUsersQuery) {
+    return this.activity.users(q);
   }
 
   @Get('users/:userId/sessions')
@@ -142,15 +178,13 @@ export class PlatformController {
   // ------------------------------------------------------------ sign-in history and audit log
 
   @Get('logins')
-  async logins(@Query() query: Record<string, string>, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
-    const q = loginHistoryQuerySchema.parse(query);
+  async logins(@Query(new ZodPipe(loginHistoryQuerySchema)) q: LoginHistoryQuery, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
     const result = await this.activity.logins(q, actor(auth, req));
     return typeof result === 'string' ? csv(res, 'connexions.csv', result) : result;
   }
 
   @Get('audit')
-  async auditLog(@Query() query: Record<string, string>, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
-    const q = auditQuerySchema.parse(query);
+  async auditLog(@Query(new ZodPipe(auditQuerySchema)) q: AuditQuery, @CurrentAuth() auth: AuthContext, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
     const result = await this.activity.auditLog(q, actor(auth, req));
     return typeof result === 'string' ? csv(res, 'journal-audit.csv', result) : result;
   }

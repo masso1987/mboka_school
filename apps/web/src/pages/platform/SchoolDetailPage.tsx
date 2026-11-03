@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Select, Table } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useDateFormat } from '../../lib/hooks';
+import { useMoney } from '../../lib/money';
 import { stateTone } from '../SubscriptionTab';
 import { statusTone } from './SchoolsPage';
 
@@ -100,6 +101,7 @@ export function PlatformSchoolDetailPage() {
         </Card>
       </div>
 
+      <LicenceCard tenantId={s.tenant.id} onSaved={refresh} />
       <AdminsCard school={s} onChanged={refresh} />
       <StatusCard school={s} onChanged={refresh} />
 
@@ -173,6 +175,147 @@ function EditCard({ school, onSaved }: { school: SchoolDetail; onSaved: () => vo
         {save.isSuccess && <p className="text-sm text-success-600">{t('platform.saved')}</p>}
         <Button type="submit" disabled={save.isPending}>
           {t('common.save')}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+interface Licence {
+  plan: string;
+  status: 'TRIALING' | 'ACTIVE' | 'CANCELED';
+  maxStudents: number;
+  maxCampuses: number;
+  maxUsers: number;
+  modules: string[] | null;
+  trialEndsAt: string | null;
+  currentUntil: string | null;
+  notes: string | null;
+}
+
+/** The school's licence: plan, status, limits, licensed modules and validity, overriding the plan's terms. */
+function LicenceCard({ tenantId, onSaved }: { tenantId: string; onSaved: () => void }) {
+  const licence = useQuery({ queryKey: ['platform-licence', tenantId], queryFn: () => api<Licence>(`/platform/schools/${tenantId}/licence`) });
+  const plans = useQuery({ queryKey: ['platform-plans'], queryFn: () => api<{ code: string; nameFr: string; monthlyPrice: string; maxStudents: number; maxCampuses: number; maxUsers: number }[]>('/platform/plans') });
+  const prices = useQuery({ queryKey: ['platform-modules'], queryFn: () => api<{ module: string; monthlyPrice: string }[]>('/platform/modules') });
+  if (licence.isPending || plans.isPending || prices.isPending) return <Loading />;
+  if (licence.isError) return <ErrorMessage error={licence.error} />;
+  if (plans.isError || prices.isError) return <ErrorMessage error={plans.error ?? prices.error} />;
+  return <LicenceForm key={JSON.stringify(licence.data)} tenantId={tenantId} initial={licence.data} plans={plans.data} prices={prices.data} onSaved={onSaved} />;
+}
+
+function LicenceForm({
+  tenantId,
+  initial,
+  plans,
+  prices,
+  onSaved,
+}: {
+  tenantId: string;
+  initial: Licence;
+  plans: { code: string; nameFr: string; monthlyPrice: string; maxStudents: number; maxCampuses: number; maxUsers: number }[];
+  prices: { module: string; monthlyPrice: string }[];
+  onSaved: () => void;
+}) {
+  const { t } = useTranslation();
+  const money = useMoney();
+  const qc = useQueryClient();
+  const [f, setF] = useState(initial);
+  const save = useMutation({
+    mutationFn: () => api<Licence>(`/platform/schools/${tenantId}/licence`, { method: 'PUT', body: { ...f, notes: f.notes?.trim() || null } }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['platform-licence', tenantId] });
+      onSaved();
+    },
+  });
+  const all = f.modules === null;
+  const enabled = (m: string) => all || f.modules!.includes(m);
+  const toggle = (m: string) => {
+    const current = f.modules ?? prices.map((p) => p.module);
+    const next = current.includes(m) ? current.filter((x) => x !== m) : [...current, m];
+    setF({ ...f, modules: next.length === prices.length ? null : next });
+  };
+  const plan = plans.find((p) => p.code === f.plan);
+  // Indicative only: invoices still bill the plan price alone.
+  const monthly = Number(plan?.monthlyPrice ?? 0) + prices.filter((p) => enabled(p.module)).reduce((sum, p) => sum + Number(p.monthlyPrice), 0);
+  const num = (v: string) => Math.max(1, Number.parseInt(v, 10) || 1);
+
+  return (
+    <Card title={t('platform.licence')}>
+      <form
+        className="space-y-4"
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Field label={t('subscription.plan')}>
+            <Select
+              value={f.plan}
+              onChange={(e) => {
+                const p = plans.find((x) => x.code === e.target.value);
+                setF({ ...f, plan: e.target.value, ...(p && { maxStudents: p.maxStudents, maxCampuses: p.maxCampuses, maxUsers: p.maxUsers }) });
+              }}
+            >
+              {plans.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.nameFr}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label={t('common.status')}>
+            <Select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as Licence['status'] })}>
+              {(['TRIALING', 'ACTIVE', 'CANCELED'] as const).map((s) => (
+                <option key={s} value={s}>
+                  {t(`platform.licenceStatus.${s}`)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          {f.status === 'TRIALING' ? (
+            <Field label={t('platform.trialEndsAt')}>
+              <Input type="date" required value={f.trialEndsAt ?? ''} onChange={(e) => setF({ ...f, trialEndsAt: e.target.value || null })} />
+            </Field>
+          ) : (
+            <Field label={t('platform.currentUntil')} hint={t('platform.currentUntilHint')}>
+              <Input type="date" value={f.currentUntil ?? ''} onChange={(e) => setF({ ...f, currentUntil: e.target.value || null })} />
+            </Field>
+          )}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label={t('platform.maxStudents')}>
+            <Input type="number" min={1} value={f.maxStudents} onChange={(e) => setF({ ...f, maxStudents: num(e.target.value) })} />
+          </Field>
+          <Field label={t('platform.maxCampuses')}>
+            <Input type="number" min={1} value={f.maxCampuses} onChange={(e) => setF({ ...f, maxCampuses: num(e.target.value) })} />
+          </Field>
+          <Field label={t('platform.maxUsers')}>
+            <Input type="number" min={1} value={f.maxUsers} onChange={(e) => setF({ ...f, maxUsers: num(e.target.value) })} />
+          </Field>
+        </div>
+        <fieldset>
+          <legend className="text-sm font-medium text-slate-700">{t('platform.modules')}</legend>
+          <p className="mb-2 text-xs text-slate-500">{t('platform.modulesHelp')}</p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {prices.map((p) => (
+              <label key={p.module} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={enabled(p.module)} onChange={() => toggle(p.module)} disabled={enabled(p.module) && !all && f.modules!.length === 1} />
+                {t(`platform.module.${p.module}`)}
+                {Number(p.monthlyPrice) > 0 && <span className="text-xs text-slate-500">+{money(p.monthlyPrice, 'XAF')}</span>}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <Field label={t('platform.licenceNotes')} hint={t('platform.licenceNotesHint')}>
+          <textarea className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" rows={2} value={f.notes ?? ''} onChange={(e) => setF({ ...f, notes: e.target.value })} />
+        </Field>
+        <p className="text-sm text-slate-600">{t('platform.indicativePrice', { amount: money(String(monthly), 'XAF') })}</p>
+        <ErrorMessage error={save.error} />
+        {save.isSuccess && <p className="text-sm text-success-600">{t('platform.saved')}</p>}
+        <Button type="submit" disabled={save.isPending}>
+          {t('platform.saveLicence')}
         </Button>
       </form>
     </Card>

@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import type { ActiveInput, PersonInviteInput, SchoolUpdateInput } from '@mboka/shared';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import type { ActiveInput, LicenceInput, PersonInviteInput, SchoolUpdateInput } from '@mboka/shared';
 import { Prisma, type TenantStatus } from '@prisma/client';
 import { AdminService } from '../admin/admin.service';
 import { AuditService } from '../audit/audit.service';
 import { PasswordLinksService } from '../auth/password-links.service';
-import { Errors } from '../common/api-error';
+import { ApiException, Errors } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
@@ -14,7 +14,19 @@ export interface PlatformActor {
   ip?: string;
 }
 
-const tenantFields = { id: true, slug: true, legalName: true, tradingName: true, status: true, defaultLocale: true, defaultCurrency: true, timezone: true, settings: true, createdAt: true } as const;
+const presentLicence = (s: Prisma.SubscriptionGetPayload<object>) => ({
+  plan: s.plan,
+  status: s.status,
+  maxStudents: s.maxStudents,
+  maxCampuses: s.maxCampuses,
+  maxUsers: s.maxUsers,
+  modules: s.modules.length === 0 ? null : s.modules,
+  trialEndsAt: s.trialEndsAt?.toISOString().slice(0, 10) ?? null,
+  currentUntil: s.currentUntil?.toISOString().slice(0, 10) ?? null,
+  notes: s.licenceNotes,
+});
+
+const tenantFields ={ id: true, slug: true, legalName: true, tradingName: true, status: true, defaultLocale: true, defaultCurrency: true, timezone: true, settings: true, createdAt: true } as const;
 
 /**
  * Schools seen from the platform console (Phase 7). Reads go through the read-only platform scope; every change
@@ -149,6 +161,49 @@ export class SchoolsService {
         tx,
       );
       return { membershipId: updated.id, status: updated.status };
+    });
+  }
+
+  // ------------------------------------------------------------ licence
+
+  /** The licence as stored: plan, status, limits, modules (empty = all), validity and the platform's notes. */
+  async licence(id: string) {
+    const sub = await this.prisma.platform((tx) => tx.subscription.findUnique({ where: { tenantId: id } }));
+    if (!sub) throw Errors.notFound('School');
+    return presentLicence(sub);
+  }
+
+  /** Overrides the plan's terms for one school. Dates are calendar days, valid through their end (UTC). */
+  async setLicence(id: string, input: LicenceInput, a: PlatformActor) {
+    if (!(await this.prisma.plan.findUnique({ where: { code: input.plan }, select: { code: true } }))) {
+      throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'UNKNOWN_PLAN', 'Choose one of the plans');
+    }
+    if (input.status === 'TRIALING' && !input.trialEndsAt) {
+      throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'TRIAL_END_REQUIRED', 'A trial needs an end date');
+    }
+    const endOfDay = (d: string | null) => (d ? new Date(`${d}T23:59:59.999Z`) : null);
+    return this.prisma.scoped({ tenantId: id, userId: a.userId }, async (tx) => {
+      const before = await tx.subscription.findUnique({ where: { tenantId: id } });
+      if (!before) throw Errors.notFound('School');
+      const after = await tx.subscription.update({
+        where: { tenantId: id },
+        data: {
+          plan: input.plan,
+          status: input.status,
+          maxStudents: input.maxStudents,
+          maxCampuses: input.maxCampuses,
+          maxUsers: input.maxUsers,
+          modules: input.modules ?? [],
+          trialEndsAt: endOfDay(input.trialEndsAt),
+          currentUntil: endOfDay(input.currentUntil),
+          licenceNotes: input.notes,
+        },
+      });
+      await this.audit.record(
+        { tenantId: id, actorId: a.userId, action: 'platform.licence_changed', entityType: 'subscription', entityId: after.id, metadata: { before: presentLicence(before), after: presentLicence(after) }, ip: a.ip },
+        tx,
+      );
+      return presentLicence(after);
     });
   }
 

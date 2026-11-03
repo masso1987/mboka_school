@@ -96,6 +96,51 @@ describe('schools', () => {
   });
 });
 
+describe('licences and modules', () => {
+  const put = (path: string, body: object) => platform.put(API + path).set('X-CSRF-Token', csrf).send(body);
+  const licence = { plan: 'standard', status: 'ACTIVE', maxStudents: 400, maxCampuses: 2, maxUsers: 30, trialEndsAt: null, currentUntil: '2099-06-30', notes: 'Remise 10 % accordée' };
+  const finance = '/finance/reports/summary?from=2026-01-01&to=2026-12-31';
+
+  it('starts with every module', async () => {
+    expect((await get(`/platform/schools/${tenantId}/licence`).expect(200)).body.modules).toBeNull();
+    await director.get(finance).expect(200);
+  });
+
+  it('turns a module off: its routes refuse, its permissions leave the school context, the core stays', async () => {
+    const saved = (await put(`/platform/schools/${tenantId}/licence`, { ...licence, modules: ['students', 'attendance'] }).expect(200)).body;
+    expect(saved).toMatchObject({ plan: 'standard', maxStudents: 400, modules: ['students', 'attendance'], currentUntil: '2099-06-30', notes: 'Remise 10 % accordée' });
+    expect((await director.get(finance).expect(403)).body.error.code).toBe('MODULE_DISABLED');
+    await director.get('/students').expect(200);
+    const permissions: string[] = (await director.get('/tenant/context').expect(200)).body.permissions;
+    expect(permissions).toContain('users.invite');
+    expect(permissions).not.toContain('fees.invoice.read');
+    expect(permissions).not.toContain('hr.payroll.manage');
+
+    const log = await owner.auditLog.findFirstOrThrow({ where: { tenantId, action: 'platform.licence_changed' }, orderBy: { createdAt: 'desc' } });
+    expect(log.metadata).toMatchObject({ before: { modules: null }, after: { modules: ['students', 'attendance'] } });
+
+    await put(`/platform/schools/${tenantId}/licence`, { ...licence, modules: null }).expect(200);
+    await director.get(finance).expect(200);
+  });
+
+  it('applies the new limits and refuses an incomplete licence', async () => {
+    const sub = await owner.subscription.findUniqueOrThrow({ where: { tenantId } });
+    expect(sub).toMatchObject({ maxStudents: 400, maxUsers: 30, licenceNotes: 'Remise 10 % accordée' });
+    expect((await put(`/platform/schools/${tenantId}/licence`, { ...licence, status: 'TRIALING', modules: null }).expect(422)).body.error.code).toBe('TRIAL_END_REQUIRED');
+    expect((await put(`/platform/schools/${tenantId}/licence`, { ...licence, plan: 'nope', modules: null }).expect(422)).body.error.code).toBe('UNKNOWN_PLAN');
+    await put(`/platform/schools/${tenantId}/licence`, { ...licence, modules: [] }).expect(400);
+  });
+
+  it('keeps optional module prices', async () => {
+    await put('/platform/modules/payroll/price', { monthlyPrice: '5000', annualPrice: '50000' }).expect(200);
+    const prices = (await get('/platform/modules').expect(200)).body;
+    expect(prices).toContainEqual({ module: 'payroll', monthlyPrice: '5000', annualPrice: '50000' });
+    expect(prices).toHaveLength(10);
+    await put('/platform/modules/wizardry/price', { monthlyPrice: '1', annualPrice: '1' }).expect(404);
+    await director.put('/platform/modules/payroll/price', { monthlyPrice: '0', annualPrice: '0' }).expect(403);
+  });
+});
+
 describe('platform administrators', () => {
   it('invites a new platform administrator and never lets one act on themself', async () => {
     const email = `second-root-${run}@e2e.local`;

@@ -56,8 +56,11 @@ model Subscription {
   maxStudents  Int                @default(1000) @map("max_students")
   maxCampuses  Int                @default(1) @map("max_campuses")
   maxUsers     Int                @default(50) @map("max_users")
+  /// Licensed modules (MODULES in @mboka/shared); empty means every module.
   modules      String[]           @default([])
   currentUntil DateTime?          @map("current_until") @db.Timestamptz(6)
+  /// Platform's private notes on the licence (contract, agreed discount…); never shown to the school.
+  licenceNotes String?            @map("licence_notes")
   createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -1784,6 +1787,16 @@ model Plan {
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("plans")
+}
+
+/// Optional price of a licensed module on top of the plan (Phase 7), in the platform's currency (XAF).
+model ModulePrice {
+  module       String   @id
+  monthlyPrice Decimal  @map("monthly_price") @db.Decimal(18, 0)
+  annualPrice  Decimal  @map("annual_price") @db.Decimal(18, 0)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("module_prices")
 }
 
 enum SubscriptionInvoiceStatus {

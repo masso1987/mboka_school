@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { hasAllPermissions, subscriptionAccess, type PermissionKey } from '@mboka/shared';
+import { hasAllPermissions, licensedPermissions, subscriptionAccess, type PermissionKey } from '@mboka/shared';
 import { ApiException, Errors } from '../common/api-error';
 import type { AppRequest } from '../common/request-context';
 import { PrismaService } from '../prisma/prisma.service';
@@ -39,7 +39,7 @@ export class TenantGuard implements CanActivate {
         select: {
           id: true,
           status: true,
-          tenant: { select: { status: true, timezone: true, settings: true, subscription: { select: { status: true, trialEndsAt: true, currentUntil: true } } } },
+          tenant: { select: { status: true, timezone: true, settings: true, subscription: { select: { status: true, trialEndsAt: true, currentUntil: true, modules: true } } } },
         },
       });
       if (!membership || membership.status !== 'ACTIVE') return null;
@@ -47,7 +47,9 @@ export class TenantGuard implements CanActivate {
         where: { tenantId, role: { assignments: { some: { membershipId: membership.id } } } },
         select: { permissionKey: true },
       });
-      return { membership, permissions: new Set(grants.map((g) => g.permissionKey)) };
+      const granted = grants.map((g) => g.permissionKey);
+      // Modules the licence leaves off take their permissions with them: routes refuse, screens leave the menu.
+      return { membership, granted, permissions: licensedPermissions(granted, membership.tenant.subscription?.modules ?? []) };
     });
 
     if (!resolved) throw Errors.forbidden();
@@ -69,7 +71,12 @@ export class TenantGuard implements CanActivate {
 
     const required =
       this.reflector.getAllAndOverride<PermissionKey[]>(REQUIRED_PERMISSIONS, [ctx.getHandler(), ctx.getClass()]) ?? [];
-    if (!hasAllPermissions(resolved.permissions, required)) throw Errors.forbidden();
+    if (!hasAllPermissions(resolved.permissions, required)) {
+      if (hasAllPermissions(new Set(resolved.granted), required)) {
+        throw new ApiException(HttpStatus.FORBIDDEN, 'MODULE_DISABLED', "This module is not part of the school's licence");
+      }
+      throw Errors.forbidden();
+    }
 
     req.tenant = {
       tenantId,

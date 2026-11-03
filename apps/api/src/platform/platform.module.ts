@@ -5,12 +5,13 @@ import { ActivityService } from './activity.service';
 import { DashboardService } from './dashboard.service';
 import { PlatformAdminsService } from './platform-admins.service';
 import { PlatformController } from './platform.controller';
+import { PricingService } from './pricing.service';
 import { SchoolsService } from './schools.service';
 
 /** Platform console (Phase 7). */
 @Module({
   imports: [AdminModule, SubscriptionsModule],
   controllers: [PlatformController],
-  providers: [DashboardService, SchoolsService, PlatformAdminsService, ActivityService],
+  providers: [DashboardService, SchoolsService, PlatformAdminsService, ActivityService, PricingService],
 })
 export class PlatformModule {}

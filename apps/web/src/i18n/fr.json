@@ -446,7 +446,9 @@
     "INVALID_RESET_LINK": "Ce lien est invalide, déjà utilisé ou expiré. Demandez-en un nouveau.",
     "TENANT_SLUG_TAKEN": "Une école utilise déjà cet identifiant.",
     "ALREADY_PLATFORM_ADMIN": "Cette personne est déjà administrateur de la plateforme.",
-    "LAST_SUPER_ADMIN": "Impossible : ce serait le dernier administrateur actif de la plateforme."
+    "LAST_SUPER_ADMIN": "Impossible : ce serait le dernier administrateur actif de la plateforme.",
+    "MODULE_DISABLED": "Ce module ne fait pas partie de la licence de l'école.",
+    "TRIAL_END_REQUIRED": "Indiquez la date de fin de l'essai."
   },
   "fees": {
     "tabs": {
@@ -1205,7 +1207,39 @@
     },
     "actionHint": "Début du code, ex. « platform. », « payment. », « auth. »",
     "details": "Détails",
-    "hideDetails": "Masquer"
+    "hideDetails": "Masquer",
+    "licence": "Licence",
+    "licenceStatus": {
+      "TRIALING": "Essai",
+      "ACTIVE": "Active",
+      "CANCELED": "Résiliée"
+    },
+    "trialEndsAt": "Fin de l'essai",
+    "currentUntil": "Payée jusqu'au",
+    "currentUntilHint": "Vide : sans échéance (contrat hors libre-service).",
+    "maxStudents": "Élèves max.",
+    "maxCampuses": "Campus max.",
+    "maxUsers": "Utilisateurs max.",
+    "modules": "Modules",
+    "modulesHelp": "Un module décoché disparaît du menu de l'école et ses fonctions sont refusées ; les données restent. Le cœur (structure, administration) est toujours inclus.",
+    "module": {
+      "students": "Élèves & inscriptions",
+      "timetable": "Emploi du temps & affectations",
+      "attendance": "Présences",
+      "grades": "Notes & bulletins",
+      "finance": "Scolarité & paiements",
+      "expenses": "Dépenses & budgets",
+      "hr": "Ressources humaines",
+      "payroll": "Paie",
+      "communication": "Communication",
+      "portals": "Portails parents & élèves"
+    },
+    "licenceNotes": "Notes internes",
+    "licenceNotesHint": "Contrat, remise accordée… Jamais visibles par l'école.",
+    "indicativePrice": "Prix indicatif : {{amount}} / mois (formule + modules payants). Les factures appliquent encore le prix de la formule seule.",
+    "saveLicence": "Enregistrer la licence",
+    "modulePrices": "Prix des modules",
+    "modulePricesHelp": "Facultatif : prix d'un module en plus de la formule (FCFA). Sert au devis d'une licence ; 0 = inclus."
   },
   "password": {
     "forgotTitle": "Mot de passe oublié",

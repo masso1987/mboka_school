@@ -446,7 +446,9 @@
     "INVALID_RESET_LINK": "This link is invalid, already used or expired. Ask for a new one.",
     "TENANT_SLUG_TAKEN": "A school already uses this identifier.",
     "ALREADY_PLATFORM_ADMIN": "This person is already a platform administrator.",
-    "LAST_SUPER_ADMIN": "Not possible: this is the last active platform administrator."
+    "LAST_SUPER_ADMIN": "Not possible: this is the last active platform administrator.",
+    "MODULE_DISABLED": "This module is not part of the school's licence.",
+    "TRIAL_END_REQUIRED": "Enter the end date of the trial."
   },
   "fees": {
     "tabs": {
@@ -1205,7 +1207,39 @@
     },
     "actionHint": "Start of the code, e.g. \"platform.\", \"payment.\", \"auth.\"",
     "details": "Details",
-    "hideDetails": "Hide"
+    "hideDetails": "Hide",
+    "licence": "Licence",
+    "licenceStatus": {
+      "TRIALING": "Trial",
+      "ACTIVE": "Active",
+      "CANCELED": "Cancelled"
+    },
+    "trialEndsAt": "Trial ends",
+    "currentUntil": "Paid until",
+    "currentUntilHint": "Empty: no end date (contract outside self-service).",
+    "maxStudents": "Max. students",
+    "maxCampuses": "Max. campuses",
+    "maxUsers": "Max. users",
+    "modules": "Modules",
+    "modulesHelp": "An unticked module leaves the school's menu and its features are refused; the data stays. The core (structure, administration) is always included.",
+    "module": {
+      "students": "Students & enrolment",
+      "timetable": "Timetable & assignments",
+      "attendance": "Attendance",
+      "grades": "Marks & report cards",
+      "finance": "Fees & payments",
+      "expenses": "Expenses & budgets",
+      "hr": "Human resources",
+      "payroll": "Payroll",
+      "communication": "Communication",
+      "portals": "Parent & student portals"
+    },
+    "licenceNotes": "Internal notes",
+    "licenceNotesHint": "Contract, agreed discount… Never shown to the school.",
+    "indicativePrice": "Indicative price: {{amount}} / month (plan + paid modules). Invoices still bill the plan price alone.",
+    "saveLicence": "Save the licence",
+    "modulePrices": "Module prices",
+    "modulePricesHelp": "Optional: price of a module on top of the plan (XAF). Used to quote a licence; 0 = included."
   },
   "password": {
     "forgotTitle": "Forgot password",

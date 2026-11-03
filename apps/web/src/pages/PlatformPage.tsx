@@ -117,6 +117,55 @@ export function PlatformPage() {
           <ErrorMessage error={savePlan.error} />
         </div>
       </Card>
+      <ModulePricesCard />
     </div>
+  );
+}
+
+/** Optional price of each module on top of the plan; used to quote a school's licence. */
+function ModulePricesCard() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const prices = useQuery({ queryKey: ['platform-modules'], queryFn: () => api<{ module: string; monthlyPrice: string; annualPrice: string }[]>('/platform/modules') });
+  const [edits, setEdits] = useState<Record<string, { monthlyPrice: string; annualPrice: string }>>({});
+  const save = useMutation({
+    mutationFn: (p: { module: string; monthlyPrice: string; annualPrice: string }) =>
+      api(`/platform/modules/${p.module}/price`, { method: 'PUT', body: { monthlyPrice: p.monthlyPrice, annualPrice: p.annualPrice } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['platform-modules'] }),
+  });
+  return (
+    <Card title={t('platform.modulePrices')}>
+      <p className="mb-3 text-sm text-slate-600">{t('platform.modulePricesHelp')}</p>
+      {prices.isPending ? (
+        <Loading />
+      ) : prices.isError ? (
+        <ErrorMessage error={prices.error} />
+      ) : (
+        <Table head={[t('platform.modules'), t('subscription.cycles.MONTHLY'), t('subscription.cycles.ANNUAL'), '']}>
+          {prices.data.map((p) => {
+            const e = edits[p.module] ?? { monthlyPrice: p.monthlyPrice, annualPrice: p.annualPrice };
+            return (
+              <tr key={p.module}>
+                <td className="font-medium">{t(`platform.module.${p.module}`)}</td>
+                <td>
+                  <Input className="tabular w-28" inputMode="numeric" value={e.monthlyPrice} onChange={(ev) => setEdits({ ...edits, [p.module]: { ...e, monthlyPrice: ev.target.value } })} />
+                </td>
+                <td>
+                  <Input className="tabular w-32" inputMode="numeric" value={e.annualPrice} onChange={(ev) => setEdits({ ...edits, [p.module]: { ...e, annualPrice: ev.target.value } })} />
+                </td>
+                <td>
+                  <Button variant="ghost" disabled={save.isPending} onClick={() => save.mutate({ module: p.module, ...e })}>
+                    {t('common.save')}
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
+        </Table>
+      )}
+      <div className="mt-3">
+        <ErrorMessage error={save.error} />
+      </div>
+    </Card>
   );
 }
