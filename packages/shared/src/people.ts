@@ -61,6 +61,11 @@ export const studentSchema = z.object({
   placeOfBirth: optionalText(120),
   nationality: optionalText(60),
   address: optionalText(300),
+  /** Origin and health status printed in the MINEDUB primary report booklet. */
+  region: optionalText(80),
+  division: optionalText(80),
+  subDivision: optionalText(80),
+  healthStatus: optionalText(200),
   /** Set after the API reported a possible duplicate and the user confirmed it is a different child. */
   confirmDuplicate: z.boolean().default(false),
   guardians: z.array(guardianLinkSchema).max(6).default([]),

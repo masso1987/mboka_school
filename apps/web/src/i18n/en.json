@@ -88,7 +88,8 @@
       "platformPeople": "Accounts and traces",
       "platformCommunication": "Communication",
       "platformOperations": "Operations"
-    }
+    },
+    "competences": "Competences"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -214,7 +215,13 @@
     "exitConfirm": "Close this enrollment? The student's history is kept.",
     "exitHelp": "Transfer, withdrawal or completion: the enrollment is closed and nothing is deleted.",
     "exitType": "Type of departure",
-    "exit": "Close enrollment"
+    "exit": "Close enrollment",
+    "booklet": "Booklet details",
+    "bookletEdit": "Edit",
+    "region": "Region",
+    "division": "Division",
+    "subDivision": "Sub-division",
+    "healthStatus": "Health status"
   },
   "enrollments": {
     "statuses": {
@@ -329,7 +336,8 @@
       "users": "Users",
       "campuses": "Campuses",
       "security": "Security",
-      "subscription": "Subscription"
+      "subscription": "Subscription",
+      "school": "School"
     },
     "invite": "Add a user",
     "fullName": "Full name",
@@ -481,7 +489,15 @@
     "SQL_ERROR": "The database refused the statement.",
     "DOCKER_NOT_MOUNTED": "Docker is not mounted for the API.",
     "DOCKER_ERROR": "Docker refused the action.",
-    "BACKUPS_NOT_CONFIGURED": "The backups folder is not mounted for the API."
+    "BACKUPS_NOT_CONFIGURED": "The backups folder is not mounted for the API.",
+    "INVALID_MARKS": "Some marks are invalid or above the maximum.",
+    "NO_COMPONENTS": "This competence has no scale.",
+    "COMPONENT_HAS_MARKS": "This evaluation type already has marks: it cannot be removed.",
+    "MARKS_ABOVE_NEW_MAX": "Existing marks are above the new maximum.",
+    "NOT_COMPETENCE_CLASS": "This class is not marked by competences.",
+    "IMAGE_TOO_LARGE": "The image is larger than 400 KB.",
+    "IMAGE_TYPE": "The image must be a PNG or a JPEG.",
+    "IMAGE_REQUIRED": "Choose an image."
   },
   "fees": {
     "tabs": {
@@ -1505,5 +1521,95 @@
       "FAILED": "Failed"
     },
     "restoreHelp": "Whole-database backups are encrypted with BACKUP_PASSPHRASE (in the server .env). The restore test loads the backup into a scratch database and compares row counts. Restoring the live database stays a command on the server (operations guide §6)."
+  },
+  "school": {
+    "identity": "School identity",
+    "identityHelp": "What is printed on {{name}}'s report books, receipts and certificates.",
+    "acronym": "Acronym",
+    "acronymHint": "E.g. DIBINAPS",
+    "motto": "Motto",
+    "authorisation": "Authorisation no.",
+    "authorisationHint": "Ministry's opening order or authorisation",
+    "address": "Address",
+    "city": "Town",
+    "poBox": "P.O. Box",
+    "phone": "Phone",
+    "email": "E-mail",
+    "website": "Website",
+    "headTitle": "Head of school title",
+    "headTitleHint": "E.g. Head Teacher, Principal",
+    "headName": "Head of school name",
+    "officialHeader": "Official header",
+    "headerEn": "English header",
+    "headerFr": "French header",
+    "headerHint": "One line per printed line (6 at most).",
+    "reportBook": "Report book",
+    "layout": "Layout",
+    "layoutHint": "Classes marked by competences always use the primary booklet.",
+    "layouts": {
+      "PRIMARY_BOOKLET": "Primary booklet (MINEDUB 2018)",
+      "SEQUENCE_BOOK": "Sequence report book"
+    },
+    "reportBookTitle": "Report book title",
+    "reportBookTitleHint": "Leave empty for the default title.",
+    "images": "Images",
+    "imagesHelp": "PNG or JPEG, 400 KB at most. They appear on printed documents.",
+    "assets": {
+      "logo": "Logo",
+      "emblem": "Coat of arms",
+      "stamp": "Stamp",
+      "signature": "Signature"
+    },
+    "noImage": "No image",
+    "upload": "Upload",
+    "replace": "Replace",
+    "remove": "Remove",
+    "competenceRules": "Competence appreciations",
+    "competenceRulesHelp": "Thresholds in % of the maximum: below \"SPA from\", the competence is not acquired (SNA).",
+    "spaFrom": "SPA from (%)",
+    "saFrom": "SA from (%)",
+    "expFrom": "Expert from (%)",
+    "defaults": "Defaults"
+  },
+  "competences": {
+    "intro": "Monthly marks per competence, scales, results and report booklets.",
+    "subjectClass": "This class is marked by subjects. Switch its level to competences to use the primary booklet.",
+    "switchLevel": "Mark this level by competences",
+    "switchConfirm": "Every class of this level will be marked by competences. Continue?",
+    "tabs": {
+      "marks": "Marks",
+      "setup": "Scale",
+      "results": "Results and booklets"
+    },
+    "noScale": "No competence has a scale yet. Set it in the Scale tab.",
+    "competence": "Competence",
+    "month": "Month",
+    "monthOption": "Month {{month}} (term {{term}})",
+    "pupil": "Pupil",
+    "components": {
+      "ORAL": "Oral",
+      "WRITTEN": "Written",
+      "PRACTICAL": "Practical",
+      "ATTITUDE": "Attitude"
+    },
+    "total": "Total",
+    "saveMonth": "Save the month",
+    "notAssigned": "You don't teach this competence: read only.",
+    "saved_one": "{{count}} mark saved.",
+    "saved_other": "{{count}} marks saved.",
+    "setupHelp": "Maximum of each evaluation type per competence. Current grand total: {{total}}.",
+    "marksTotal": "Total: {{total}}",
+    "rank": "{{rank}} of {{size}}",
+    "resultsHelp": "Averages out of 20, from a maximum of {{max}} per term.",
+    "printClass": "Print the class's booklets",
+    "printOne": "Booklet",
+    "termN": "Term {{n}}",
+    "annual": "Annual",
+    "term": "Term",
+    "remarks": "Remarks",
+    "remarksFor": "Remarks — {{name}}",
+    "conduct": "Conduct",
+    "teacherRemark": "Teacher's remark",
+    "headRemark": "Head teacher's remark"
   }
 }

@@ -20,6 +20,10 @@ export const presentStudent = (s: Student) => ({
   placeOfBirth: s.placeOfBirth,
   nationality: s.nationality,
   address: s.address,
+  region: s.region,
+  division: s.division,
+  subDivision: s.subDivision,
+  healthStatus: s.healthStatus,
   status: s.status,
 });
 
@@ -160,6 +164,10 @@ export class StudentsService {
             placeOfBirth: input.placeOfBirth,
             nationality: input.nationality,
             address: input.address,
+            region: input.region,
+            division: input.division,
+            subDivision: input.subDivision,
+            healthStatus: input.healthStatus,
           },
         });
         for (const link of input.guardians) await this.linkGuardianTx(tx, a, student.id, link);

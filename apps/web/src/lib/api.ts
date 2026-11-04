@@ -37,6 +37,20 @@ export async function apiBlob(path: string): Promise<Blob> {
   return res.blob();
 }
 
+/** PUTs a file as the raw request body (e.g. a school image), with the tenant and CSRF headers. */
+export async function apiUpload<T>(path: string, file: File): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': file.type || 'application/octet-stream' };
+  if (tenantId) headers['X-Tenant-Id'] = tenantId;
+  if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+  const res = await fetch(`/api/v1${path}`, { method: 'PUT', headers, credentials: 'same-origin', body: file });
+  const data: unknown = await res.json().catch(() => undefined);
+  if (!res.ok) {
+    const err = (data as ApiError | undefined)?.error;
+    throw new ApiRequestError(res.status, err?.code ?? 'HTTP_ERROR', err?.message ?? res.statusText, err?.details);
+  }
+  return data as T;
+}
+
 /** POSTs a JSON body and saves the file the server answers with (e.g. an encrypted backup). */
 export async function postAndSave(path: string, body: unknown, fallbackName: string): Promise<void> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };

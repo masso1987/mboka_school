@@ -36,6 +36,7 @@ import { PlatformSchoolDetailPage } from './pages/platform/SchoolDetailPage';
 import { PlatformSchoolsPage } from './pages/platform/SchoolsPage';
 import { ForgotPasswordPage, SetPasswordPage } from './pages/PasswordPages';
 import { ReportCardsPage } from './pages/ReportCardsPage';
+import { CompetencesPage } from './pages/CompetencesPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { SignupPage, VerifyEmailPage } from './pages/SignupPage';
@@ -126,6 +127,7 @@ function Screens() {
           <Route path="expenses" element={<ExpensesPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="grades" element={<GradesPage />} />
+          <Route path="competences" element={<CompetencesPage />} />
           <Route path="report-cards" element={<ReportCardsPage />} />
           <Route path="platform" element={<PlatformHomePage />} />
           <Route path="platform/schools" element={<PlatformSchoolsPage />} />

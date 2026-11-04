@@ -88,7 +88,8 @@
       "platformPeople": "Comptes et traces",
       "platformCommunication": "Communication",
       "platformOperations": "Exploitation"
-    }
+    },
+    "competences": "Compétences"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -214,7 +215,13 @@
     "exitConfirm": "Clôturer cette inscription ? L'historique de l'élève est conservé.",
     "exitHelp": "Transfert, retrait ou fin de scolarité : l'inscription est clôturée, rien n'est supprimé.",
     "exitType": "Type de sortie",
-    "exit": "Clôturer l'inscription"
+    "exit": "Clôturer l'inscription",
+    "booklet": "Informations du livret",
+    "bookletEdit": "Modifier",
+    "region": "Région",
+    "division": "Département",
+    "subDivision": "Arrondissement",
+    "healthStatus": "État de santé"
   },
   "enrollments": {
     "statuses": {
@@ -329,7 +336,8 @@
       "users": "Utilisateurs",
       "campuses": "Campus",
       "security": "Sécurité",
-      "subscription": "Abonnement"
+      "subscription": "Abonnement",
+      "school": "École"
     },
     "invite": "Ajouter un utilisateur",
     "fullName": "Nom complet",
@@ -481,7 +489,15 @@
     "SQL_ERROR": "La base de données a refusé l’instruction.",
     "DOCKER_NOT_MOUNTED": "Docker n'est pas monté pour l'API.",
     "DOCKER_ERROR": "Docker a refusé l’action.",
-    "BACKUPS_NOT_CONFIGURED": "Le dossier des sauvegardes n'est pas monté pour l'API."
+    "BACKUPS_NOT_CONFIGURED": "Le dossier des sauvegardes n'est pas monté pour l'API.",
+    "INVALID_MARKS": "Certaines notes sont invalides ou dépassent le maximum.",
+    "NO_COMPONENTS": "Cette compétence n'a pas de barème.",
+    "COMPONENT_HAS_MARKS": "Ce type d’évaluation a déjà des notes : il ne peut pas être retiré.",
+    "MARKS_ABOVE_NEW_MAX": "Des notes existantes dépassent le nouveau maximum.",
+    "NOT_COMPETENCE_CLASS": "Cette classe n'est pas notée par compétences.",
+    "IMAGE_TOO_LARGE": "L'image dépasse 400 Ko.",
+    "IMAGE_TYPE": "L'image doit être un PNG ou un JPEG.",
+    "IMAGE_REQUIRED": "Choisissez une image."
   },
   "fees": {
     "tabs": {
@@ -1505,5 +1521,95 @@
       "FAILED": "Échec"
     },
     "restoreHelp": "Les sauvegardes complètes sont chiffrées avec BACKUP_PASSPHRASE (dans le .env du serveur). Le test de restauration recharge la sauvegarde dans une base temporaire et compare le nombre de lignes. Restaurer la base réelle reste une commande sur le serveur (guide d'exploitation §6)."
+  },
+  "school": {
+    "identity": "Identité de l'école",
+    "identityHelp": "Ce qui est imprimé sur les livrets, reçus et certificats de {{name}}.",
+    "acronym": "Sigle",
+    "acronymHint": "Ex. DIBINAPS",
+    "motto": "Devise",
+    "authorisation": "N° d'autorisation",
+    "authorisationHint": "Arrêté ou autorisation d'ouverture du ministère",
+    "address": "Adresse",
+    "city": "Ville",
+    "poBox": "Boîte postale",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "website": "Site web",
+    "headTitle": "Titre du chef d’établissement",
+    "headTitleHint": "Ex. Head Teacher, Directeur",
+    "headName": "Nom du chef d’établissement",
+    "officialHeader": "En-tête officiel",
+    "headerEn": "En-tête anglais",
+    "headerFr": "En-tête français",
+    "headerHint": "Une ligne par ligne imprimée (6 au plus).",
+    "reportBook": "Livret scolaire",
+    "layout": "Modèle",
+    "layoutHint": "Les classes notées par compétences utilisent toujours le livret primaire.",
+    "layouts": {
+      "PRIMARY_BOOKLET": "Livret primaire (MINEDUB 2018)",
+      "SEQUENCE_BOOK": "Bulletin par séquences"
+    },
+    "reportBookTitle": "Titre du livret",
+    "reportBookTitleHint": "Laisser vide pour le titre par défaut.",
+    "images": "Images",
+    "imagesHelp": "PNG ou JPEG, 400 Ko au plus. Elles apparaissent sur les documents imprimés.",
+    "assets": {
+      "logo": "Logo",
+      "emblem": "Armoiries",
+      "stamp": "Cachet",
+      "signature": "Signature"
+    },
+    "noImage": "Aucune image",
+    "upload": "Téléverser",
+    "replace": "Remplacer",
+    "remove": "Retirer",
+    "competenceRules": "Appréciations des compétences",
+    "competenceRulesHelp": "Seuils en % du maximum : en dessous de « SPA à partir de », la compétence est non acquise (SNA).",
+    "spaFrom": "SPA à partir de (%)",
+    "saFrom": "SA à partir de (%)",
+    "expFrom": "Expert à partir de (%)",
+    "defaults": "Valeurs par défaut"
+  },
+  "competences": {
+    "intro": "Notes mensuelles par compétence, barèmes, résultats et livrets scolaires.",
+    "subjectClass": "Cette classe est notée par matières. Passez son niveau aux compétences pour utiliser le livret primaire.",
+    "switchLevel": "Noter ce niveau par compétences",
+    "switchConfirm": "Toutes les classes de ce niveau seront notées par compétences. Continuer ?",
+    "tabs": {
+      "marks": "Saisie",
+      "setup": "Barème",
+      "results": "Résultats et livrets"
+    },
+    "noScale": "Aucune compétence n'a encore de barème. Définissez-le dans l'onglet Barème.",
+    "competence": "Compétence",
+    "month": "Mois",
+    "monthOption": "Mois {{month}} (trimestre {{term}})",
+    "pupil": "Élève",
+    "components": {
+      "ORAL": "Oral",
+      "WRITTEN": "Écrit",
+      "PRACTICAL": "Pratique",
+      "ATTITUDE": "Savoir-être"
+    },
+    "total": "Total",
+    "saveMonth": "Enregistrer le mois",
+    "notAssigned": "Vous n'enseignez pas cette compétence : lecture seule.",
+    "saved_one": "{{count}} note enregistrée.",
+    "saved_other": "{{count}} notes enregistrées.",
+    "setupHelp": "Maximum de chaque type d’évaluation par compétence. Total général actuel : {{total}}.",
+    "marksTotal": "Total : {{total}}",
+    "rank": "{{rank}}e sur {{size}}",
+    "resultsHelp": "Moyennes sur 20, calculées sur un maximum de {{max}} par trimestre.",
+    "printClass": "Imprimer les livrets de la classe",
+    "printOne": "Livret",
+    "termN": "Trimestre {{n}}",
+    "annual": "Annuel",
+    "term": "Trimestre",
+    "remarks": "Observations",
+    "remarksFor": "Observations — {{name}}",
+    "conduct": "Conduite",
+    "teacherRemark": "Appréciation de l'enseignant",
+    "headRemark": "Appréciation du directeur"
   }
 }

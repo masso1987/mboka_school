@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { Fragment, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import { GUARDIAN_RELATIONSHIPS } from '@mboka/shared';
@@ -209,6 +209,61 @@ function NewStudentForm({ onDone }: { onDone: () => void }) {
   );
 }
 
+/** Origin and health status, printed on the MINEDUB primary report booklet's cover. */
+function BookletDetails({ student, editable }: { student: StudentFile; editable: boolean }) {
+  const { t } = useTranslation();
+  const initial = { region: student.region ?? '', division: student.division ?? '', subDivision: student.subDivision ?? '', healthStatus: student.healthStatus ?? '' };
+  const [f, setF] = useState(initial);
+  const [open, setOpen] = useState(false);
+  const save = useTenantMutation<object>('PATCH', `/students/${student.id}`, [['student', student.id]]);
+  const fields = ['subDivision', 'division', 'region', 'healthStatus'] as const;
+  return (
+    <div className="mt-3 border-t border-slate-100 pt-3 text-sm">
+      <div className="flex items-center justify-between">
+        <span className="font-semibold text-slate-700">{t('students.booklet')}</span>
+        {editable && !open && (
+          <button type="button" className="text-accent-700 hover:underline" onClick={() => setOpen(true)}>
+            {t('students.bookletEdit')}
+          </button>
+        )}
+      </div>
+      {open ? (
+        <form
+          className="mt-2 space-y-2"
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            save.mutate(Object.fromEntries(fields.map((k) => [k, f[k].trim() || null])), { onSuccess: () => setOpen(false) });
+          }}
+        >
+          {fields.map((k) => (
+            <Field key={k} label={t(`students.${k}`)}>
+              <Input value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+            </Field>
+          ))}
+          <ErrorMessage error={save.error} />
+          <div className="flex gap-2">
+            <Button type="submit" disabled={save.isPending}>
+              {t('common.save')}
+            </Button>
+            <Button variant="secondary" onClick={() => (setF(initial), setOpen(false))}>
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+          {fields.map((k) => (
+            <Fragment key={k}>
+              <dt className="text-slate-500">{t(`students.${k}`)}</dt>
+              <dd>{student[k] ?? '—'}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      )}
+    </div>
+  );
+}
+
 export function StudentDetailPage() {
   const { id } = useParams();
   const { t } = useTranslation();
@@ -243,6 +298,7 @@ export function StudentDetailPage() {
               <Badge tone={statusTone(s.status)}>{t(`students.statuses.${s.status}`)}</Badge>
             </dd>
           </dl>
+          <BookletDetails student={s} editable={can('students.update')} />
           {can('students.update') && (
             <div className="mt-3 border-t border-slate-100 pt-2 text-sm">
               <span className="text-slate-500">{t('portal.studentAccount')}</span>

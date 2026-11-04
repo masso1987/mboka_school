@@ -21,6 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'classes', path: '/classes', anyOf: ['academics.structure.manage', 'academics.years.read'], group: 'teaching' },
   { key: 'teaching', path: '/teaching', anyOf: ['timetable.read', 'academics.assignments.manage'], group: 'teaching' },
   { key: 'grades', path: '/grades', anyOf: ['grades.enter', 'grades.approve'], group: 'teaching' },
+  { key: 'competences', path: '/competences', anyOf: ['grades.enter', 'grades.approve'], group: 'teaching' },
   { key: 'reportCards', path: '/report-cards', anyOf: ['reportcards.publish', 'grades.approve'], group: 'teaching' },
   { key: 'academicYears', path: '/academic-years', anyOf: ['academics.years.read'], group: 'teaching' },
   { key: 'fees', path: '/fees', anyOf: ['fees.invoice.read', 'payments.record'], group: 'money' },

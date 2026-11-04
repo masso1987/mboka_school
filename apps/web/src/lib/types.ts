@@ -98,6 +98,10 @@ export interface StudentFile extends Omit<StudentRow, 'currentClass' | 'currentY
   placeOfBirth: string | null;
   nationality: string | null;
   address: string | null;
+  region: string | null;
+  division: string | null;
+  subDivision: string | null;
+  healthStatus: string | null;
   guardians: {
     guardianId: string;
     relationship: string;

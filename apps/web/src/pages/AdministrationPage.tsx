@@ -6,28 +6,32 @@ import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHe
 import { useDateFormat, useLabel, useTenantMutation, useTenantQuery } from '../lib/hooks';
 import { useSession } from '../lib/session';
 import type { RoleRow, UserRow } from '../lib/types';
+import { SchoolProfileTab } from './SchoolProfileTab';
 import { SubscriptionTab } from './SubscriptionTab';
 
-type Tab = 'users' | 'campuses' | 'security' | 'subscription';
+type Tab = 'users' | 'school' | 'campuses' | 'security' | 'subscription';
+const TABS: Tab[] = ['users', 'school', 'campuses', 'security', 'subscription'];
 
 export function AdministrationPage() {
   const { t } = useTranslation();
   const [params] = useSearchParams();
-  const [tab, setTab] = useState<Tab>(params.get('tab') === 'subscription' ? 'subscription' : 'users');
+  const requested = params.get('tab') as Tab | null;
+  const [tab, setTab] = useState<Tab>(requested && TABS.includes(requested) ? requested : 'users');
   return (
     <div>
       <PageHeader title={t('nav.administration')} />
-      <Tabs
-        value={tab}
-        onChange={setTab}
-        items={[
-          { key: 'users', label: t('admin.tabs.users') },
-          { key: 'campuses', label: t('admin.tabs.campuses') },
-          { key: 'security', label: t('admin.tabs.security') },
-          { key: 'subscription', label: t('admin.tabs.subscription') },
-        ]}
-      />
-      {tab === 'users' ? <UsersTab /> : tab === 'campuses' ? <CampusesTab /> : tab === 'security' ? <SecurityTab /> : <SubscriptionTab />}
+      <Tabs value={tab} onChange={setTab} items={TABS.map((k) => ({ key: k, label: t(`admin.tabs.${k}`) }))} />
+      {tab === 'users' ? (
+        <UsersTab />
+      ) : tab === 'school' ? (
+        <SchoolProfileTab />
+      ) : tab === 'campuses' ? (
+        <CampusesTab />
+      ) : tab === 'security' ? (
+        <SecurityTab />
+      ) : (
+        <SubscriptionTab />
+      )}
     </div>
   );
 }
