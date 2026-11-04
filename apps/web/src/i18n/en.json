@@ -1600,6 +1600,7 @@
     "setupHelp": "Maximum of each evaluation type per competence. Current grand total: {{total}}.",
     "marksTotal": "Total: {{total}}",
     "rank": "{{rank}} of {{size}}",
+    "rank_first": "1st of {{size}}",
     "resultsHelp": "Averages out of 20, from a maximum of {{max}} per term.",
     "printClass": "Print the class's booklets",
     "printOne": "Booklet",

@@ -1600,6 +1600,7 @@
     "setupHelp": "Maximum de chaque type d’évaluation par compétence. Total général actuel : {{total}}.",
     "marksTotal": "Total : {{total}}",
     "rank": "{{rank}}e sur {{size}}",
+    "rank_first": "1er sur {{size}}",
     "resultsHelp": "Moyennes sur 20, calculées sur un maximum de {{max}} par trimestre.",
     "printClass": "Imprimer les livrets de la classe",
     "printOne": "Livret",

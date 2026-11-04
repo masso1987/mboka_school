@@ -312,7 +312,7 @@ function ResultsTab({ classId }: { classId: string }) {
       <span className="tabular">
         <span className="font-bold">{s.average}</span>
         <span className="block text-xs text-slate-500">
-          {Number(s.total)} · {t('competences.rank', { rank: s.rank, size: r.classSize })}
+          {Number(s.total)} · {t('competences.rank', { rank: s.rank, size: r.classSize, context: s.rank === 1 ? 'first' : undefined })}
         </span>
       </span>
     ) : (

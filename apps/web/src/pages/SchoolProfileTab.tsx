@@ -23,7 +23,7 @@ export function SchoolProfileTab() {
   if (profile.isError) return <ErrorMessage error={profile.error} />;
   return (
     <div className="space-y-6">
-      <ProfileForm key={JSON.stringify(profile.data.profile)} data={profile.data} />
+      <ProfileForm data={profile.data} />
       <ImagesCard assets={profile.data.assets} />
       {rules.data && <RulesCard key={JSON.stringify(rules.data)} initial={rules.data} />}
     </div>
