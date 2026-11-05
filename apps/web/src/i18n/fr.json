@@ -22,7 +22,8 @@
     "nameEn": "Nom (anglais)",
     "status": "Statut",
     "reason": "Motif",
-    "total": "{{count}} au total"
+    "total": "{{count}} au total",
+    "choose": "— Choisir —"
   },
   "auth": {
     "title": "Connexion",
@@ -769,7 +770,9 @@
       "invalid_value": "valeur illisible",
       "above_maximum": "note au-dessus du maximum"
     },
-    "draftRestored": "Brouillon restauré : des notes saisies sur cet appareil ne sont pas encore enregistrées."
+    "draftRestored": "Brouillon restauré : des notes saisies sur cet appareil ne sont pas encore enregistrées.",
+    "invalidCells_one": "Une note est invalide (en rouge) : corrigez-la pour pouvoir enregistrer.",
+    "invalidCells_other": "{{count}} notes sont invalides (en rouge) : corrigez-les pour pouvoir enregistrer."
   },
   "reportCards": {
     "annual": "Bulletin annuel",

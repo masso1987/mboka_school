@@ -74,7 +74,7 @@ function Feed() {
             {f.audience === 'CLASS' && (
               <Field label={t('students.class')} className="max-w-xs">
                 <Select required value={f.classId} onChange={(e) => setF({ ...f, classId: e.target.value })}>
-                  <option value="" />
+                  <option value="">{t('common.choose')}</option>
                   {classes.data?.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}

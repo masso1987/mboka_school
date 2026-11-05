@@ -203,7 +203,7 @@ function ContractsTab() {
           >
             <Field label={t('students.name')}>
               <Select required value={f.staffId} onChange={(e) => setF({ ...f, staffId: e.target.value })}>
-                <option value="" />
+                <option value="">{t('common.choose')}</option>
                 {staff.data?.items.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.lastName} {s.firstName}
@@ -283,7 +283,7 @@ function CompensationTab() {
       <ErrorMessage error={exportError} />
       <Field label={t('students.name')} className="max-w-sm">
         <Select value={staffId} onChange={(e) => setStaffId(e.target.value)}>
-          <option value="" />
+          <option value="">{t('common.choose')}</option>
           {staff.data?.items.map((s) => (
             <option key={s.id} value={s.id}>
               {s.lastName} {s.firstName}

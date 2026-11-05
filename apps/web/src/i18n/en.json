@@ -22,7 +22,8 @@
     "nameEn": "Name (English)",
     "status": "Status",
     "reason": "Reason",
-    "total": "{{count}} in total"
+    "total": "{{count}} in total",
+    "choose": "— Choose —"
   },
   "auth": {
     "title": "Sign in",
@@ -769,7 +770,9 @@
       "invalid_value": "unreadable value",
       "above_maximum": "mark above the maximum"
     },
-    "draftRestored": "Draft restored: marks entered on this device are not saved yet."
+    "draftRestored": "Draft restored: marks entered on this device are not saved yet.",
+    "invalidCells_one": "One mark is invalid (in red): correct it to save.",
+    "invalidCells_other": "{{count}} marks are invalid (in red): correct them to save."
   },
   "reportCards": {
     "annual": "Annual report",

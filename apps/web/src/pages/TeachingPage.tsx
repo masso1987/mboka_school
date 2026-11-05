@@ -156,7 +156,7 @@ function TimetableTab() {
             </Field>
             <Field label={t('teaching.teacher')}>
               <Select value={f.staffId} onChange={(e) => setF({ ...f, staffId: e.target.value })}>
-                <option value="" />
+                <option value="">—</option>
                 {teachers.data?.items.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.lastName} {s.firstName}
@@ -166,7 +166,7 @@ function TimetableTab() {
             </Field>
             <Field label={t('teaching.room')}>
               <Select value={f.roomId} onChange={(e) => setF({ ...f, roomId: e.target.value })}>
-                <option value="" />
+                <option value="">—</option>
                 {rooms.data?.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -228,7 +228,7 @@ function AssignmentsTab() {
           >
             <Field label={t('students.class')}>
               <Select required value={f.classId} onChange={(e) => setF({ ...f, classId: e.target.value, classSubjectId: '' })}>
-                <option value="" />
+                <option value="">{t('common.choose')}</option>
                 {classes.data?.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -238,7 +238,7 @@ function AssignmentsTab() {
             </Field>
             <Field label={t('classes.subject')}>
               <Select required value={f.classSubjectId} onChange={(e) => setF({ ...f, classSubjectId: e.target.value })}>
-                <option value="" />
+                <option value="">{t('common.choose')}</option>
                 {classDetail.data?.subjects.map((s) => (
                   <option key={s.id} value={s.id}>
                     {label(s.subject)}
@@ -248,7 +248,7 @@ function AssignmentsTab() {
             </Field>
             <Field label={t('teaching.teacher')}>
               <Select required value={f.staffId} onChange={(e) => setF({ ...f, staffId: e.target.value })}>
-                <option value="" />
+                <option value="">{t('common.choose')}</option>
                 {teachers.data?.items.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.lastName} {s.firstName}

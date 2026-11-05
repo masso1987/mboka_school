@@ -356,7 +356,16 @@ function GradeSheetView({ refs, onBack }: { refs: { classSubjectId: string; peri
                   </Field>
                 )}
                 <ErrorMessage error={saveMarks.error ?? saveComments.error} />
-                {saveMarks.isSuccess && !saveMarks.error && <p className="text-sm text-success-600">{t('grades.saved', { count: saveMarks.data?.changed ?? 0 })}</p>}
+                {saveMarks.isSuccess && !saveMarks.error && (
+                  <p role="status" className="text-sm text-success-600">
+                    {t('grades.saved', { count: saveMarks.data?.changed ?? 0 })}
+                  </p>
+                )}
+                {invalid.size > 0 && (
+                  <p role="alert" className="text-sm text-danger-600">
+                    {t('grades.invalidCells', { count: invalid.size })}
+                  </p>
+                )}
                 <Button onClick={save} disabled={invalid.size > 0 || saveMarks.isPending}>
                   {t('common.save')}
                 </Button>
@@ -408,7 +417,7 @@ function GradeSheetView({ refs, onBack }: { refs: { classSubjectId: string; peri
             <Card title={t('grades.import')}>
               <div className="space-y-3">
                 <Select value={csv.assessmentId} onChange={(e) => setCsv({ ...csv, assessmentId: e.target.value })} aria-label={t('grades.assessments')}>
-                  <option value="" />
+                  <option value="">{t('common.choose')}</option>
                   {s.assessments.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}

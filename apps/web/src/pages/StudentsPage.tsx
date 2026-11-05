@@ -154,7 +154,7 @@ function NewStudentForm({ onDone }: { onDone: () => void }) {
           </Field>
           <Field label={t('students.gender')}>
             <Select value={f.gender} onChange={set('gender')}>
-              <option value="" />
+              <option value="">{t('common.choose')}</option>
               <option value="F">{t('students.genders.F')}</option>
               <option value="M">{t('students.genders.M')}</option>
             </Select>
@@ -380,7 +380,7 @@ function EnrollForm({ studentId }: { studentId: string }) {
     >
       <Field label={`${t('students.class')} (${current?.name ?? ''})`}>
         <Select required value={classId} onChange={(e) => setClassId(e.target.value)}>
-          <option value="" />
+          <option value="">{t('common.choose')}</option>
           {classes.data?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name} — {c.studentCount}/{c.capacity ?? '∞'}

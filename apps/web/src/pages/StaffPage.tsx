@@ -108,7 +108,7 @@ function NewStaffForm({ onDone }: { onDone: () => void }) {
         </Field>
         <Field label={t('staff.account')} hint={t('staff.accountHint')}>
           <Select value={f.membershipId} onChange={(e) => setF({ ...f, membershipId: e.target.value })}>
-            <option value="" />
+            <option value="">—</option>
             {unlinked.map((u) => (
               <option key={u.membershipId} value={u.membershipId}>
                 {u.user.fullName} ({u.user.email})

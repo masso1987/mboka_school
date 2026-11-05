@@ -630,7 +630,7 @@ function SchedulesTab() {
               </Field>
               <Field label={t('fees.category')}>
                 <Select required value={f.categoryId} onChange={(e) => setF({ ...f, categoryId: e.target.value })}>
-                  <option value="" />
+                  <option value="">{t('common.choose')}</option>
                   {categories.data?.map((c) => (
                     <option key={c.id} value={c.id}>
                       {label(c)}

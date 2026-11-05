@@ -85,7 +85,7 @@ function ClassesTab() {
               </Field>
               <Field label={t('classes.level')}>
                 <Select required value={form.levelId} onChange={(e) => setForm({ ...form, levelId: e.target.value })}>
-                  <option value="" />
+                  <option value="">{t('common.choose')}</option>
                   {levels.data?.map((l) => (
                     <option key={l.id} value={l.id}>
                       {label(l)}
@@ -188,7 +188,7 @@ export function ClassDetailPage() {
             >
               <Field label={t('classes.subject')} className="sm:col-span-2">
                 <Select required value={form.subjectId} onChange={(e) => setForm({ ...form, subjectId: e.target.value })}>
-                  <option value="" />
+                  <option value="">{t('common.choose')}</option>
                   {subjects.data
                     ?.filter((s) => !taken.has(s.id))
                     .map((s) => (
