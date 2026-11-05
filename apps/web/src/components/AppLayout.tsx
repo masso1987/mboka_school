@@ -35,7 +35,7 @@ export function AppLayout() {
       </a>
 
       <aside
-        className={`${menuOpen ? 'fixed inset-0 z-40 flex' : 'hidden'} w-full flex-col bg-forest-900 text-white/80 md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0`}
+        className={`${menuOpen ? 'fixed inset-0 z-40 flex' : 'hidden'} w-full flex-col bg-forest-900 text-white/80 print:hidden md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0`}
       >
         <div className="flex items-start justify-between gap-2 px-4 pb-4 pt-5">
           <SchoolStamp name={stampName} detail={stampDetail} />
@@ -75,7 +75,7 @@ export function AppLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4">
+        <header className="flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4 print:hidden">
           <button
             type="button"
             className="rounded-md border border-slate-300 px-2 py-1 text-sm md:hidden"
@@ -137,7 +137,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 md:px-10">
+        <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 md:px-10 print:max-w-none print:p-0">
           {location.pathname === '/account' ? (
             <Outlet />
           ) : contextError?.code === 'MFA_SETUP_REQUIRED' ? (

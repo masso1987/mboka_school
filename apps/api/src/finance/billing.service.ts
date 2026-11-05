@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import type { ApplyScheduleInput, DiscountInput, FeeCategoryInput, FeeScheduleInput, ReasonInput } from '@mboka/shared';
+import type { ApplyScheduleInput, DiscountInput, FeeCategoryInput, FeeScheduleInput, ReasonInput, SubscribeServicesInput } from '@mboka/shared';
 import type { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { Actor } from '../common/actor';
@@ -64,6 +64,7 @@ export class BillingService {
           levelId: s.levelId,
           classId: s.classId,
           isActive: s.isActive,
+          optional: s.isOptional,
           category: s.category,
           billedCount: s._count.assignments,
           installments: await Promise.all(
@@ -90,6 +91,7 @@ export class BillingService {
             amount: total,
             levelId: input.levelId,
             classId: input.classId,
+            isOptional: input.optional,
             installments: {
               create: input.installments.map((i, n) => ({
                 position: n + 1,
@@ -107,7 +109,7 @@ export class BillingService {
             action: 'fee_schedule.created',
             entityType: 'fee_schedule',
             entityId: schedule.id,
-            metadata: { name: input.name, currency: input.currency, total: total.toString(), installments: input.installments.length },
+            metadata: { name: input.name, currency: input.currency, total: total.toString(), installments: input.installments.length, optional: input.optional },
             ip: a.ip,
           },
           tx,
@@ -130,6 +132,7 @@ export class BillingService {
       });
       if (!schedule) throw Errors.notFound('Fee schedule');
       if (!schedule.isActive) throw Errors.conflict('SCHEDULE_INACTIVE', 'This fee schedule is inactive');
+      if (schedule.isOptional) throw Errors.conflict('OPTIONAL_SCHEDULE', 'An optional service is billed per pupil, from the pupil account');
       await this.core.assertPeriodOpen(tx, a.tenantId, input.issueDate);
       const settings = await this.core.settings(tx, a.tenantId);
       const reportingRate = await this.core.rate(tx, a.tenantId, schedule.currency, settings.reportingCurrency, input.issueDate);
@@ -192,6 +195,156 @@ export class BillingService {
       );
       return { invoicesCreated: created, alreadyBilled: enrollments.length - created };
     });
+  }
+
+  // ------------------------------------------------------------ per-pupil fees and services
+
+  /** The pupil's active enrollment for the year with every schedule that applies to its class (school, level or class). */
+  private async applicable(tx: Tx, a: Actor, studentId: string, academicYearId: string) {
+    const enrollment = await tx.enrollment.findFirst({
+      where: { tenantId: a.tenantId, studentId, academicYearId, status: { in: [...ACTIVE_ENROLLMENT] } },
+      select: { id: true, studentId: true, academicYearId: true, classId: true, schoolClass: { select: { name: true, levelId: true } } },
+    });
+    if (!enrollment) return null;
+    const schedules = await tx.feeSchedule.findMany({
+      where: {
+        tenantId: a.tenantId,
+        academicYearId,
+        isActive: true,
+        OR: [{ classId: null, levelId: null }, { classId: enrollment.classId }, { levelId: enrollment.schoolClass.levelId }],
+      },
+      include: {
+        installments: { orderBy: { position: 'asc' } },
+        category: { select: { code: true, nameFr: true, nameEn: true, kind: true } },
+        // Any enrollment of the pupil this year: a class change does not bill school or level fees again.
+        assignments: { where: { invoice: { studentId } }, select: { invoiceId: true } },
+      },
+      orderBy: [{ isOptional: 'asc' }, { createdAt: 'asc' }],
+    });
+    return { enrollment, schedules };
+  }
+
+  /** Bills schedules to one enrollment: one invoice per currency, one line per installment, recorded so it is never billed twice. */
+  private async billSchedules(
+    tx: Tx,
+    a: Actor,
+    enrollment: { id: string; studentId: string; academicYearId: string },
+    schedules: { id: string; name: string; currency: string; categoryId: string; installments: { id: string; label: string; dueDate: Date; amount: Prisma.Decimal }[] }[],
+    issueDate: string,
+  ) {
+    await this.core.assertPeriodOpen(tx, a.tenantId, issueDate);
+    const settings = await this.core.settings(tx, a.tenantId);
+    const currencies = [...new Set(schedules.map((s) => s.currency))];
+    // Every check runs before the first write.
+    const rates = await Promise.all(currencies.map((c) => this.core.rate(tx, a.tenantId, c, settings.reportingCurrency, issueDate)));
+    const invoices: string[] = [];
+    for (const [n, currency] of currencies.entries()) {
+      const group = schedules.filter((s) => s.currency === currency);
+      const reportingRate = rates[n]!;
+      const invoice = await tx.invoice.create({
+        data: {
+          tenantId: a.tenantId,
+          number: await this.core.number(tx, a.tenantId, 'INV', issueDate),
+          studentId: enrollment.studentId,
+          academicYearId: enrollment.academicYearId,
+          enrollmentId: enrollment.id,
+          currency,
+          issueDate: toDate(issueDate),
+          reportingCurrency: settings.reportingCurrency,
+          reportingRate: reportingRate.value,
+          createdBy: a.userId,
+          lines: {
+            create: group.flatMap((s) =>
+              s.installments.map((i) => ({
+                kind: 'CHARGE' as const,
+                categoryId: s.categoryId,
+                description: s.installments.length > 1 ? `${s.name} — ${i.label}` : s.name,
+                amount: i.amount,
+                dueDate: i.dueDate,
+                installmentId: i.id,
+                createdBy: a.userId,
+              })),
+            ),
+          },
+        },
+      });
+      await tx.studentFeeAssignment.createMany({ data: group.map((s) => ({ tenantId: a.tenantId, scheduleId: s.id, enrollmentId: enrollment.id, invoiceId: invoice.id })) });
+      invoices.push(invoice.id);
+    }
+    return invoices;
+  }
+
+  /** What the pupil pays this year: the class's compulsory fees and the optional services, each with whether it is billed. */
+  feeOptions(a: Actor, studentId: string, academicYearId: string) {
+    return this.run(a, async (tx) => {
+      const found = await this.applicable(tx, a, studentId, academicYearId);
+      if (!found) return { enrollment: null, compulsory: [], services: [] };
+      const present = await Promise.all(
+        found.schedules.map(async (s) => ({
+          id: s.id,
+          name: s.name,
+          currency: s.currency,
+          amount: await this.core.format(tx, s.amount, s.currency),
+          category: s.category,
+          installments: await Promise.all(s.installments.map(async (i) => ({ label: i.label, dueDate: toIso(i.dueDate), amount: await this.core.format(tx, i.amount, s.currency) }))),
+          invoiceId: s.assignments[0]?.invoiceId ?? null,
+          optional: s.isOptional,
+        })),
+      );
+      return {
+        enrollment: { id: found.enrollment.id, classId: found.enrollment.classId, className: found.enrollment.schoolClass.name },
+        compulsory: present.filter((s) => !s.optional),
+        services: present.filter((s) => s.optional),
+      };
+    });
+  }
+
+  /** Bills the optional services ticked for a pupil, in one invoice per currency. */
+  subscribeServices(a: Actor, studentId: string, input: SubscribeServicesInput) {
+    return this.run(a, async (tx) => {
+      const found = await this.applicable(tx, a, studentId, input.academicYearId);
+      if (!found) throw Errors.conflict('NOT_ENROLLED', 'The pupil has no active enrollment this year');
+      const wanted = new Set(input.scheduleIds);
+      const chosen = found.schedules.filter((s) => wanted.has(s.id));
+      if (chosen.length !== wanted.size || chosen.some((s) => !s.isOptional)) throw Errors.conflict('SERVICE_NOT_AVAILABLE', "A selected service doesn't apply to this pupil's class");
+      if (chosen.some((s) => s.assignments.length > 0)) throw Errors.conflict('SERVICE_ALREADY_BILLED', 'A selected service is already billed to this pupil');
+      const invoices = await this.billSchedules(tx, a, found.enrollment, chosen, input.issueDate);
+      await this.audit.record(
+        {
+          tenantId: a.tenantId,
+          actorId: a.userId,
+          action: 'fee_services.subscribed',
+          entityType: 'student',
+          entityId: studentId,
+          metadata: { schedules: chosen.map((s) => s.name), invoices },
+          ip: a.ip,
+        },
+        tx,
+      );
+      return { invoices };
+    });
+  }
+
+  /**
+   * Bills the class's compulsory fees to a new enrollment, inside the caller's transaction. Never blocks the enrollment:
+   * when billing is impossible (closed period, missing rate) it reports why and the bursar can apply the fees later.
+   */
+  async billCompulsory(tx: Tx, a: Actor, studentId: string, academicYearId: string, issueDate: string): Promise<{ invoices: number; skipped: string | null }> {
+    const found = await this.applicable(tx, a, studentId, academicYearId);
+    const due = found?.schedules.filter((s) => !s.isOptional && s.assignments.length === 0) ?? [];
+    if (!found || due.length === 0) return { invoices: 0, skipped: null };
+    try {
+      const invoices = await this.billSchedules(tx, a, found.enrollment, due, issueDate);
+      await this.audit.record(
+        { tenantId: a.tenantId, actorId: a.userId, action: 'fee_schedule.billed_on_enrollment', entityType: 'enrollment', entityId: found.enrollment.id, metadata: { schedules: due.map((s) => s.name), invoices }, ip: a.ip },
+        tx,
+      );
+      return { invoices: invoices.length, skipped: null };
+    } catch (e) {
+      // Raised by the period and rate checks before any write, so the transaction is still usable.
+      if (e instanceof ApiException) return { invoices: 0, skipped: (e.getResponse() as { code: string }).code };
+      throw e;
+    }
   }
 
   // ------------------------------------------------------------ invoices

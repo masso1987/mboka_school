@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { DISCOUNT_KINDS, PAYMENT_METHODS } from '@mboka/shared';
 import { Badge, Button, Card, Empty, ErrorMessage, Field, Input, Loading, PageHeader, Select, Table, Tabs } from '../components/ui';
-import type { CashierSession, FeeSchedule, FinanceSettings, InvoiceDetail, InvoiceRow, PaymentView, RefundRow, Statement } from '../lib/finance-types';
+import type { CashierSession, FeeOption, FeeOptions, FeeSchedule, FinanceSettings, InvoiceDetail, InvoiceRow, PaymentView, RefundRow, Statement } from '../lib/finance-types';
 import { useCurrentYear, useDateFormat, useLabel, useSchoolToday, useTenantMutation, useTenantQuery } from '../lib/hooks';
 import { newKey, useMoney } from '../lib/money';
 import { useSession } from '../lib/session';
-import type { EducationLevel, Page, StudentRow } from '../lib/types';
+import type { EducationLevel, Page, SchoolClass, StudentRow } from '../lib/types';
 
 type Tab = 'desk' | 'invoices' | 'schedules' | 'refunds' | 'settings';
 
@@ -126,6 +126,7 @@ function StudentAccount({ studentId }: { studentId: string }) {
           </Table>
         )}
       </Card>
+      <FeesAndServices studentId={studentId} />
       <RecordPayment studentId={studentId} />
       {s.payments.length > 0 && (
         <Card title={t('fees.paymentHistory')}>
@@ -156,6 +157,113 @@ function StudentAccount({ studentId }: { studentId: string }) {
         </Card>
       )}
     </>
+  );
+}
+
+/** The class's compulsory fees and the optional services (bus, canteen, uniform…): tick services, see the total, bill them. */
+function FeesAndServices({ studentId }: { studentId: string }) {
+  const { t } = useTranslation();
+  const label = useLabel();
+  const money = useMoney();
+  const today = useSchoolToday();
+  const { can } = useSession();
+  const { current } = useCurrentYear();
+  const options = useTenantQuery<FeeOptions>(['fee-options', studentId, current?.id], current ? `/students/${studentId}/fee-options?academicYearId=${current.id}` : null);
+  const [picked, setPicked] = useState<string[]>([]);
+  const bill = useTenantMutation<{ academicYearId: string; scheduleIds: string[]; issueDate: string }, { invoices: string[] }>('POST', `/students/${studentId}/services`, [
+    ['fee-options', studentId],
+    ['statement', studentId],
+    ['invoices'],
+  ]);
+  if (!current || options.isPending) return null;
+  if (options.isError) return <ErrorMessage error={options.error} />;
+  const o = options.data;
+  if (!o.enrollment) return null;
+  const canBill = can('fees.invoice.create');
+
+  // Totals per currency: everything already billed plus the services ticked now.
+  const totals = new Map<string, { billed: number; picked: number }>();
+  for (const x of [...o.compulsory, ...o.services]) {
+    const row = totals.get(x.currency) ?? { billed: 0, picked: 0 };
+    if (x.invoiceId) row.billed += Number(x.amount);
+    else if (picked.includes(x.id)) row.picked += Number(x.amount);
+    totals.set(x.currency, row);
+  }
+  const line = (x: FeeOption, control: ReactNode) => (
+    <li key={x.id} className="flex items-center justify-between gap-3 py-2">
+      <label className="flex min-w-0 items-center gap-3">
+        {control}
+        <span className="min-w-0">
+          <span className="block font-medium">{x.name}</span>
+          <span className="block text-xs text-slate-500">
+            {label(x.category)}
+            {x.installments.length > 1 && ` · ${t('fees.inInstallments', { count: x.installments.length })}`}
+          </span>
+        </span>
+      </label>
+      <span className="flex shrink-0 items-center gap-2">
+        {x.invoiceId && <Badge tone="green">{t('fees.billedBadge')}</Badge>}
+        <span className="tabular font-semibold">{money(x.amount, x.currency)}</span>
+      </span>
+    </li>
+  );
+
+  return (
+    <Card title={t('fees.feesAndServices', { className: o.enrollment.className })}>
+      {o.compulsory.length > 0 && (
+        <>
+          <h3 className="text-sm font-semibold text-slate-700">{t('fees.classFees')}</h3>
+          <ul className="mb-4 divide-y divide-slate-100 text-sm">{o.compulsory.map((x) => line(x, <span className="w-4" />))}</ul>
+        </>
+      )}
+      <h3 className="text-sm font-semibold text-slate-700">{t('fees.services')}</h3>
+      {o.services.length === 0 ? (
+        <p className="py-2 text-sm text-slate-500">{t('fees.noServices')}</p>
+      ) : (
+        <ul className="divide-y divide-slate-100 text-sm">
+          {o.services.map((x) =>
+            line(
+              x,
+              <input
+                type="checkbox"
+                aria-label={x.name}
+                checked={Boolean(x.invoiceId) || picked.includes(x.id)}
+                disabled={Boolean(x.invoiceId) || !canBill}
+                onChange={(e) => setPicked(e.target.checked ? [...picked, x.id] : picked.filter((id) => id !== x.id))}
+              />,
+            ),
+          )}
+        </ul>
+      )}
+      <div className="mt-4 space-y-1 rounded-md bg-slate-50 px-4 py-3">
+        {[...totals].map(([currency, v]) => (
+          <div key={currency} className="text-sm">
+            {v.picked > 0 && (
+              <p className="tabular flex justify-between">
+                <span>{t('fees.selection')}</span>
+                <span className="font-semibold">{money(String(v.picked), currency)}</span>
+              </p>
+            )}
+            <p className="tabular flex justify-between text-base">
+              <span>{t('fees.yearTotal')}</span>
+              <span className="font-bold">{money(String(v.billed + v.picked), currency)}</span>
+            </p>
+          </div>
+        ))}
+      </div>
+      {canBill && picked.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button
+            disabled={bill.isPending}
+            onClick={() => bill.mutate({ academicYearId: current.id, scheduleIds: picked, issueDate: today }, { onSuccess: () => setPicked([]) })}
+          >
+            {t('fees.billSelection')}
+          </Button>
+        </div>
+      )}
+      {bill.isSuccess && picked.length === 0 && <p role="status" className="mt-3 text-sm text-success-600">{t('fees.servicesBilled')}</p>}
+      <ErrorMessage error={bill.error} />
+    </Card>
   );
 }
 
@@ -553,8 +661,12 @@ function SchedulesTab() {
   const schedules = useTenantQuery<FeeSchedule[]>(['schedules', current?.id], current ? `/fee-schedules?academicYearId=${current.id}` : null);
   const categories = useTenantQuery<{ id: string; code: string; nameFr: string; nameEn: string }[]>(['fee-categories'], '/fee-categories');
   const levels = useTenantQuery<EducationLevel[]>(['levels'], '/education-levels');
+  const classes = useTenantQuery<SchoolClass[]>(['classes', current?.id], current ? `/classes?academicYearId=${current.id}` : null);
   const settings = useTenantQuery<FinanceSettings>(['finance-settings'], '/finance/settings');
-  const [f, setF] = useState({ name: '', categoryId: '', levelId: '', currency: 'XAF', installments: [{ label: '', dueDate: '', amount: '' }] });
+  /** scope: '' (whole school), 'level:<id>' or 'class:<id>'. */
+  const [f, setF] = useState({ name: '', categoryId: '', scope: '', optional: false, currency: 'XAF', installments: [{ label: '', dueDate: '', amount: '' }] });
+  const scopeLabel = (s: FeeSchedule) =>
+    s.classId ? (classes.data?.find((c) => c.id === s.classId)?.name ?? '—') : s.levelId ? label(levels.data?.find((l) => l.id === s.levelId)) : t('fees.wholeSchool');
   const [cat, setCat] = useState({ code: '', nameFr: '', nameEn: '', kind: 'TUITION' });
   const create = useTenantMutation<object>('POST', '/fee-schedules', [['schedules']]);
   const createCat = useTenantMutation<object>('POST', '/fee-categories', [['fee-categories']]);
@@ -579,11 +691,15 @@ function SchedulesTab() {
         ) : schedules.data?.length === 0 ? (
           <Empty>{t('fees.noSchedules')}</Empty>
         ) : (
-          <Table head={[t('common.name'), t('fees.category'), t('fees.installments'), t('fees.total'), t('fees.billed'), '']}>
+          <Table head={[t('common.name'), t('fees.appliesTo'), t('fees.installments'), t('fees.total'), t('fees.billed'), '']}>
             {schedules.data?.map((s) => (
               <tr key={s.id}>
-                <td className="font-medium">{s.name}</td>
-                <td>{label(s.category)}</td>
+                <td>
+                  <p className="font-medium">{s.name}</p>
+                  <p className="text-xs text-slate-500">{label(s.category)}</p>
+                  {s.optional && <Badge tone="blue">{t('fees.optionalService')}</Badge>}
+                </td>
+                <td>{scopeLabel(s)}</td>
                 <td className="text-xs">
                   {s.installments.map((i) => (
                     <span key={i.label} className="tabular block">
@@ -594,7 +710,7 @@ function SchedulesTab() {
                 <td className="tabular">{money(s.amount, s.currency)}</td>
                 <td className="tabular">{s.billedCount}</td>
                 <td className="text-right">
-                  {manage && (
+                  {manage && !s.optional && (
                     <Button variant="secondary" disabled={apply.isPending} onClick={() => window.confirm(t('fees.applyConfirm')) && apply.mutate({ id: s.id, issueDate: today })}>
                       {t('fees.apply')}
                     </Button>
@@ -617,7 +733,9 @@ function SchedulesTab() {
                   categoryId: f.categoryId,
                   name: f.name,
                   currency: f.currency,
-                  ...(f.levelId && { levelId: f.levelId }),
+                  optional: f.optional,
+                  ...(f.scope.startsWith('level:') && { levelId: f.scope.slice(6) }),
+                  ...(f.scope.startsWith('class:') && { classId: f.scope.slice(6) }),
                   installments: f.installments.map((i) => ({ ...i, amount: i.amount.replace(/\s/g, '') })),
                 },
                 { onSuccess: () => setF({ ...f, name: '', installments: [{ label: '', dueDate: '', amount: '' }] }) },
@@ -638,14 +756,23 @@ function SchedulesTab() {
                   ))}
                 </Select>
               </Field>
-              <Field label={t('classes.level')}>
-                <Select value={f.levelId} onChange={(e) => setF({ ...f, levelId: e.target.value })}>
-                  <option value="">{t('fees.allLevels')}</option>
-                  {levels.data?.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {label(l)}
-                    </option>
-                  ))}
+              <Field label={t('fees.appliesTo')}>
+                <Select value={f.scope} onChange={(e) => setF({ ...f, scope: e.target.value })}>
+                  <option value="">{t('fees.wholeSchool')}</option>
+                  <optgroup label={t('classes.level')}>
+                    {levels.data?.map((l) => (
+                      <option key={l.id} value={`level:${l.id}`}>
+                        {label(l)}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={t('nav.classes')}>
+                    {classes.data?.map((c) => (
+                      <option key={c.id} value={`class:${c.id}`}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 </Select>
               </Field>
               <Field label={t('fees.currency')}>
@@ -656,6 +783,13 @@ function SchedulesTab() {
                 </Select>
               </Field>
             </div>
+            <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" className="mt-1" checked={f.optional} onChange={(e) => setF({ ...f, optional: e.target.checked })} />
+              <span>
+                <span className="font-semibold">{t('fees.optionalService')}</span>
+                <span className="block text-slate-600">{t('fees.optionalServiceHelp')}</span>
+              </span>
+            </label>
             {f.installments.map((inst, n) => (
               <div key={n} className="grid gap-4 sm:grid-cols-4">
                 <Field label={`${t('fees.installment')} ${n + 1}`}>

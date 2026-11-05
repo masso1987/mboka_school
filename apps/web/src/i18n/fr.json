@@ -90,7 +90,8 @@
       "platformCommunication": "Communication",
       "platformOperations": "Exploitation"
     },
-    "competences": "Compétences"
+    "competences": "Compétences",
+    "bookLists": "Listes de livres"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -498,7 +499,11 @@
     "NOT_COMPETENCE_CLASS": "Cette classe n'est pas notée par compétences.",
     "IMAGE_TOO_LARGE": "L'image dépasse 400 Ko.",
     "IMAGE_TYPE": "L'image doit être un PNG ou un JPEG.",
-    "IMAGE_REQUIRED": "Choisissez une image."
+    "IMAGE_REQUIRED": "Choisissez une image.",
+    "OPTIONAL_SCHEDULE": "Un service facultatif se facture élève par élève, depuis son compte.",
+    "SERVICE_NOT_AVAILABLE": "Un service choisi ne s'applique pas à la classe de l'élève.",
+    "SERVICE_ALREADY_BILLED": "Un service choisi est déjà facturé à cet élève.",
+    "NOT_ENROLLED": "L'élève n'est inscrit dans aucune classe cette année."
   },
   "fees": {
     "tabs": {
@@ -632,7 +637,22 @@
     "providerConfirmed": "Paiement confirmé par l'opérateur ; le reçu est disponible dans le relevé.",
     "orangePayHint": "Le payeur confirme sur la page Orange Money :",
     "verifyNow": "Vérifier auprès de l'opérateur",
-    "stillPending": "L'opérateur n'a pas encore de résultat ; une vérification automatique a lieu chaque minute."
+    "stillPending": "L'opérateur n'a pas encore de résultat ; une vérification automatique a lieu chaque minute.",
+    "wholeSchool": "Toute l'école",
+    "appliesTo": "S'applique à",
+    "optionalService": "Service facultatif",
+    "optionalServiceHelp": "Bus, cantine, tenue… choisi élève par élève depuis son compte, jamais facturé à toute la classe. Sinon, le frais est obligatoire et facturé dès l'inscription.",
+    "inInstallments_one": "en {{count}} versement",
+    "inInstallments_other": "en {{count}} versements",
+    "billedBadge": "Facturé",
+    "feesAndServices": "Frais et services — {{className}}",
+    "classFees": "Frais de la classe",
+    "services": "Services facultatifs",
+    "noServices": "Aucun service facultatif pour cette classe (Frais → Barèmes).",
+    "selection": "Sélection",
+    "yearTotal": "Total de l'année",
+    "billSelection": "Facturer la sélection",
+    "servicesBilled": "Services facturés : ils apparaissent dans le solde de l’élève."
   },
   "expenses": {
     "tabs": {
@@ -1615,5 +1635,26 @@
     "conduct": "Conduite",
     "teacherRemark": "Appréciation de l'enseignant",
     "headRemark": "Appréciation du directeur"
+  },
+  "books": {
+    "intro": "La liste des livres de chaque classe pour l’année, avec les prix indicatifs. Les parents achètent les livres en dehors de l’école.",
+    "print": "Imprimer la liste",
+    "printTitle": "Liste des livres — {{className}} — {{year}}",
+    "empty": "Aucun livre sur la liste de cette classe.",
+    "subject": "Matière",
+    "title": "Titre",
+    "author": "Auteur",
+    "publisher": "Éditeur",
+    "price": "Prix",
+    "total": "Total indicatif",
+    "indicative": "Prix indicatifs, susceptibles de varier selon la librairie.",
+    "removeConfirm": "Retirer « {{title}} » de la liste ?",
+    "add": "Ajouter un livre",
+    "appliesTo": "Liste concernée",
+    "thisClass": "Cette classe ({{name}})",
+    "thisLevel": "Toutes les classes du niveau",
+    "scopeClass": "Cette classe",
+    "scopeLevel": "Tout le niveau",
+    "scopeSchool": "Toute l'école"
   }
 }

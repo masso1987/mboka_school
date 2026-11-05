@@ -90,7 +90,8 @@
       "platformCommunication": "Communication",
       "platformOperations": "Operations"
     },
-    "competences": "Competences"
+    "competences": "Competences",
+    "bookLists": "Book lists"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -498,7 +499,11 @@
     "NOT_COMPETENCE_CLASS": "This class is not marked by competences.",
     "IMAGE_TOO_LARGE": "The image is larger than 400 KB.",
     "IMAGE_TYPE": "The image must be a PNG or a JPEG.",
-    "IMAGE_REQUIRED": "Choose an image."
+    "IMAGE_REQUIRED": "Choose an image.",
+    "OPTIONAL_SCHEDULE": "An optional service is billed pupil by pupil, from their account.",
+    "SERVICE_NOT_AVAILABLE": "A selected service doesn't apply to the pupil's class.",
+    "SERVICE_ALREADY_BILLED": "A selected service is already billed to this pupil.",
+    "NOT_ENROLLED": "The pupil is not enrolled in any class this year."
   },
   "fees": {
     "tabs": {
@@ -632,7 +637,22 @@
     "providerConfirmed": "Payment confirmed by the operator; the receipt is in the statement.",
     "orangePayHint": "The payer confirms on the Orange Money page:",
     "verifyNow": "Check with the operator",
-    "stillPending": "The operator has no result yet; an automatic check runs every minute."
+    "stillPending": "The operator has no result yet; an automatic check runs every minute.",
+    "wholeSchool": "Whole school",
+    "appliesTo": "Applies to",
+    "optionalService": "Optional service",
+    "optionalServiceHelp": "Bus, canteen, uniform… chosen pupil by pupil from their account, never billed to the whole class. Otherwise the fee is compulsory and billed at enrolment.",
+    "inInstallments_one": "in {{count}} installment",
+    "inInstallments_other": "in {{count}} installments",
+    "billedBadge": "Billed",
+    "feesAndServices": "Fees and services — {{className}}",
+    "classFees": "Class fees",
+    "services": "Optional services",
+    "noServices": "No optional service for this class (Fees → Schedules).",
+    "selection": "Selection",
+    "yearTotal": "Total for the year",
+    "billSelection": "Bill the selection",
+    "servicesBilled": "Services billed: they now appear in the pupil's balance."
   },
   "expenses": {
     "tabs": {
@@ -1615,5 +1635,26 @@
     "conduct": "Conduct",
     "teacherRemark": "Teacher's remark",
     "headRemark": "Head teacher's remark"
+  },
+  "books": {
+    "intro": "Each class's book list for the year, with indicative prices. Parents buy the books outside the school.",
+    "print": "Print the list",
+    "printTitle": "Book list — {{className}} — {{year}}",
+    "empty": "No book on this class's list.",
+    "subject": "Subject",
+    "title": "Title",
+    "author": "Author",
+    "publisher": "Publisher",
+    "price": "Price",
+    "total": "Indicative total",
+    "indicative": "Indicative prices, which may vary by bookshop.",
+    "removeConfirm": "Remove \"{{title}}\" from the list?",
+    "add": "Add a book",
+    "appliesTo": "List",
+    "thisClass": "This class ({{name}})",
+    "thisLevel": "Every class of the level",
+    "scopeClass": "This class",
+    "scopeLevel": "Whole level",
+    "scopeSchool": "Whole school"
   }
 }

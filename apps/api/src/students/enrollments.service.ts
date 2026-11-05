@@ -13,6 +13,7 @@ import type { Actor } from '../common/actor';
 import { ApiException, Errors } from '../common/api-error';
 import { toDate, toIso, toIsoOrNull } from '../common/dates';
 import { guardDb } from '../common/db-errors';
+import { BillingService } from '../finance/billing.service';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 
 const ACTIVE = ['PENDING', 'ENROLLED', 'REPEATING'] as const;
@@ -37,6 +38,7 @@ export class EnrollmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly billing: BillingService,
   ) {}
 
   private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
@@ -134,7 +136,9 @@ export class EnrollmentsService {
           { tenantId: a.tenantId, actorId: a.userId, action: 'enrollment.created', entityType: 'enrollment', entityId: enrollment.id, metadata: { after: presentEnrollment(enrollment) }, ip: a.ip },
           tx,
         );
-        return presentEnrollment(enrollment);
+        // The class's compulsory fees (tuition, registration…) are billed at once; optional services are chosen later.
+        const billing = await this.billing.billCompulsory(tx, a, input.studentId, enrollment.academicYearId, toIso(new Date()));
+        return { ...presentEnrollment(enrollment), billing };
       }),
       { Enrollment: alreadyEnrolled },
     );

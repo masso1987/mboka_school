@@ -909,6 +909,8 @@ model FeeSchedule {
   levelId        String?  @map("level_id") @db.Uuid
   classId        String?  @map("class_id") @db.Uuid
   isActive       Boolean  @default(true) @map("is_active")
+  /// Optional service (bus, canteen, uniform…): billed per pupil on request, never to the whole class.
+  isOptional     Boolean  @default(false) @map("is_optional")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   academicYear AcademicYear           @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
@@ -1943,4 +1945,26 @@ model PlatformMessage {
 
   @@index([createdAt])
   @@map("platform_messages")
+}
+
+/// A book on a class's list for one year (level-wide when levelId is set, school-wide when neither). Price is indicative.
+model BookListItem {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  levelId        String?  @map("level_id") @db.Uuid
+  classId        String?  @map("class_id") @db.Uuid
+  subject        String?
+  title          String
+  author         String?
+  publisher      String?
+  isbn           String?
+  price          Decimal? @db.Decimal(18, 2)
+  currency       String   @db.Char(3)
+  createdBy      String   @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, academicYearId])
+  @@map("book_list_items")
 }

@@ -55,6 +55,8 @@ export const feeScheduleSchema = z
     /** Limit to a level or a class; neither means every enrollment of the year. */
     levelId: z.uuid().optional(),
     classId: z.uuid().optional(),
+    /** An optional service (bus, canteen, uniform…) chosen per pupil, never billed to the whole class. */
+    optional: z.boolean().default(false),
     installments: z
       .array(z.object({ label: z.string().trim().min(1).max(60), dueDate: isoDate, amount: money }))
       .min(1)
@@ -69,6 +71,32 @@ export type FeeScheduleInput = z.infer<typeof feeScheduleSchema>;
 
 export const applyScheduleSchema = z.object({ issueDate: isoDate });
 export type ApplyScheduleInput = z.infer<typeof applyScheduleSchema>;
+
+/** Bills the optional services ticked for one pupil in a single invoice (one per currency). */
+export const subscribeServicesSchema = z.object({
+  academicYearId: z.uuid(),
+  scheduleIds: z.array(z.uuid()).min(1).max(30),
+  issueDate: isoDate,
+});
+export type SubscribeServicesInput = z.infer<typeof subscribeServicesSchema>;
+
+/** A book on a class's list for one year; the price is indicative (parents buy the books outside). */
+export const bookListItemSchema = z
+  .object({
+    academicYearId: z.uuid(),
+    /** Neither means every class of the year. */
+    levelId: z.uuid().optional(),
+    classId: z.uuid().optional(),
+    subject: z.string().trim().max(80).optional(),
+    title: z.string().trim().min(1).max(200),
+    author: z.string().trim().max(120).optional(),
+    publisher: z.string().trim().max(120).optional(),
+    isbn: z.string().trim().max(20).optional(),
+    price: moneyOrZero.optional(),
+    currency: currencyCode.default('XAF'),
+  })
+  .refine((v) => !(v.levelId && v.classId), { message: 'single_scope', path: ['classId'] });
+export type BookListItemInput = z.infer<typeof bookListItemSchema>;
 
 export const discountSchema = z.object({
   kind: z.enum(DISCOUNT_KINDS),

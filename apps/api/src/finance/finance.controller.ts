@@ -21,6 +21,7 @@ import {
   refundDecisionSchema,
   refundRequestSchema,
   reportRangeSchema,
+  subscribeServicesSchema,
   type ApplyScheduleInput,
   type BudgetInput,
   type CashierCloseInput,
@@ -40,6 +41,7 @@ import {
   type RefundDecisionInput,
   type RefundRequestInput,
   type ReportRange,
+  type SubscribeServicesInput,
 } from '@mboka/shared';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
@@ -197,6 +199,19 @@ export class FinanceController {
   @ApiZodBody(reasonSchema)
   cancelInvoice(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @ZodBody(reasonSchema) body: ReasonInput) {
     return this.billing.cancel(a, id, body);
+  }
+
+  @Get('students/:id/fee-options')
+  @RequirePermissions('fees.invoice.read')
+  feeOptions(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Query('academicYearId', ParseUUIDPipe) academicYearId: string) {
+    return this.billing.feeOptions(a, id, academicYearId);
+  }
+
+  @Post('students/:id/services')
+  @RequirePermissions('fees.invoice.create')
+  @ApiZodBody(subscribeServicesSchema)
+  subscribeServices(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @ZodBody(subscribeServicesSchema) body: SubscribeServicesInput) {
+    return this.billing.subscribeServices(a, id, body);
   }
 
   @Get('students/:id/statement')

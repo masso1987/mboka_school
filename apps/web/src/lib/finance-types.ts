@@ -76,8 +76,28 @@ export interface FeeSchedule {
   currency: string;
   amount: string;
   billedCount: number;
+  levelId: string | null;
+  classId: string | null;
+  optional: boolean;
   category: { code: string; nameFr: string; nameEn: string; kind: string };
   installments: { label: string; dueDate: string; amount: string }[];
+}
+
+/** One fee or service as it applies to a pupil, with the invoice it was billed on. */
+export interface FeeOption {
+  id: string;
+  name: string;
+  currency: string;
+  amount: string;
+  category: { code: string; nameFr: string; nameEn: string; kind: string };
+  installments: { label: string; dueDate: string; amount: string }[];
+  invoiceId: string | null;
+}
+
+export interface FeeOptions {
+  enrollment: { id: string; classId: string; className: string } | null;
+  compulsory: FeeOption[];
+  services: FeeOption[];
 }
 
 export interface RefundRow {
