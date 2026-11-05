@@ -91,7 +91,8 @@
       "platformOperations": "Operations"
     },
     "competences": "Competences",
-    "bookLists": "Book lists"
+    "bookLists": "Book lists",
+    "promotion": "Promotion"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -1656,5 +1657,54 @@
     "scopeClass": "This class",
     "scopeLevel": "Whole level",
     "scopeSchool": "Whole school"
+  },
+  "promotion": {
+    "intro": "At year end: every pupil who passes moves to the upper class of the next year, repeaters stay at the same level. Nothing is deleted.",
+    "step1": "1. The years",
+    "closingYear": "Year ending",
+    "nextYear": "Next year",
+    "noNextYear": "First create the next year (with its dates) in",
+    "step2": "2. The classes of {{year}}",
+    "classesReady_one": "{{count}} class already exists for that year.",
+    "classesReady_other": "{{count}} classes already exist for that year.",
+    "noClasses": "{{year}} has no class yet. Recreate this year’s (same names, levels, subjects and scales) in one click.",
+    "copyClasses": "Recreate the classes of {{year}}",
+    "copied": "{{created}} class(es) created, {{skipped}} already there.",
+    "step3": "3. The decisions",
+    "decisionsHelp": "Pre-filled by the class council (Report cards). Choose a decision for pupils still undecided, in orange.",
+    "noPupils": "No pupil enrolled this year.",
+    "pupils_one": "{{count}} pupil",
+    "pupils_other": "{{count}} pupils",
+    "undecided": "— To decide —",
+    "allUndecidedPass": "Pass every undecided pupil",
+    "saveDecisions_one": "Save {{count}} decision",
+    "saveDecisions_other": "Save {{count}} decisions",
+    "decisionsSaved_one": "{{count}} decision saved.",
+    "decisionsSaved_other": "{{count}} decisions saved.",
+    "step4": "4. Where pupils go",
+    "mapHelp": "Suggested automatically (next level, same section). Pupils of the last class of a cycle leave with the decision \"End of cycle\".",
+    "thisYearClass": "This year's class",
+    "promotedTo": "Promoted pupils go to",
+    "repeatIn": "Repeaters go to",
+    "noUpperClass": "— None —",
+    "step5": "5. Check and validate",
+    "summary": {
+      "promote": "move up",
+      "repeat": "repeat",
+      "graduate": "finish the cycle",
+      "leave": "leave the school",
+      "alreadyEnrolled": "already enrolled next year"
+    },
+    "exceptions_one": "{{count}} pupil to sort out before validating:",
+    "exceptions_other": "{{count}} pupils to sort out before validating:",
+    "exception": {
+      "NO_DECISION": "no decision",
+      "NO_TARGET_CLASS": "no destination class",
+      "CLASS_FULL": "destination class full"
+    },
+    "closeSource": "Close {{year}} after the promotion",
+    "commit": "Validate the promotion",
+    "confirm": "Enrol the pupils in their {{year}} classes? This year's enrolments will be closed.",
+    "done": "Promotion done for {{year}}: {{promoted}} promoted, {{repeating}} repeating, {{graduated}} finished, {{left}} left. {{billed}} fee invoice(s) created."
   }
 }

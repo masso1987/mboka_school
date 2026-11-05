@@ -91,7 +91,8 @@
       "platformOperations": "Exploitation"
     },
     "competences": "Compétences",
-    "bookLists": "Listes de livres"
+    "bookLists": "Listes de livres",
+    "promotion": "Passage de classe"
   },
   "dashboard": {
     "welcome": "Bienvenue, {{name}}",
@@ -1656,5 +1657,54 @@
     "scopeClass": "Cette classe",
     "scopeLevel": "Tout le niveau",
     "scopeSchool": "Toute l'école"
+  },
+  "promotion": {
+    "intro": "En fin d'année : chaque élève admis passe dans la classe supérieure de l'année suivante, les redoublants restent au même niveau. Rien n'est supprimé.",
+    "step1": "1. Les années",
+    "closingYear": "Année qui se termine",
+    "nextYear": "Année suivante",
+    "noNextYear": "Créez d'abord l'année suivante (dates comprises) dans",
+    "step2": "2. Les classes de {{year}}",
+    "classesReady_one": "{{count}} classe existe déjà pour cette année.",
+    "classesReady_other": "{{count}} classes existent déjà pour cette année.",
+    "noClasses": "{{year}} n'a encore aucune classe. Recréez celles de cette année (mêmes noms, niveaux, matières et barèmes) en un clic.",
+    "copyClasses": "Recréer les classes de {{year}}",
+    "copied": "{{created}} classe(s) créée(s), {{skipped}} déjà présente(s).",
+    "step3": "3. Les décisions",
+    "decisionsHelp": "Pré-remplies par le conseil de classe (Bulletins). Choisissez la décision des élèves restés sans décision, en orange.",
+    "noPupils": "Aucun élève inscrit cette année.",
+    "pupils_one": "{{count}} élève",
+    "pupils_other": "{{count}} élèves",
+    "undecided": "— À décider —",
+    "allUndecidedPass": "Admettre tous les élèves sans décision",
+    "saveDecisions_one": "Enregistrer {{count}} décision",
+    "saveDecisions_other": "Enregistrer {{count}} décisions",
+    "decisionsSaved_one": "{{count}} décision enregistrée.",
+    "decisionsSaved_other": "{{count}} décisions enregistrées.",
+    "step4": "4. Où vont les élèves",
+    "mapHelp": "Proposé automatiquement (niveau suivant, même section). Les élèves de la dernière classe d'un cycle sortent avec la décision « Fin de cycle ».",
+    "thisYearClass": "Classe de cette année",
+    "promotedTo": "Les admis vont en",
+    "repeatIn": "Les redoublants vont en",
+    "noUpperClass": "— Aucune —",
+    "step5": "5. Vérifier et valider",
+    "summary": {
+      "promote": "passent en classe supérieure",
+      "repeat": "redoublent",
+      "graduate": "terminent le cycle",
+      "leave": "quittent l’école",
+      "alreadyEnrolled": "déjà inscrits l’an prochain"
+    },
+    "exceptions_one": "{{count}} élève à régler avant de valider :",
+    "exceptions_other": "{{count}} élèves à régler avant de valider :",
+    "exception": {
+      "NO_DECISION": "pas de décision",
+      "NO_TARGET_CLASS": "aucune classe de destination",
+      "CLASS_FULL": "classe de destination pleine"
+    },
+    "closeSource": "Clôturer {{year}} après le passage",
+    "commit": "Valider le passage de classe",
+    "confirm": "Inscrire les élèves dans leurs classes de {{year}} ? Les inscriptions de cette année seront clôturées.",
+    "done": "Passage effectué pour {{year}} : {{promoted}} admis, {{repeating}} redoublants, {{graduated}} fins de cycle, {{left}} départs. {{billed}} facture(s) de frais créée(s)."
   }
 }

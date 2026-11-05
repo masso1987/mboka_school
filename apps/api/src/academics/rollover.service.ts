@@ -1,8 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { PROMOTION_OUTCOMES } from '@mboka/shared';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service';
 import type { Actor } from '../common/actor';
 import { ApiException, Errors } from '../common/api-error';
+import { toIso } from '../common/dates';
+import { BillingService } from '../finance/billing.service';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 
 export const rolloverSchema = z.object({
@@ -14,6 +17,18 @@ export const rolloverSchema = z.object({
   closeSourceYear: z.boolean().default(false),
 });
 export type RolloverInput = z.infer<typeof rolloverSchema>;
+
+/** Decisions taken on the promotion screen, for pupils the class council did not decide (e.g. primary classes). */
+export const yearDecisionsSchema = z.object({
+  decisions: z
+    .array(z.object({ enrollmentId: z.uuid(), decision: z.enum(PROMOTION_OUTCOMES) }))
+    .min(1)
+    .max(2000),
+});
+export type YearDecisionsInput = z.infer<typeof yearDecisionsSchema>;
+
+export const copyClassesSchema = z.object({ fromYearId: z.uuid() });
+export type CopyClassesInput = z.infer<typeof copyClassesSchema>;
 
 type Action = 'PROMOTE' | 'REPEAT' | 'GRADUATE' | 'LEAVE' | 'ALREADY_ENROLLED';
 
@@ -42,6 +57,7 @@ export class RolloverService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly billing: BillingService,
   ) {}
 
   private run<T>(a: Actor, fn: (tx: Tx) => Promise<T>) {
@@ -65,7 +81,8 @@ export class RolloverService {
         });
       }
       const { source, target } = plan;
-      const counts = { promoted: 0, repeating: 0, graduated: 0, left: 0, alreadyEnrolled: 0 };
+      const counts = { promoted: 0, repeating: 0, graduated: 0, left: 0, alreadyEnrolled: 0, billed: 0 };
+      const billOn = toIso(new Date());
       for (const r of plan.rows) {
         switch (r.action) {
           case 'ALREADY_ENROLLED':
@@ -85,6 +102,8 @@ export class RolloverService {
               },
             });
             await tx.enrollment.update({ where: { id: r.enrollmentId }, data: { status: 'COMPLETED', leftOn: source.endDate, leftReason: 'rollover' } });
+            // Next year's class fees, when the bursar has already set them; otherwise "Bill" on the schedule later.
+            counts.billed += (await this.billing.billCompulsory(tx, a, r.studentId, target.id, billOn)).invoices;
             if (r.action === 'REPEAT') counts.repeating++;
             else counts.promoted++;
             break;
@@ -115,6 +134,72 @@ export class RolloverService {
         tx,
       );
       return { ...counts, sourceClosed: input.closeSourceYear };
+    });
+  }
+
+  /** Records pass / repeat / end of cycle / exclusion for pupils of the year, from the promotion screen. */
+  saveDecisions(a: Actor, yearId: string, input: YearDecisionsInput) {
+    return this.run(a, async (tx) => {
+      const ids = input.decisions.map((d) => d.enrollmentId);
+      const enrollments = await tx.enrollment.findMany({
+        where: { tenantId: a.tenantId, academicYearId: yearId, id: { in: ids }, status: { in: [...ACTIVE] } },
+        include: { promotion: true },
+      });
+      if (enrollments.length !== new Set(ids).size) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'STUDENT_NOT_IN_YEAR', 'A pupil is not enrolled this year');
+      let changed = 0;
+      for (const d of input.decisions) {
+        const e = enrollments.find((x) => x.id === d.enrollmentId)!;
+        if (e.promotion?.decision === d.decision) continue;
+        await tx.promotionDecision.upsert({
+          where: { tenantId_enrollmentId: { tenantId: a.tenantId, enrollmentId: e.id } },
+          // Without a class council proposal, the decision stands as its own proposal.
+          create: { tenantId: a.tenantId, enrollmentId: e.id, academicYearId: yearId, decision: d.decision, proposed: d.decision, decidedBy: a.userId },
+          update: { decision: d.decision, decidedBy: a.userId, decidedAt: new Date() },
+        });
+        await this.audit.record(
+          { tenantId: a.tenantId, actorId: a.userId, action: 'promotion.decided', entityType: 'enrollment', entityId: e.id, metadata: { from: e.promotion?.decision ?? null, to: d.decision, via: 'promotion_screen' }, ip: a.ip },
+          tx,
+        );
+        changed++;
+      }
+      return { changed };
+    });
+  }
+
+  /** Creates next year's classes from this year's (same code, name, level, campus, capacity, subjects and scales). */
+  copyClasses(a: Actor, targetYearId: string, input: CopyClassesInput) {
+    return this.run(a, async (tx) => {
+      const [source, target] = await Promise.all([
+        tx.academicYear.findFirst({ where: { id: input.fromYearId, tenantId: a.tenantId } }),
+        tx.academicYear.findFirst({ where: { id: targetYearId, tenantId: a.tenantId } }),
+      ]);
+      if (!source || !target) throw Errors.notFound('Academic year');
+      if (source.id === target.id) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, 'SAME_YEAR', 'Choose a different year');
+      if (target.status === 'CLOSED') throw Errors.conflict('ACADEMIC_YEAR_CLOSED', 'The academic year is closed');
+      const [classes, existing] = await Promise.all([
+        tx.schoolClass.findMany({ where: { tenantId: a.tenantId, academicYearId: source.id }, include: { subjects: true } }),
+        tx.schoolClass.findMany({ where: { tenantId: a.tenantId, academicYearId: target.id }, select: { code: true } }),
+      ]);
+      const taken = new Set(existing.map((c) => c.code));
+      let created = 0;
+      for (const c of classes.filter((x) => !taken.has(x.code))) {
+        const copy = await tx.schoolClass.create({
+          data: { tenantId: a.tenantId, academicYearId: target.id, campusId: c.campusId, levelId: c.levelId, programId: c.programId, code: c.code, name: c.name, capacity: c.capacity },
+        });
+        for (const s of c.subjects) {
+          const cs = await tx.classSubject.create({ data: { tenantId: a.tenantId, classId: copy.id, subjectId: s.subjectId, coefficient: s.coefficient, weeklyHours: s.weeklyHours } });
+          const components = await tx.competenceComponent.findMany({ where: { tenantId: a.tenantId, classSubjectId: s.id } });
+          if (components.length > 0) {
+            await tx.competenceComponent.createMany({ data: components.map((k) => ({ tenantId: a.tenantId, classSubjectId: cs.id, kind: k.kind, maxScore: k.maxScore, position: k.position })) });
+          }
+        }
+        created++;
+      }
+      await this.audit.record(
+        { tenantId: a.tenantId, actorId: a.userId, action: 'academic_year.classes_copied', entityType: 'academic_year', entityId: target.id, metadata: { fromYearId: source.id, created, skipped: classes.length - created }, ip: a.ip },
+        tx,
+      );
+      return { created, skipped: classes.length - created };
     });
   }
 

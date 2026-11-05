@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   academicPeriodSchema,
@@ -18,7 +18,15 @@ import { RequirePermissions } from '../auth/decorators';
 import { type Actor, CurrentActor } from '../common/actor';
 import { ApiZodBody, ZodBody } from '../common/zod';
 import { AcademicsService } from './academics.service';
-import { type RolloverInput, rolloverSchema, RolloverService } from './rollover.service';
+import {
+  type CopyClassesInput,
+  copyClassesSchema,
+  type RolloverInput,
+  rolloverSchema,
+  RolloverService,
+  type YearDecisionsInput,
+  yearDecisionsSchema,
+} from './rollover.service';
 
 const READ = 'academics.years.read' as const;
 const MANAGE = 'academics.structure.manage' as const;
@@ -46,6 +54,23 @@ export class AcademicsController {
   @ApiZodBody(rolloverSchema)
   commitRollover(@CurrentActor() a: Actor, @Param('yearId', ParseUUIDPipe) yearId: string, @ZodBody(rolloverSchema) body: RolloverInput) {
     return this.rollover.commit(a, yearId, body);
+  }
+
+  /** Decisions from the promotion screen, for pupils the class council has not decided. */
+  @Put('academic-years/:yearId/promotion-decisions')
+  @RequirePermissions('academics.years.close')
+  @ApiZodBody(yearDecisionsSchema)
+  saveDecisions(@CurrentActor() a: Actor, @Param('yearId', ParseUUIDPipe) yearId: string, @ZodBody(yearDecisionsSchema) body: YearDecisionsInput) {
+    return this.rollover.saveDecisions(a, yearId, body);
+  }
+
+  /** Next year's classes, copied from a previous year's. */
+  @Post('academic-years/:yearId/copy-classes')
+  @HttpCode(200)
+  @RequirePermissions(MANAGE)
+  @ApiZodBody(copyClassesSchema)
+  copyClasses(@CurrentActor() a: Actor, @Param('yearId', ParseUUIDPipe) yearId: string, @ZodBody(copyClassesSchema) body: CopyClassesInput) {
+    return this.rollover.copyClasses(a, yearId, body);
   }
 
   @Get('academic-years/:yearId/periods')

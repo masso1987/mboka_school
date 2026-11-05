@@ -26,7 +26,7 @@ describe('navigation filtering', () => {
 
   it('shows the director everything except the family portal', () => {
     expect(visibleNavItems(canFor('director')).map((i) => i.key)).not.toContain('portal');
-    expect(visibleNavItems(canFor('director'))).toHaveLength(17);
+    expect(visibleNavItems(canFor('director'))).toHaveLength(18);
   });
 
   it('always shows the dashboard and announcements', () => {
